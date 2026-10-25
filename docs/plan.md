@@ -107,6 +107,32 @@ the holidays through the function the caller builds, and a test runs both throug
 opt-out. M3 stores the set like the extras and builds that function from Land, extras and opt-outs
 for marked days, the balance and Brückentage alike. Not built: Room, screen.
 
+Storage (M2, first piece): Room in `:app`, package `de.remph.urlaubsplaner.data`, database
+`UrlaubsplanerDatabase` (version 1). Design approved by Nick on 2026-10-25:
+
+- Three tables: `settings` (one row: Land code, working weekdays, regional extras, opt-outs, and the
+  special days like Heiligabend/Silvester as `day:halves` text), `year_entitlement` (year, half
+  days, Resturlaub, expiry day) and `marked_day` (ISO date, `FULL` or `HALF`). Entities hold plain
+  text and numbers; `Mappers.kt` turns them into the `:core` types and skips a value it does not
+  understand instead of crashing. The enum names are stored, so renaming one needs a migration (a
+  test pins them).
+- `UserSettings` (Land or null, extras, opt-outs, `WorkSchedule`) is in `:core.settings`, so the
+  backup format can use it too. No Land is chosen until the user picks one; no default.
+- `UserDataRepository` is what screens and the widget use: flows of `UserSettings`,
+  `YearEntitlement?` and a date range of marks, plus the writes.
+- The app language is not stored here: `AppCompatDelegate` remembers it (`autoStoreLocales`). The
+  backup file leaves it out.
+- Schemas go to `app/schemas/` (committed). `UrlaubsplanerDatabase.MIGRATIONS` has one entry per
+  version step and a test fails if one is missing. No destructive fallback: it is the user's data.
+- Tests run on the JVM with Robolectric (JUnit 4 in `:app`, Jupiter stays in `:core`). Robolectric
+  uses Android 15 (`robolectric.properties`). In the cloud pass
+  `-ProbolectricRepoUrl=https://maven-central.storage-download.googleapis.com/maven2`, because it
+  downloads its Android image from Maven Central, which answers 429 there.
+- The schema directory is a `debug` asset directory because Robolectric reads assets from the
+  debug build; the release APK does not contain the schemas.
+- Not built: school holiday file, backup, screens, a place that creates the database
+  (`UrlaubsplanerDatabase.create(context)` exists; M3 calls it from an `Application`).
+
 Known snags:
 
 - School holiday data (M2): the cloud cannot reach openholidaysapi.org unless Nick adds it to the
@@ -117,8 +143,8 @@ Known snags:
 ## Status
 
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
-- [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (in review)
-- [ ] M2 Data and storage
+- [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
+- [ ] M2 Data and storage: Room (in review), school holiday file, backup
 - [ ] M3 Screens
 - [ ] M4 Export and widget
 - [ ] M5 Release prep
