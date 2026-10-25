@@ -1,0 +1,429 @@
+# School holidays (Schulferien) per Bundesland, Germany.
+# Contains information from OpenHolidays API (https://www.openholidaysapi.org), which is made
+# available here under the Open Database License (ODbL). Licence text: ODbL-1.0.md. This file
+# is a derivative database and stays under the ODbL; see README.md for what was left out.
+# Rebuilt by tools/update-school-holidays.py. Do not edit by hand.
+# Lines: land;from;to;name_de;name_en (dates inclusive, ISO format)
+format: 1
+version: 2026-10-25
+covers: 2026-01-01..2029-12-31
+BB;2025-12-22;2026-01-02;Weihnachtsferien;Christmas Holidays
+BB;2026-02-02;2026-02-07;Winterferien;Winter Holidays
+BB;2026-03-30;2026-04-10;Osterferien;Easter Holidays
+BB;2026-05-15;2026-05-15;Variabler Ferientag;Variable holiday
+BB;2026-05-26;2026-05-26;Pfingstferien;Pentecost Holidays
+BB;2026-07-09;2026-08-22;Sommerferien;Summer Holidays
+BB;2026-10-19;2026-10-30;Herbstferien;Autumn Holidays
+BB;2026-12-23;2027-01-02;Weihnachtsferien;Christmas Holidays
+BB;2027-02-01;2027-02-06;Winterferien;Winter Holidays
+BB;2027-03-22;2027-04-03;Osterferien;Easter Holidays
+BB;2027-05-07;2027-05-07;Variabler Ferientag;Variable holiday
+BB;2027-05-18;2027-05-18;Pfingstferien;Pentecost Holidays
+BB;2027-07-01;2027-08-14;Sommerferien;Summer Holidays
+BB;2027-10-11;2027-10-23;Herbstferien;Autumn Holidays
+BB;2027-12-23;2027-12-31;Weihnachtsferien;Christmas Holidays
+BB;2028-01-31;2028-02-05;Winterferien;Winter Holidays
+BB;2028-04-10;2028-04-22;Osterferien;Easter Holidays
+BB;2028-05-26;2028-05-26;Variabler Ferientag;Variable holiday
+BB;2028-06-29;2028-08-12;Sommerferien;Summer Holidays
+BB;2028-10-02;2028-10-14;Herbstferien;Autumn Holidays
+BB;2028-10-30;2028-10-30;Variabler Ferientag;Variable holiday
+BB;2028-12-22;2029-01-02;Weihnachtsferien;Christmas Holidays
+BB;2029-01-29;2029-02-03;Winterferien;Winter Holidays
+BB;2029-03-26;2029-04-06;Osterferien;Easter Holidays
+BB;2029-04-30;2029-04-30;Variabler Ferientag;Variable holiday
+BB;2029-05-11;2029-05-11;Variabler Ferientag;Variable holiday
+BB;2029-05-22;2029-05-22;Pfingstferien;Pentecost Holidays
+BB;2029-06-28;2029-08-11;Sommerferien;Summer Holidays
+BB;2029-10-01;2029-10-12;Herbstferien;Autumn Holidays
+BB;2029-12-21;2030-01-04;Weihnachtsferien;Christmas Holidays
+BE;2025-12-22;2026-01-02;Weihnachtsferien;Christmas Holidays
+BE;2026-02-02;2026-02-07;Winterferien;Winter Holidays
+BE;2026-03-30;2026-04-10;Osterferien;Easter Holidays
+BE;2026-05-15;2026-05-15;Unterrichtsfreier Tag;Day off
+BE;2026-05-26;2026-05-26;Pfingstferien;Pentecost Holidays
+BE;2026-07-09;2026-08-22;Sommerferien;Summer Holidays
+BE;2026-10-19;2026-10-31;Herbstferien;Autumn Holidays
+BE;2026-12-23;2027-01-02;Weihnachtsferien;Christmas Holidays
+BE;2027-02-01;2027-02-06;Winterferien;Winter Holidays
+BE;2027-03-22;2027-04-02;Osterferien;Easter Holidays
+BE;2027-05-07;2027-05-07;Unterrichtsfreier Tag;Day off
+BE;2027-05-18;2027-05-19;Pfingstferien;Pentecost Holidays
+BE;2027-07-01;2027-08-14;Sommerferien;Summer Holidays
+BE;2027-10-11;2027-10-23;Herbstferien;Autumn Holidays
+BE;2027-12-22;2027-12-31;Weihnachtsferien;Christmas Holidays
+BE;2028-01-31;2028-02-05;Winterferien;Winter Holidays
+BE;2028-04-10;2028-04-22;Osterferien;Easter Holidays
+BE;2028-05-26;2028-05-26;Unterrichtsfreier Tag;Day off
+BE;2028-06-01;2028-06-02;Pfingstferien;Pentecost Holidays
+BE;2028-07-01;2028-08-12;Sommerferien;Summer Holidays
+BE;2028-10-02;2028-10-14;Herbstferien;Autumn Holidays
+BE;2028-12-22;2029-01-02;Weihnachtsferien;Christmas Holidays
+BE;2029-01-29;2029-02-03;Winterferien;Winter Holidays
+BE;2029-03-09;2029-03-09;Unterrichtsfreier Tag;Day off
+BE;2029-03-26;2029-04-06;Osterferien;Easter Holidays
+BE;2029-04-30;2029-04-30;Unterrichtsfreier Tag;Day off
+BE;2029-05-11;2029-05-11;Unterrichtsfreier Tag;Day off
+BE;2029-05-22;2029-05-25;Pfingstferien;Pentecost Holidays
+BE;2029-07-01;2029-08-11;Sommerferien;Summer Holidays
+BE;2029-10-01;2029-10-12;Herbstferien;Autumn Holidays
+BE;2029-12-21;2030-01-04;Weihnachtsferien;Christmas Holidays
+BW;2025-12-22;2026-01-05;Weihnachtsferien;Christmas Holidays
+BW;2026-03-30;2026-04-11;Osterferien;Easter Holidays
+BW;2026-05-26;2026-06-05;Pfingstferien;Pentecost Holidays
+BW;2026-07-30;2026-09-12;Sommerferien;Summer Holidays
+BW;2026-10-26;2026-10-30;Herbstferien;Autumn Holidays
+BW;2026-10-31;2026-10-31;Reformationsfest;Reformation Day
+BW;2026-12-23;2027-01-09;Weihnachtsferien;Christmas Holidays
+BW;2027-03-25;2027-03-25;Gründonnerstag;Maundy Thursday
+BW;2027-03-30;2027-04-03;Osterferien;Easter Holidays
+BW;2027-05-18;2027-05-29;Pfingstferien;Pentecost Holidays
+BW;2027-07-29;2027-09-11;Sommerferien;Summer Holidays
+BW;2027-11-02;2027-11-06;Herbstferien;Autumn Holidays
+BW;2027-12-23;2028-01-08;Weihnachtsferien;Christmas Holidays
+BW;2028-04-13;2028-04-13;Gründonnerstag;Maundy Thursday
+BW;2028-04-18;2028-04-22;Osterferien;Easter Holidays
+BW;2028-06-06;2028-06-17;Pfingstferien;Pentecost Holidays
+BW;2028-07-27;2028-09-09;Sommerferien;Summer Holidays
+BW;2028-10-30;2028-11-03;Herbstferien;Autumn Holidays
+BW;2028-12-23;2029-01-05;Weihnachtsferien;Christmas Holidays
+BW;2029-03-26;2029-04-07;Osterferien;Easter Holidays
+BW;2029-05-22;2029-06-01;Pfingstferien;Pentecost Holidays
+BW;2029-07-26;2029-09-08;Sommerferien;Summer Holidays
+BW;2029-10-29;2029-11-02;Herbstferien;Autumn Holidays
+BW;2029-12-22;2030-01-05;Weihnachtsferien;Christmas Holidays
+BY;2025-12-22;2026-01-05;Weihnachtsferien;Christmas Holidays
+BY;2026-02-16;2026-02-20;Frühjahrsferien;Spring Holidays
+BY;2026-03-30;2026-04-10;Osterferien;Easter Holidays
+BY;2026-05-26;2026-06-05;Pfingstferien;Pentecost Holidays
+BY;2026-08-03;2026-09-14;Sommerferien;Summer Holidays
+BY;2026-11-02;2026-11-06;Herbstferien;Autumn Holidays
+BY;2026-11-18;2026-11-18;Buß- und Bettag;Repentance Day
+BY;2026-12-24;2027-01-08;Weihnachtsferien;Christmas Holidays
+BY;2027-02-08;2027-02-12;Frühjahrsferien;Spring Holidays
+BY;2027-03-22;2027-04-02;Osterferien;Easter Holidays
+BY;2027-05-18;2027-05-28;Pfingstferien;Pentecost Holidays
+BY;2027-08-02;2027-09-13;Sommerferien;Summer Holidays
+BY;2027-11-02;2027-11-05;Herbstferien;Autumn Holidays
+BY;2027-11-17;2027-11-17;Buß- und Bettag;Repentance Day
+BY;2027-12-24;2028-01-07;Weihnachtsferien;Christmas Holidays
+BY;2028-02-28;2028-03-03;Frühjahrsferien;Spring Holidays
+BY;2028-04-10;2028-04-21;Osterferien;Easter Holidays
+BY;2028-06-06;2028-06-16;Pfingstferien;Pentecost Holidays
+BY;2028-07-31;2028-09-11;Sommerferien;Summer Holidays
+BY;2028-10-30;2028-11-03;Herbstferien;Autumn Holidays
+BY;2028-11-22;2028-11-22;Buß- und Bettag;Repentance Day
+BY;2028-12-23;2029-01-05;Weihnachtsferien;Christmas Holidays
+BY;2029-02-12;2029-02-16;Frühjahrsferien;Spring Holidays
+BY;2029-03-26;2029-04-06;Osterferien;Easter Holidays
+BY;2029-05-22;2029-06-01;Pfingstferien;Pentecost Holidays
+BY;2029-07-30;2029-09-10;Sommerferien;Summer Holidays
+BY;2029-10-29;2029-11-02;Herbstferien;Autumn Holidays
+BY;2029-11-21;2029-11-21;Buß- und Bettag;Repentance Day
+BY;2029-12-24;2030-01-04;Weihnachtsferien;Christmas Holidays
+HB;2025-12-22;2026-01-05;Weihnachtsferien;Christmas Holidays
+HB;2026-02-02;2026-02-03;Halbjahresferien;Mid-Year Holidays
+HB;2026-03-23;2026-04-07;Osterferien;Easter Holidays
+HB;2026-05-15;2026-05-15;Tag nach Himmelfahrt;Day after Ascension
+HB;2026-05-26;2026-05-26;Pfingstferien;Pentecost Holidays
+HB;2026-07-02;2026-08-12;Sommerferien;Summer Holidays
+HB;2026-10-12;2026-10-24;Herbstferien;Autumn Holidays
+HB;2026-12-23;2027-01-09;Weihnachtsferien;Christmas Holidays
+HB;2027-02-01;2027-02-02;Halbjahresferien;Mid-Year Holidays
+HB;2027-03-22;2027-04-03;Osterferien;Easter Holidays
+HB;2027-05-07;2027-05-07;Tag nach Himmelfahrt;Day after Ascension
+HB;2027-05-18;2027-05-18;Pfingstferien;Pentecost Holidays
+HB;2027-07-08;2027-08-18;Sommerferien;Summer Holidays
+HB;2027-10-18;2027-10-30;Herbstferien;Autumn Holidays
+HB;2027-12-23;2028-01-08;Weihnachtsferien;Christmas Holidays
+HB;2028-01-31;2028-02-01;Halbjahresferien;Mid-Year Holidays
+HB;2028-04-10;2028-04-22;Osterferien;Easter Holidays
+HB;2028-05-26;2028-05-26;Tag nach Himmelfahrt;Day after Ascension
+HB;2028-06-06;2028-06-06;Pfingstferien;Pentecost Holidays
+HB;2028-07-20;2028-08-30;Sommerferien;Summer Holidays
+HB;2028-10-02;2028-10-02;Tag vor dem 3. Oktober;Day before the 3 October
+HB;2028-10-23;2028-11-04;Herbstferien;Autumn Holidays
+HB;2028-12-27;2029-01-06;Weihnachtsferien;Christmas Holidays
+HB;2029-02-01;2029-02-02;Halbjahresferien;Mid-Year Holidays
+HB;2029-03-19;2029-04-03;Osterferien;Easter Holidays
+HB;2029-04-30;2029-04-30;Tag vor dem 1. Mai;Day before 1 May
+HB;2029-05-11;2029-05-11;Tag nach Himmelfahrt;Day after Ascension
+HB;2029-05-22;2029-05-22;Pfingstferien;Pentecost Holidays
+HB;2029-07-19;2029-08-29;Sommerferien;Summer Holidays
+HB;2029-10-04;2029-10-05;Tage nach dem 3. Oktober;Days after the 3 October
+HB;2029-10-22;2029-11-02;Herbstferien;Autumn Holidays
+HB;2029-12-21;2030-01-05;Weihnachtsferien;Christmas Holidays
+HE;2025-12-22;2026-01-10;Weihnachtsferien;Christmas Holidays
+HE;2026-03-30;2026-04-10;Osterferien;Easter Holidays
+HE;2026-06-29;2026-08-07;Sommerferien;Summer Holidays
+HE;2026-10-05;2026-10-17;Herbstferien;Autumn Holidays
+HE;2026-12-23;2027-01-12;Weihnachtsferien;Christmas Holidays
+HE;2027-03-22;2027-04-02;Osterferien;Easter Holidays
+HE;2027-06-28;2027-08-06;Sommerferien;Summer Holidays
+HE;2027-10-04;2027-10-16;Herbstferien;Autumn Holidays
+HE;2027-12-23;2028-01-11;Weihnachtsferien;Christmas Holidays
+HE;2028-04-03;2028-04-14;Osterferien;Easter Holidays
+HE;2028-07-03;2028-08-11;Sommerferien;Summer Holidays
+HE;2028-10-09;2028-10-20;Herbstferien;Autumn Holidays
+HE;2028-12-27;2029-01-12;Weihnachtsferien;Christmas Holidays
+HE;2029-03-29;2029-04-13;Osterferien;Easter Holidays
+HE;2029-07-16;2029-08-24;Sommerferien;Summer Holidays
+HE;2029-10-15;2029-10-26;Herbstferien;Autumn Holidays
+HE;2029-12-24;2030-01-11;Weihnachtsferien;Christmas Holidays
+HH;2025-12-17;2026-01-02;Weihnachtsferien;Christmas Holidays
+HH;2026-01-30;2026-01-30;Halbjahrespause;Mid-Year Break
+HH;2026-03-02;2026-03-13;Frühjahrsferien;Spring Holidays
+HH;2026-05-11;2026-05-15;Pfingstferien;Pentecost Holidays
+HH;2026-07-09;2026-08-19;Sommerferien;Summer Holidays
+HH;2026-10-19;2026-10-30;Herbstferien;Autumn Holidays
+HH;2026-12-21;2027-01-01;Weihnachtsferien;Christmas Holidays
+HH;2027-01-29;2027-01-29;Halbjahrespause;Mid-Year Break
+HH;2027-03-01;2027-03-12;Frühjahrsferien;Spring Holidays
+HH;2027-05-07;2027-05-14;Pfingstferien;Pentecost Holidays
+HH;2027-07-01;2027-08-11;Sommerferien;Summer Holidays
+HH;2027-10-11;2027-10-22;Herbstferien;Autumn Holidays
+HH;2027-12-20;2027-12-31;Weihnachtsferien;Christmas Holidays
+HH;2028-01-28;2028-01-28;Halbjahrespause;Mid-Year Break
+HH;2028-03-06;2028-03-17;Frühjahrsferien;Spring Holidays
+HH;2028-05-22;2028-05-26;Pfingstferien;Pentecost Holidays
+HH;2028-07-03;2028-08-11;Sommerferien;Summer Holidays
+HH;2028-10-02;2028-10-13;Herbstferien;Autumn Holidays
+HH;2028-10-30;2028-10-30;Brückentag;Bridge Day
+HH;2028-12-18;2028-12-29;Weihnachtsferien;Christmas Holidays
+HH;2029-02-02;2029-02-02;Halbjahrespause;Mid-Year Break
+HH;2029-03-05;2029-03-16;Frühjahrsferien;Spring Holidays
+HH;2029-05-11;2029-05-18;Pfingstferien;Pentecost Holidays
+HH;2029-07-02;2029-08-10;Sommerferien;Summer Holidays
+HH;2029-10-01;2029-10-12;Herbstferien;Autumn Holidays
+HH;2029-12-21;2030-01-04;Weihnachtsferien;Christmas Holidays
+MV;2025-12-20;2026-01-03;Weihnachtsferien;Christmas Holidays
+MV;2026-02-09;2026-02-20;Winterferien;Winter Holidays
+MV;2026-03-30;2026-04-08;Osterferien;Easter Holidays
+MV;2026-05-15;2026-05-15;Zusätzlicher Ferientag;Additional holiday
+MV;2026-05-22;2026-05-26;Pfingstferien;Pentecost Holidays
+MV;2026-07-13;2026-08-22;Sommerferien;Summer Holidays
+MV;2026-10-15;2026-10-24;Herbstferien;Autumn Holidays
+MV;2026-11-26;2026-11-26;Zusätzlicher Ferientag;Additional holiday
+MV;2026-11-27;2026-11-27;Zusätzlicher Ferientag;Additional holiday
+MV;2026-12-21;2027-01-02;Weihnachtsferien;Christmas Holidays
+MV;2027-02-08;2027-02-19;Winterferien;Winter Holidays
+MV;2027-03-24;2027-04-02;Osterferien;Easter Holidays
+MV;2027-05-07;2027-05-07;Zusätzlicher Ferientag;Additional holiday
+MV;2027-05-14;2027-05-18;Pfingstferien;Pentecost Holidays
+MV;2027-07-05;2027-08-14;Sommerferien;Summer Holidays
+MV;2027-10-14;2027-10-23;Herbstferien;Autumn Holidays
+MV;2027-11-25;2027-11-25;Zusätzlicher Ferientag;Additional holiday
+MV;2027-11-26;2027-11-26;Zusätzlicher Ferientag;Additional holiday
+MV;2027-12-22;2028-01-04;Weihnachtsferien;Christmas Holidays
+MV;2028-02-05;2028-02-17;Winterferien;Winter Holidays
+MV;2028-02-18;2028-02-18;Schulfrei;School free
+MV;2028-04-12;2028-04-21;Osterferien;Easter Holidays
+MV;2028-05-26;2028-05-26;Zusätzlicher Ferientag;Additional holiday
+MV;2028-06-02;2028-06-06;Pfingstferien;Pentecost Holidays
+MV;2028-06-26;2028-08-05;Sommerferien;Summer Holidays
+MV;2028-10-02;2028-10-02;Zusätzlicher Ferientag;Additional holiday
+MV;2028-10-23;2028-10-28;Herbstferien;Autumn Holidays
+MV;2028-10-30;2028-10-30;Zusätzlicher Ferientag;Additional holiday
+MV;2028-12-22;2029-01-02;Weihnachtsferien;Christmas Holidays
+MV;2029-02-05;2029-02-16;Winterferien;Winter Holidays
+MV;2029-03-09;2029-03-09;Zusätzlicher Ferientag;Additional holiday
+MV;2029-03-28;2029-04-06;Osterferien;Easter Holidays
+MV;2029-04-30;2029-04-30;Zusätzlicher Ferientag;Additional holiday
+MV;2029-05-11;2029-05-11;Zusätzlicher Ferientag;Additional holiday
+MV;2029-05-18;2029-05-22;Pfingstferien;Pentecost Holidays
+MV;2029-06-18;2029-07-28;Sommerferien;Summer Holidays
+MV;2029-10-22;2029-10-27;Herbstferien;Autumn Holidays
+MV;2029-10-29;2029-10-29;Zusätzlicher Ferientag;Additional holiday
+MV;2029-10-30;2029-10-30;Zusätzlicher Ferientag;Additional holiday
+MV;2029-12-21;2030-01-04;Weihnachtsferien;Christmas Holidays
+NI;2025-12-22;2026-01-05;Weihnachtsferien;Christmas Holidays
+NI;2026-02-02;2026-02-03;Halbjahresferien;Mid-Year Holidays
+NI;2026-03-23;2026-04-07;Osterferien;Easter Holidays
+NI;2026-05-15;2026-05-15;Tag nach Himmelfahrt;Day after Ascension
+NI;2026-05-26;2026-05-26;Pfingstferien;Pentecost Holidays
+NI;2026-07-02;2026-08-12;Sommerferien;Summer Holidays
+NI;2026-10-12;2026-10-24;Herbstferien;Autumn Holidays
+NI;2026-12-23;2027-01-09;Weihnachtsferien;Christmas Holidays
+NI;2027-02-01;2027-02-02;Halbjahresferien;Mid-Year Holidays
+NI;2027-03-22;2027-04-03;Osterferien;Easter Holidays
+NI;2027-05-07;2027-05-07;Tag nach Himmelfahrt;Day after Ascension
+NI;2027-05-18;2027-05-18;Pfingstferien;Pentecost Holidays
+NI;2027-07-08;2027-08-18;Sommerferien;Summer Holidays
+NI;2027-10-16;2027-10-30;Herbstferien;Autumn Holidays
+NI;2027-12-23;2028-01-08;Weihnachtsferien;Christmas Holidays
+NI;2028-01-31;2028-02-01;Halbjahresferien;Mid-Year Holidays
+NI;2028-04-10;2028-04-22;Osterferien;Easter Holidays
+NI;2028-05-26;2028-05-26;Tag nach Himmelfahrt;Day after Ascension
+NI;2028-06-06;2028-06-06;Pfingstferien;Pentecost Holidays
+NI;2028-07-20;2028-08-30;Sommerferien;Summer Holidays
+NI;2028-10-02;2028-10-02;Tag vor dem 3. Oktober;Day before the 3 October
+NI;2028-10-23;2028-11-04;Herbstferien;Autumn Holidays
+NI;2028-12-27;2029-01-06;Weihnachtsferien;Christmas Holidays
+NI;2029-02-01;2029-02-02;Halbjahresferien;Mid-Year Holidays
+NI;2029-03-19;2029-04-03;Osterferien;Easter Holidays
+NI;2029-04-30;2029-04-30;Tag vor dem 1. Mai;Day before 1 May
+NI;2029-05-11;2029-05-11;Tag nach Himmelfahrt;Day after Ascension
+NI;2029-05-22;2029-05-22;Pfingstferien;Pentecost Holidays
+NI;2029-07-19;2029-08-29;Sommerferien;Summer Holidays
+NI;2029-10-04;2029-10-05;Tage nach dem 3. Oktober;Days after the 3 October
+NI;2029-10-22;2029-11-02;Herbstferien;Autumn Holidays
+NI;2029-12-21;2030-01-05;Weihnachtsferien;Christmas Holidays
+NW;2025-12-22;2026-01-06;Weihnachtsferien;Christmas Holidays
+NW;2026-03-30;2026-04-11;Osterferien;Easter Holidays
+NW;2026-05-26;2026-05-26;Pfingstferien;Pentecost Holidays
+NW;2026-07-20;2026-09-01;Sommerferien;Summer Holidays
+NW;2026-10-17;2026-10-31;Herbstferien;Autumn Holidays
+NW;2026-12-23;2027-01-06;Weihnachtsferien;Christmas Holidays
+NW;2027-03-22;2027-04-03;Osterferien;Easter Holidays
+NW;2027-05-18;2027-05-18;Pfingstferien;Pentecost Holidays
+NW;2027-07-19;2027-08-31;Sommerferien;Summer Holidays
+NW;2027-10-23;2027-11-06;Herbstferien;Autumn Holidays
+NW;2027-12-24;2028-01-08;Weihnachtsferien;Christmas Holidays
+NW;2028-04-10;2028-04-22;Osterferien;Easter Holidays
+NW;2028-07-10;2028-08-22;Sommerferien;Summer Holidays
+NW;2028-10-23;2028-11-04;Herbstferien;Autumn Holidays
+NW;2028-12-21;2029-01-05;Weihnachtsferien;Christmas Holidays
+NW;2029-03-26;2029-04-07;Osterferien;Easter Holidays
+NW;2029-05-22;2029-05-22;Pfingstferien;Pentecost Holidays
+NW;2029-07-02;2029-08-14;Sommerferien;Summer Holidays
+NW;2029-10-15;2029-10-27;Herbstferien;Autumn Holidays
+NW;2029-12-20;2030-01-04;Weihnachtsferien;Christmas Holidays
+RP;2025-12-22;2026-01-07;Weihnachtsferien;Christmas Holidays
+RP;2026-03-30;2026-04-10;Osterferien;Easter Holidays
+RP;2026-06-29;2026-08-07;Sommerferien;Summer Holidays
+RP;2026-10-05;2026-10-16;Herbstferien;Autumn Holidays
+RP;2026-12-23;2027-01-08;Weihnachtsferien;Christmas Holidays
+RP;2027-03-22;2027-04-02;Osterferien;Easter Holidays
+RP;2027-06-28;2027-08-06;Sommerferien;Summer Holidays
+RP;2027-10-04;2027-10-15;Herbstferien;Autumn Holidays
+RP;2027-12-23;2028-01-07;Weihnachtsferien;Christmas Holidays
+RP;2028-04-10;2028-04-21;Osterferien;Easter Holidays
+RP;2028-07-03;2028-08-11;Sommerferien;Summer Holidays
+RP;2028-10-09;2028-10-20;Herbstferien;Autumn Holidays
+RP;2028-12-21;2029-01-08;Weihnachtsferien;Christmas Holidays
+RP;2029-03-26;2029-04-06;Osterferien;Easter Holidays
+RP;2029-07-16;2029-08-24;Sommerferien;Summer Holidays
+RP;2029-10-22;2029-11-02;Herbstferien;Autumn Holidays
+RP;2029-12-24;2030-01-09;Weihnachtsferien;Christmas Holidays
+SH;2025-12-19;2026-01-06;Weihnachtsferien;Christmas Holidays
+SH;2026-03-26;2026-04-10;Osterferien;Easter Holidays
+SH;2026-05-15;2026-05-15;Himmelfahrt;Ascension
+SH;2026-07-04;2026-08-15;Sommerferien;Summer Holidays
+SH;2026-10-12;2026-10-24;Herbstferien;Autumn Holidays
+SH;2026-12-21;2027-01-06;Weihnachtsferien;Christmas Holidays
+SH;2027-03-30;2027-04-10;Osterferien;Easter Holidays
+SH;2027-05-07;2027-05-07;Himmelfahrt;Ascension
+SH;2027-07-03;2027-08-14;Sommerferien;Summer Holidays
+SH;2027-10-11;2027-10-23;Herbstferien;Autumn Holidays
+SH;2027-12-23;2028-01-08;Weihnachtsferien;Christmas Holidays
+SH;2028-04-03;2028-04-15;Osterferien;Easter Holidays
+SH;2028-05-26;2028-05-26;Himmelfahrt;Ascension
+SH;2028-06-24;2028-08-04;Sommerferien;Summer Holidays
+SH;2028-10-16;2028-10-30;Herbstferien;Autumn Holidays
+SH;2028-12-21;2029-01-05;Weihnachtsferien;Christmas Holidays
+SH;2029-03-23;2029-04-06;Osterferien;Easter Holidays
+SH;2029-05-11;2029-05-11;Himmelfahrt;Ascension
+SH;2029-06-23;2029-08-03;Sommerferien;Summer Holidays
+SH;2029-10-08;2029-10-19;Herbstferien;Autumn Holidays
+SH;2029-12-21;2030-01-08;Weihnachtsferien;Christmas Holidays
+SL;2025-12-22;2026-01-02;Weihnachtsferien;Christmas Holidays
+SL;2026-02-16;2026-02-20;Fastnachtsferien;Carnival Holidays
+SL;2026-04-07;2026-04-17;Osterferien;Easter Holidays
+SL;2026-06-29;2026-08-07;Sommerferien;Summer Holidays
+SL;2026-10-05;2026-10-16;Herbstferien;Autumn Holidays
+SL;2026-12-21;2026-12-31;Weihnachtsferien;Christmas Holidays
+SL;2027-02-08;2027-02-12;Fastnachtsferien;Carnival Holidays
+SL;2027-03-30;2027-04-09;Osterferien;Easter Holidays
+SL;2027-06-28;2027-08-06;Sommerferien;Summer Holidays
+SL;2027-10-04;2027-10-15;Herbstferien;Autumn Holidays
+SL;2027-12-20;2027-12-31;Weihnachtsferien;Christmas Holidays
+SL;2028-02-21;2028-02-29;Fastnachtsferien;Carnival Holidays
+SL;2028-04-12;2028-04-21;Osterferien;Easter Holidays
+SL;2028-07-03;2028-08-11;Sommerferien;Summer Holidays
+SL;2028-10-09;2028-10-20;Herbstferien;Autumn Holidays
+SL;2028-12-20;2029-01-02;Weihnachtsferien;Christmas Holidays
+SL;2029-02-12;2029-02-16;Fastnachtsferien;Carnival Holidays
+SL;2029-03-26;2029-04-06;Osterferien;Easter Holidays
+SL;2029-05-22;2029-05-25;Pfingstferien;Pentecost Holidays
+SL;2029-07-16;2029-08-24;Sommerferien;Summer Holidays
+SL;2029-10-22;2029-11-02;Herbstferien;Autumn Holidays
+SL;2029-12-21;2030-01-04;Weihnachtsferien;Christmas Holidays
+SN;2025-12-22;2026-01-02;Weihnachtsferien;Christmas Holidays
+SN;2026-02-09;2026-02-21;Winterferien;Winter Holidays
+SN;2026-04-03;2026-04-10;Osterferien;Easter Holidays
+SN;2026-05-15;2026-05-15;Unterrichtsfreier Tag;Day off
+SN;2026-07-04;2026-08-14;Sommerferien;Summer Holidays
+SN;2026-10-12;2026-10-24;Herbstferien;Autumn Holidays
+SN;2026-12-23;2027-01-02;Weihnachtsferien;Christmas Holidays
+SN;2027-02-08;2027-02-19;Winterferien;Winter Holidays
+SN;2027-03-26;2027-04-02;Osterferien;Easter Holidays
+SN;2027-05-07;2027-05-07;Unterrichtsfreier Tag;Day off
+SN;2027-05-15;2027-05-18;Pfingstferien;Pentecost Holidays
+SN;2027-07-10;2027-08-20;Sommerferien;Summer Holidays
+SN;2027-10-11;2027-10-23;Herbstferien;Autumn Holidays
+SN;2027-12-23;2028-01-01;Weihnachtsferien;Christmas Holidays
+SN;2028-02-14;2028-02-26;Winterferien;Winter Holidays
+SN;2028-04-14;2028-04-22;Osterferien;Easter Holidays
+SN;2028-05-26;2028-05-26;Unterrichtsfreier Tag;Day off
+SN;2028-07-22;2028-09-01;Sommerferien;Summer Holidays
+SN;2028-10-23;2028-11-03;Herbstferien;Autumn Holidays
+SN;2028-12-23;2029-01-03;Weihnachtsferien;Christmas Holidays
+SN;2029-02-05;2029-02-16;Winterferien;Winter Holidays
+SN;2029-03-29;2029-04-06;Osterferien;Easter Holidays
+SN;2029-05-11;2029-05-11;Unterrichtsfreier Tag;Day off
+SN;2029-05-19;2029-05-22;Pfingstferien;Pentecost Holidays
+SN;2029-07-21;2029-08-31;Sommerferien;Summer Holidays
+SN;2029-10-22;2029-11-02;Herbstferien;Autumn Holidays
+SN;2029-12-22;2030-01-04;Weihnachtsferien;Christmas Holidays
+ST;2025-12-22;2026-01-05;Weihnachtsferien;Christmas Holidays
+ST;2026-01-31;2026-02-06;Winterferien;Winter Holidays
+ST;2026-03-30;2026-04-04;Osterferien;Easter Holidays
+ST;2026-05-26;2026-05-29;Pfingstferien;Pentecost Holidays
+ST;2026-07-04;2026-08-14;Sommerferien;Summer Holidays
+ST;2026-10-19;2026-10-30;Herbstferien;Autumn Holidays
+ST;2026-12-21;2027-01-02;Weihnachtsferien;Christmas Holidays
+ST;2027-02-01;2027-02-06;Winterferien;Winter Holidays
+ST;2027-03-22;2027-03-27;Osterferien;Easter Holidays
+ST;2027-05-15;2027-05-22;Pfingstferien;Pentecost Holidays
+ST;2027-07-10;2027-08-20;Sommerferien;Summer Holidays
+ST;2027-10-18;2027-10-23;Herbstferien;Autumn Holidays
+ST;2027-12-20;2027-12-31;Weihnachtsferien;Christmas Holidays
+ST;2028-02-07;2028-02-12;Winterferien;Winter Holidays
+ST;2028-04-10;2028-04-22;Osterferien;Easter Holidays
+ST;2028-06-03;2028-06-10;Pfingstferien;Pentecost Holidays
+ST;2028-07-22;2028-09-01;Sommerferien;Summer Holidays
+ST;2028-10-02;2028-10-02;Ferientag;Holiday Day
+ST;2028-10-30;2028-11-03;Herbstferien;Autumn Holidays
+ST;2028-12-21;2029-01-02;Weihnachtsferien;Christmas Holidays
+ST;2029-02-05;2029-02-10;Winterferien;Winter Holidays
+ST;2029-03-26;2029-03-31;Osterferien;Easter Holidays
+ST;2029-04-30;2029-04-30;Ferientag;Holiday Day
+ST;2029-05-11;2029-05-25;Pfingstferien;Pentecost Holidays
+ST;2029-07-21;2029-08-31;Sommerferien;Summer Holidays
+ST;2029-10-29;2029-11-02;Herbstferien;Autumn Holidays
+ST;2029-12-21;2030-01-05;Weihnachtsferien;Christmas Holidays
+TH;2025-12-22;2026-01-03;Weihnachtsferien;Christmas Holidays
+TH;2026-02-16;2026-02-21;Winterferien;Winter Holidays
+TH;2026-04-07;2026-04-17;Osterferien;Easter Holidays
+TH;2026-05-15;2026-05-15;Schulfreier Tag;Day off from school
+TH;2026-07-04;2026-08-14;Sommerferien;Summer Holidays
+TH;2026-10-12;2026-10-24;Herbstferien;Autumn Holidays
+TH;2026-12-23;2027-01-02;Weihnachtsferien;Christmas Holidays
+TH;2027-02-01;2027-02-06;Winterferien;Winter Holidays
+TH;2027-03-22;2027-04-03;Osterferien;Easter Holidays
+TH;2027-05-07;2027-05-07;Schulfreier Tag;Day off from school
+TH;2027-07-10;2027-08-20;Sommerferien;Summer Holidays
+TH;2027-10-09;2027-10-23;Herbstferien;Autumn Holidays
+TH;2027-12-23;2027-12-31;Weihnachtsferien;Christmas Holidays
+TH;2028-02-07;2028-02-12;Winterferien;Winter Holidays
+TH;2028-04-03;2028-04-15;Osterferien;Easter Holidays
+TH;2028-05-26;2028-05-26;Schulfreier Tag;Day off from school
+TH;2028-07-22;2028-09-01;Sommerferien;Summer Holidays
+TH;2028-10-23;2028-11-03;Herbstferien;Autumn Holidays
+TH;2028-12-23;2029-01-05;Weihnachtsferien;Christmas Holidays
+TH;2029-02-12;2029-02-17;Winterferien;Winter Holidays
+TH;2029-03-26;2029-04-07;Osterferien;Easter Holidays
+TH;2029-05-11;2029-05-11;Schulfreier Tag;Day off from school
+TH;2029-07-21;2029-08-31;Sommerferien;Summer Holidays
+TH;2029-10-22;2029-11-03;Herbstferien;Autumn Holidays
+TH;2029-12-22;2030-01-04;Weihnachtsferien;Christmas Holidays

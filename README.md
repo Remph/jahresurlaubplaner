@@ -27,6 +27,6 @@ The debug APK is `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Licence
 
-GPL-3.0, see [LICENSE](LICENSE). Bundled school holiday data (later) comes from OpenHolidays under
-the ODbL and stays in its own directory with its own licence text, see
+GPL-3.0, see [LICENSE](LICENSE). The bundled school holiday data comes from OpenHolidays under
+the ODbL and stays in its own directory (`data/school-holidays/`) with its own licence text, see
 [docs/data-sources.md](docs/data-sources.md).

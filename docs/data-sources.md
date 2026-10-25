@@ -43,3 +43,14 @@ Reading of the licence text (not legal advice):
 - Rule-computed public holidays are our own code and need none of this.
 - Data that is added to the file (for example corrections from KMK) must stay ODbL compatible
   (section 4.4 d).
+
+## Bundled file (built 2026-10-25)
+
+`data/school-holidays/school-holidays.txt` (2026 to 2029, all 16 Länder, built with
+`tools/update-school-holidays.py`), its ODbL text and a README with the provenance, what was left
+out and the yearly update steps are in `data/school-holidays/`. The app bundles that directory as
+assets, so the licence travels with the APK. `SchoolHolidayData.CREDIT` in `:core` is the credit
+line for the about screen and the ICS export (M3 and M4 show it; this PR does not).
+
+OpenHolidaysapi.org and kmk.org were reachable from the cloud container on 2026-10-25. The result
+of the KMK cross-check is in the README of that directory.
