@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -96,7 +95,7 @@ fun MonthGrid(
                 for (column in 0 until 7) {
                     val day = row * 7 + column - blanks + 1
                     if (day < 1 || day > month.lengthOfMonth()) {
-                        Box(Modifier.weight(1f).height(48.dp))
+                        Box(Modifier.weight(1f).height(52.dp))
                     } else {
                         DayCell(view, month.atDay(day), locale, onDayClick, Modifier.weight(1f))
                     }
@@ -117,13 +116,17 @@ private fun DayCell(
     val colors = dayColors()
     val look = view.look(date)
     val description = dayDescription(view, date, look, locale)
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(10.dp)
     val planned = look.mark != null && !look.taken
+    // Every day is a tile of its own, so the days stand out from the background (Nick,
+    // 2026-10-25). The tile's colour is the strongest thing the day is; a school holiday under a
+    // taken day or a holiday still shows as a bar along the bottom.
     val fill =
         when {
             look.taken -> colors.taken
             look.holiday -> colors.holiday
-            else -> Color.Transparent
+            look.school -> colors.school
+            else -> MaterialTheme.colorScheme.surfaceContainerLow
         }
     val textColor =
         when {
@@ -132,53 +135,55 @@ private fun DayCell(
             !look.workDay -> colors.weekend
             else -> MaterialTheme.colorScheme.onSurface
         }
+    val schoolBar = look.school && (look.taken || look.holiday || planned)
     Box(
         modifier =
             modifier
-                .height(48.dp)
-                .background(if (look.school) colors.school else Color.Transparent)
-                .clickable { onClick(date) }
+                .height(52.dp)
+                .padding(2.dp)
+                .clip(shape)
+                .background(fill)
+                .then(
+                    if (planned) {
+                        Modifier.border(BorderStroke(2.dp, colors.planned), shape)
+                    } else {
+                        Modifier
+                    },
+                ).clickable { onClick(date) }
                 .semantics(mergeDescendants = true) { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .size(40.dp)
-                    .clip(shape)
-                    .background(fill)
-                    .then(
-                        if (planned) {
-                            Modifier.border(BorderStroke(2.dp, colors.planned), shape)
-                        } else {
-                            Modifier
-                        },
-                    ),
-            contentAlignment = Alignment.Center,
-        ) {
+        Text(
+            text = date.dayOfMonth.toString(),
+            color = textColor,
+            fontWeight = if (look.today) FontWeight.Bold else FontWeight.Normal,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        if (look.mark == DayMark.HALF) {
             Text(
-                text = date.dayOfMonth.toString(),
-                color = textColor,
-                fontWeight = if (look.today) FontWeight.Bold else FontWeight.Normal,
-                style = MaterialTheme.typography.bodyLarge,
+                text = "½",
+                color = if (look.taken) colors.onTaken else colors.planned,
+                fontSize = 11.sp,
+                modifier = Modifier.align(Alignment.TopEnd).padding(end = 5.dp, top = 2.dp),
             )
-            if (look.mark == DayMark.HALF) {
-                Text(
-                    text = "½",
-                    color = if (look.taken) colors.onTaken else colors.planned,
-                    fontSize = 11.sp,
-                    modifier = Modifier.align(Alignment.TopEnd).offset(x = (-4).dp, y = 1.dp),
-                )
-            }
-            if (look.today) {
-                Box(
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .offset(y = (-4).dp)
-                        .size(width = 14.dp, height = 2.dp)
-                        .background(textColor),
-                )
-            }
+        }
+        if (schoolBar) {
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 4.dp)
+                    .size(width = 22.dp, height = 3.dp)
+                    .background(colors.schoolBar, RoundedCornerShape(2.dp)),
+            )
+        }
+        if (look.today) {
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = if (schoolBar) 9.dp else 5.dp)
+                    .size(width = 14.dp, height = 2.dp)
+                    .background(textColor),
+            )
         }
     }
 }
