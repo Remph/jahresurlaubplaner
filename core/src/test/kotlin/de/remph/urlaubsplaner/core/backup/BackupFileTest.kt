@@ -44,6 +44,7 @@ class BackupFileTest {
                                     WorkSchedule.SILVESTER to VacationDays.ZERO,
                                 ),
                         ),
+                    suggestCarryOver = true,
                 ),
             entitlements =
                 listOf(
@@ -77,7 +78,8 @@ class BackupFileTest {
             "regionalExtras": ["augsburger-friedensfest"],
             "regionalOptOuts": ["mariae-himmelfahrt-bayern"],
             "workingDays": ["MONDAY", "TUESDAY", "THURSDAY"],
-            "specialDays": [{"day": "--12-24", "halfDays": 1}, {"day": "--12-31", "halfDays": 0}]
+            "specialDays": [{"day": "--12-24", "halfDays": 1}, {"day": "--12-31", "halfDays": 0}],
+            "suggestCarryOver": true
           },
           "entitlements": [
             {"year": 2026, "halfDays": 60, "carryOverHalfDays": 5, "carryOverExpiry": "--04-30"},
@@ -365,6 +367,30 @@ class BackupFileTest {
         refused<BackupException.Damaged>(withEdit("\"year\": 2027", "\"year\": 2026"))
         refused<BackupException.Damaged>(withEdit("2027-01-04", "2026-07-01"))
         refused<BackupException.Damaged>(withEdit("--12-31", "--12-24"))
+    }
+
+    @Test
+    fun `a file without the carry-over key reads as off`() {
+        val data = BackupFile.decode(withEdit(",\n    \"suggestCarryOver\": true", ""))
+
+        assertEquals(false, data.settings.suggestCarryOver)
+        assertEquals(
+            everything.copy(settings = everything.settings.copy(suggestCarryOver = false)),
+            data,
+        )
+    }
+
+    @Test
+    fun `the carry-over key must be true or false`() {
+        refused<BackupException.Damaged>(
+            withEdit("\"suggestCarryOver\": true", "\"suggestCarryOver\": 1"),
+        )
+        refused<BackupException.Damaged>(
+            withEdit("\"suggestCarryOver\": true", "\"suggestCarryOver\": \"true\""),
+        )
+        refused<BackupException.Damaged>(
+            withEdit("\"suggestCarryOver\": true", "\"suggestCarryOver\": null"),
+        )
     }
 
     @Test

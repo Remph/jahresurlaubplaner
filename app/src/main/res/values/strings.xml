@@ -1,5 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Urlaubsplaner</string>
-    <string name="home_empty">Hier erscheint bald dein Urlaubsstatus.</string>
+
+    <string name="settings_title">Einstellungen</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Abbrechen</string>
+
+    <!-- Bundesland -->
+    <string name="section_land">Bundesland</string>
+    <string name="land_first_start">Welches Bundesland gilt für dich? Danach richten sich die Feiertage.</string>
+    <string name="land_choose">Bundesland wählen</string>
+    <string name="land_button_description">Bundesland: %1$s. Tippen zum Ändern.</string>
+    <string name="land_baden_wuerttemberg">Baden-Württemberg</string>
+    <string name="land_bayern">Bayern</string>
+    <string name="land_berlin">Berlin</string>
+    <string name="land_brandenburg">Brandenburg</string>
+    <string name="land_bremen">Bremen</string>
+    <string name="land_hamburg">Hamburg</string>
+    <string name="land_hessen">Hessen</string>
+    <string name="land_mecklenburg_vorpommern">Mecklenburg-Vorpommern</string>
+    <string name="land_niedersachsen">Niedersachsen</string>
+    <string name="land_nordrhein_westfalen">Nordrhein-Westfalen</string>
+    <string name="land_rheinland_pfalz">Rheinland-Pfalz</string>
+    <string name="land_saarland">Saarland</string>
+    <string name="land_sachsen">Sachsen</string>
+    <string name="land_sachsen_anhalt">Sachsen-Anhalt</string>
+    <string name="land_schleswig_holstein">Schleswig-Holstein</string>
+    <string name="land_thueringen">Thüringen</string>
+
+    <!-- Urlaub eines Jahres -->
+    <string name="section_vacation">Urlaub</string>
+    <string name="year_previous">Vorheriges Jahr</string>
+    <string name="year_next">Nächstes Jahr</string>
+    <string name="year_description">Jahr %1$d</string>
+    <string name="field_days">Urlaubstage im Jahr</string>
+    <string name="field_carry_over">Resturlaub</string>
+    <string name="field_carry_over_expiry">Resturlaub verfällt am</string>
+    <string name="field_expiry_format">TT.MM.</string>
+    <string name="error_days">Bitte ganze oder halbe Tage eingeben, zum Beispiel 30 oder 12,5.</string>
+    <string name="error_expiry">Bitte einen echten Tag eingeben, zum Beispiel 31.03.</string>
+    <string name="suggestion_from_year">Vorschlag aus %1$d. Noch nicht gespeichert.</string>
+    <string name="suggestion_from_year_with_carry_over">Vorschlag aus %1$d, mit den übrigen Tagen als Resturlaub (Stand heute). Noch nicht gespeichert.</string>
+    <string name="save">Speichern</string>
+    <string name="suggest_carry_over">Übrige Tage als Resturlaub vorschlagen</string>
+    <string name="suggest_carry_over_support">Gilt für ein neues Jahr: Was im Vorjahr übrig bleibt, wird als Resturlaub vorgeschlagen. Du kannst es ändern, gespeichert wird erst mit „Speichern“.</string>
+
+    <!-- Arbeitstage -->
+    <string name="section_work_days">Arbeitstage</string>
+    <string name="special_christmas_eve">Heiligabend (24.12.)</string>
+    <string name="special_new_years_eve">Silvester (31.12.)</string>
+    <string name="special_full">Ganzer Tag</string>
+    <string name="special_half">Halber Tag</string>
+    <string name="special_off">Frei</string>
+    <string name="special_options_description">%1$s: %2$s</string>
+
+    <!-- Regionales -->
+    <string name="section_regional">Regionale Feiertage</string>
+    <string name="extra_augsburg">Augsburger Friedensfest (8. August) zählt</string>
+    <string name="extra_augsburg_support">Nur in der Stadt Augsburg ein Feiertag.</string>
+    <string name="extra_fronleichnam">Fronleichnam zählt</string>
+    <string name="extra_fronleichnam_support">In Sachsen und Thüringen nur in einigen Gemeinden ein Feiertag.</string>
+    <string name="mariae_himmelfahrt_bayern">Mariä Himmelfahrt (15. August) ist bei mir frei</string>
+    <string name="mariae_himmelfahrt_bayern_support">In den meisten bayerischen Gemeinden ein Feiertag, in manchen nicht. Dann bitte ausschalten.</string>
+
+    <!-- Sprache -->
+    <string name="section_language">Sprache</string>
+    <string name="language_system">Wie das Telefon</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_english">English</string>
+
+    <!-- Datensicherung -->
+    <string name="section_backup">Datensicherung</string>
+    <string name="backup_explain">Die Sicherung ist eine Datei, die du selbst auswählst. Sie enthält deine Einstellungen, den Urlaubsanspruch und die markierten Tage.</string>
+    <string name="backup_export">Sicherung speichern</string>
+    <string name="backup_import">Sicherung wiederherstellen</string>
+    <string name="backup_import_title">Daten ersetzen?</string>
+    <string name="backup_import_body">Jetzt in der App: %1$s.\nIn der Datei: %2$s.\n\nWenn du weitermachst, wird alles Bisherige durch die Datei ersetzt.</string>
+    <string name="backup_import_no_land">In der Datei ist kein Bundesland gewählt.</string>
+    <string name="backup_import_confirm">Ersetzen</string>
+    <string name="backup_summary_empty">keine Einträge</string>
+    <string name="backup_summary_join">%1$s und %2$s</string>
+    <plurals name="backup_marked_days">
+        <item quantity="one">%d markierter Tag</item>
+        <item quantity="other">%d markierte Tage</item>
+    </plurals>
+    <plurals name="backup_years">
+        <item quantity="one">%d Jahr mit Urlaubsanspruch</item>
+        <item quantity="other">%d Jahre mit Urlaubsanspruch</item>
+    </plurals>
+    <string name="notice_saved">Gespeichert.</string>
+    <string name="notice_exported">Sicherung gespeichert.</string>
+    <string name="notice_imported">Sicherung wiederhergestellt.</string>
+    <string name="notice_export_failed">Die Datei konnte nicht gespeichert werden.</string>
+    <string name="notice_import_unreadable">Die Datei konnte nicht gelesen werden. Es wurde nichts geändert.</string>
+    <string name="notice_not_a_backup">Das ist keine Sicherung des Urlaubsplaners. Es wurde nichts geändert.</string>
+    <string name="notice_newer_version">Diese Sicherung stammt aus einer neueren Version der App (Format %1$d, diese App liest bis Format %2$d). Bitte die App aktualisieren. Es wurde nichts geändert.</string>
+    <string name="notice_damaged">Die Sicherung ist beschädigt und wurde nicht geladen. Es wurde nichts geändert.\n\nGenauer (auf Englisch): %1$s</string>
 </resources>

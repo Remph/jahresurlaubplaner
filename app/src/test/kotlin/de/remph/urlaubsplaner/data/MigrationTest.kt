@@ -7,19 +7,26 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.core.balance.WorkSchedule
+import de.remph.urlaubsplaner.core.holidays.Bundesland
+import de.remph.urlaubsplaner.core.holidays.RegionalExtra
+import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 /**
  * Opens the committed schema of each version and checks that migrating to the current one keeps
- * the data. With only version 1 there is nothing to migrate yet; when
- * [UrlaubsplanerDatabase.VERSION] goes up, add a test that starts at the old version, fills it
- * with rows, runs the migration and reads the rows back.
+ * the data. When [UrlaubsplanerDatabase.VERSION] goes up, add a test that starts at the old
+ * version, fills it with rows, runs the migration and reads the rows back.
  */
 @RunWith(AndroidJUnit4::class)
 class MigrationTest {
@@ -72,6 +79,52 @@ class MigrationTest {
                         .first()
                 }
             assertEquals(mapOf(LocalDate.of(2026, 8, 14) to DayMark.HALF), marks)
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
+    fun `version 1 settings migrate with the carry-over setting off`() {
+        helper.createDatabase(TEST_DB, 1).apply {
+            execSQL(
+                "INSERT INTO settings " +
+                    "(id, land, workingDays, regionalExtras, optOuts, specialDays) " +
+                    "VALUES (1, 'BY', 'MONDAY,TUESDAY', 'AUGSBURGER_FRIEDENSFEST', " +
+                    "'MARIAE_HIMMELFAHRT_BAYERN', '--12-24:1')",
+            )
+            execSQL(
+                "INSERT INTO year_entitlement (year, halves, carryOverHalves, carryOverExpiry) " +
+                    "VALUES (2026, 60, 5, '--03-31')",
+            )
+            close()
+        }
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database =
+            Room
+                .databaseBuilder(context, UrlaubsplanerDatabase::class.java, TEST_DB)
+                .addMigrations(*UrlaubsplanerDatabase.MIGRATIONS.toTypedArray())
+                .build()
+        try {
+            val repository = UserDataRepository(database)
+            val settings = runBlocking { repository.observeSettings().first() }
+            assertEquals(Bundesland.BAYERN, settings.land)
+            assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY), settings.schedule.workingDays)
+            assertEquals(setOf(RegionalExtra.AUGSBURGER_FRIEDENSFEST), settings.extras)
+            assertEquals(setOf(RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN), settings.optOuts)
+            assertEquals(
+                mapOf(WorkSchedule.HEILIGABEND to VacationDays.HALF),
+                settings.schedule.specialDays,
+            )
+            assertFalse(settings.suggestCarryOver)
+
+            val entitlement = runBlocking { repository.observeEntitlement(2026).first() }
+            assertEquals(VacationDays.of(30), entitlement?.days)
+            assertEquals(VacationDays.of(2.5), entitlement?.carryOver)
+
+            runBlocking { repository.saveSettings(settings.copy(suggestCarryOver = true)) }
+            assertTrue(runBlocking { repository.observeSettings().first() }.suggestCarryOver)
         } finally {
             database.close()
         }
