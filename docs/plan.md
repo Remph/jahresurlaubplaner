@@ -57,6 +57,12 @@ Android 13+ lists the app in the system's per-app language settings. To check wh
 whether the activity must extend `AppCompatActivity`, and how the widget and ICS export get the
 chosen language below Android 13 (they do not run inside the activity).
 
+Public holidays (M1, PR #5): `PublicHolidays.of(land, year, extras)` supports 2019 and later (earlier
+years differ). Mariä Himmelfahrt counts for all of Bayern (Nick, 2026-10-25); Augsburger
+Friedensfest and Fronleichnam in parts of Sachsen/Thüringen are opt-in `RegionalExtra`s. Berlin
+one-offs (8 May 2020 and 2025, 17 June 2028) are in the table. Each year: check the Länder laws for
+new or changed holidays and extend `HolidayRules`.
+
 Known snags:
 
 - School holiday data (M2): the cloud cannot reach openholidaysapi.org unless Nick adds it to the
@@ -67,7 +73,7 @@ Known snags:
 ## Status
 
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
-- [ ] M1 Rules in `:core`
+- [ ] M1 Rules in `:core`: public holidays done (PR #5); balance and Brückentage open
 - [ ] M2 Data and storage
 - [ ] M3 Screens
 - [ ] M4 Export and widget
