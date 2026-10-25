@@ -97,7 +97,7 @@ why. A review runs them again. A docs-only PR says "no code, no checks".
 - Room (if chosen): schema changes need a migration and a migration test; schemas are exported
   and committed.
 - Comment the "why", not the "what".
-- Personal notes and real device or account details stay out of this public-able repo.
+- Personal notes and real device or account details stay out of the repo if it is public.
 
 ## Dependencies
 Common well-maintained libraries may be added without asking (name them in the PR). No paid
