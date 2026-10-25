@@ -14,13 +14,21 @@ import java.time.temporal.ChronoUnit
  *
  * [leave] holds only days that still cost something; days the user already marked are part of
  * the free stretch, not of [leave]. [cost] is what [leave] costs, half days included.
+ *
+ * [anchor] is the public holiday (or special day off) the bridge is built around: the day of the
+ * stretch that loses a working day, the nearest one to [leave] if there are several. It is what a
+ * screen names the bridge after, and [isBeforeAnchor] says on which side the leave days lie.
  */
 data class Bridge(
     val leave: List<LocalDate>,
     val cost: VacationDays,
     val start: LocalDate,
     val end: LocalDate,
+    val anchor: LocalDate,
 ) {
+    /** The leave days come before [anchor] ("davor") rather than after it ("danach"). */
+    val isBeforeAnchor: Boolean get() = leave.last() < anchor
+
     /** Calendar days off in a row, [leave] included. */
     val daysOff: Int get() = (ChronoUnit.DAYS.between(start, end) + 1).toInt()
 
@@ -105,13 +113,28 @@ class BridgeFinder(
             while (isFree(start.minusDays(1))) start = start.minusDays(1)
             var end = day
             while (isFree(end.plusDays(1))) end = end.plusDays(1)
-            if (start.datesUntil(end.plusDays(1)).anyMatch { losesWorkingDay(it) }) {
-                bridges += Bridge(leave, cost, start, end)
-            }
+            val anchor =
+                start
+                    .datesUntil(end.plusDays(1))
+                    .filter { losesWorkingDay(it) }
+                    .toList()
+                    .minWithOrNull(compareBy({ distance(it, leave) }, { it }))
+            if (anchor != null) bridges += Bridge(leave, cost, start, end, anchor)
             day = end.plusDays(1)
         }
         return bridges
     }
+
+    /** Days between [day] and the nearest of the (consecutive) [leave] days. */
+    private fun distance(
+        day: LocalDate,
+        leave: List<LocalDate>,
+    ): Long =
+        when {
+            day < leave.first() -> ChronoUnit.DAYS.between(day, leave.first())
+            day > leave.last() -> ChronoUnit.DAYS.between(leave.last(), day)
+            else -> 0
+        }
 
     /**
      * The [limit] best bridges of [year] still to come: most days off per vacation day first, the

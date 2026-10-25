@@ -77,6 +77,40 @@ class BridgeFinderTest {
     }
 
     @Test
+    fun `a bridge is named after the holiday it joins and knows its side`() {
+        val bridges = finder(setOf(d(5, 13))).find(2026)
+
+        assertTrue(bridges.all { it.anchor == d(5, 13) })
+        assertEquals(listOf(true, false), bridges.map { it.isBeforeAnchor })
+    }
+
+    @Test
+    fun `the anchor is the holiday nearest to the leave days`() {
+        // Thursday 14 May and Monday 18 May are holidays; the Friday is next to the first one and
+        // the weekend lies between. The stretch Thu to Mon has both, the Friday belongs to Thursday.
+        val bridge = finder(setOf(d(5, 14), d(5, 18))).find(2026).single()
+
+        assertEquals(listOf(d(5, 15)), bridge.leave)
+        assertEquals(d(5, 14), bridge.anchor)
+        assertEquals(false, bridge.isBeforeAnchor)
+    }
+
+    @Test
+    fun `a special day off is the anchor when there is no holiday`() {
+        // Heiligabend a day off on a Thursday (2026-12-24), no public holiday at all.
+        val schedule =
+            WorkSchedule(
+                specialDays =
+                    mapOf(WorkSchedule.HEILIGABEND to VacationDays.ZERO),
+            )
+
+        val bridge = finder(schedule = schedule).find(2026).single()
+
+        assertEquals(d(12, 24), bridge.anchor)
+        assertEquals(listOf(d(12, 25)), bridge.leave)
+    }
+
+    @Test
     fun `a gap is never cut into a smaller bridge`() {
         // Mon 11 to Thu 14 May cost 4 days before the Friday holiday. Taking only Wed and Thu
         // would leave Mon and Tue to work in the middle of the stretch, so there is no bridge.

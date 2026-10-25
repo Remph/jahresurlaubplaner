@@ -296,6 +296,23 @@ and PR C (Brückentage).
   English, compose the real screens). Not covered: the date picker, TalkBack, real wallpaper
   colours. Not built: Brückentage on the screens (PR C).
 
+### Brückentage (M3, PR C)
+
+- Core: `Bridge.anchor` is the holiday (or Heiligabend/Silvester) a bridge belongs to, the nearest
+  one that loses a working day; `isBeforeAnchor` tells "davor" from "danach". `BridgeGroup` and
+  `groupedByAnchor()` put the (at most two) bridges around one anchor together.
+- Overview card "Brückentage": the best 3 bridges still to come, one entry per holiday with a
+  "davor" and a "danach" line. The card is hidden when there is none. Tapping a line opens a
+  confirm sheet (leave days, days off, cost, days left) and only "Eintragen" stores the days.
+  Someone who wants only part of a bridge marks those days in the day sheet; a stored mark is
+  removed there too, so no bridge needs "declining".
+- Calendar, month mode: possible bridge days that are not marked yet get a dashed outline, all
+  upcoming ones (not only the best 3), plus a legend item that shows only when the month has one.
+  Not in the year grid (rows are too small for an outline).
+- `BridgeFinder` reads December of the year before, so for the first supported year (2019) the
+  screens show no bridges.
+- Not built: bridges that combine two gaps, bridges in the widget or the ICS export (M4).
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on

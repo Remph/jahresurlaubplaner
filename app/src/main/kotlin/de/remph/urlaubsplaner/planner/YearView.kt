@@ -6,7 +6,12 @@ import de.remph.urlaubsplaner.core.balance.VacationBalance
 import de.remph.urlaubsplaner.core.balance.VacationCalculator
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.YearEntitlement
+import de.remph.urlaubsplaner.core.bridge.Bridge
+import de.remph.urlaubsplaner.core.bridge.BridgeFinder
+import de.remph.urlaubsplaner.core.bridge.BridgeGroup
+import de.remph.urlaubsplaner.core.bridge.groupedByAnchor
 import de.remph.urlaubsplaner.core.holidays.Holiday
+import de.remph.urlaubsplaner.core.holidays.PublicHolidays
 import de.remph.urlaubsplaner.core.schoolholidays.SchoolHoliday
 import de.remph.urlaubsplaner.core.schoolholidays.SchoolHolidayData
 import de.remph.urlaubsplaner.core.settings.UserSettings
@@ -28,6 +33,7 @@ class YearView(
     val marks: Map<LocalDate, DayMark>,
     private val calculator: VacationCalculator?,
     private val schoolData: SchoolHolidayData,
+    private val bridgeFinder: BridgeFinder? = null,
 ) {
     val hasLand: Boolean get() = settings.land != null
 
@@ -47,6 +53,33 @@ class YearView(
         }
 
     val trips: List<Trip> = calculator?.trips(marks).orEmpty()
+
+    /**
+     * Every Brückentag still to come this year (at most 2 vacation days each), for the calendar.
+     * Not for the first supported year: the finder looks at the day before the year starts, and
+     * the holiday rules do not go back that far.
+     */
+    val upcomingBridges: List<Bridge> =
+        if (bridgeFinder != null && year > PublicHolidays.FIRST_SUPPORTED_YEAR) {
+            bridgeFinder.find(year, marks).filter { it.leave.first() > today }
+        } else {
+            emptyList()
+        }
+
+    /** The days to take for any of [upcomingBridges]; a day already marked is not among them. */
+    val bridgeDays: Set<LocalDate> = upcomingBridges.flatMap { it.leave }.toSet()
+
+    /** The best few bridges, grouped under the holiday they belong to, for the overview. */
+    val bridgeGroups: List<BridgeGroup> =
+        if (bridgeFinder != null && year > PublicHolidays.FIRST_SUPPORTED_YEAR) {
+            bridgeFinder.best(year, BEST_BRIDGES, marks).groupedByAnchor()
+        } else {
+            emptyList()
+        }
+
+    /** The public holiday on [date], or null: then the day is a special day off of the schedule. */
+    fun holidayOn(date: LocalDate): Holiday? =
+        settings.publicHolidays(date.year).firstOrNull { it.date == date }?.holiday
 
     private val firstDay: LocalDate get() = LocalDate.of(year, 1, 1)
     private val lastDay: LocalDate get() = LocalDate.of(year, 12, 31)
@@ -102,3 +135,5 @@ class YearView(
     /** The trip that includes [today] or the first one after it. */
     val nextTrip: Trip? get() = trips.firstOrNull { !it.end.isBefore(today) }
 }
+
+private const val BEST_BRIDGES = 3

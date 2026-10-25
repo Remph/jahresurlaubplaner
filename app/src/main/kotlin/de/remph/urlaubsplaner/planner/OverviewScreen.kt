@@ -19,6 +19,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -66,7 +69,7 @@ fun OverviewScreen(
             }
 
             else -> {
-                Status(shown, onOpenMonth)
+                Status(shown, viewModel, onOpenMonth)
             }
         }
     }
@@ -108,8 +111,11 @@ fun EmptyState(
 @Composable
 private fun Status(
     view: YearView,
+    viewModel: PlannerViewModel,
     onOpenMonth: (YearMonth) -> Unit,
 ) {
+    // The bridge is found again by its first day, so the sheet survives a turn of the phone.
+    var sheetStart by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     val locale = currentLocale()
     val balance = view.balance ?: return
     val overbooked = balance.remaining < VacationDays.ZERO
@@ -157,6 +163,8 @@ private fun Status(
         NextHoliday(view, locale)
     }
 
+    BridgesCard(view) { sheetStart = it.leave.first() }
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = view.year.toString(),
@@ -170,6 +178,15 @@ private fun Status(
             LocalDate.of(view.year, 1, 1),
             LocalDate.of(view.year, 12, 31),
         )
+    }
+
+    val chosen =
+        view.bridgeGroups.flatMap { it.bridges }.firstOrNull {
+            it.leave.first() ==
+                sheetStart
+        }
+    if (chosen != null) {
+        BridgeSheet(view, chosen, viewModel, onDismiss = { sheetStart = null })
     }
 }
 
@@ -222,7 +239,7 @@ private fun CarryOverWarning(
 }
 
 @Composable
-private fun Card(content: @Composable () -> Unit) {
+internal fun Card(content: @Composable () -> Unit) {
     Surface(
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLow,

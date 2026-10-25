@@ -169,7 +169,26 @@
     <string name="day_taken">Vacation taken</string>
     <string name="day_taken_half">Half vacation day taken</string>
     <string name="day_planned">Vacation planned</string>
+    <string name="day_bridge">possible bridge day</string>
+    <string name="legend_bridge">Bridge day</string>
     <string name="day_planned_half">Half vacation day planned</string>
+    <string name="bridges_title">Bridge days</string>
+    <string name="bridge_anchor">%1$s, %2$s</string>
+    <string name="bridge_before">before: take %1$s, %2$s</string>
+    <string name="bridge_after">after: take %1$s, %2$s</string>
+    <string name="list_and">%1$s and %2$s</string>
+    <plurals name="bridge_days_off">
+        <item quantity="one">%1$d day off</item>
+        <item quantity="other">%1$d days off</item>
+    </plurals>
+    <string name="bridge_sheet_title">Add bridge</string>
+    <plurals name="bridge_stretch">
+        <item quantity="one">%1$d day off in a row, %2$s</item>
+        <item quantity="other">%1$d days off in a row, %2$s</item>
+    </plurals>
+    <string name="bridge_christmas_eve">Christmas Eve</string>
+    <string name="bridge_new_years_eve">New Year\'s Eve</string>
+    <string name="bridge_day_off">Day off</string>
     <string name="day_today">today</string>
 
     <!-- Day sheet -->

@@ -158,7 +158,7 @@ fun DaySheet(
 }
 
 @Composable
-private fun costText(
+internal fun costText(
     cost: VacationDays,
     remaining: VacationDays?,
     locale: Locale,

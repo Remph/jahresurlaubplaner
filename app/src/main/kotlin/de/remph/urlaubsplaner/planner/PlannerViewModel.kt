@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.VacationCalculator
+import de.remph.urlaubsplaner.core.bridge.BridgeFinder
 import de.remph.urlaubsplaner.core.holidays.PublicHolidays
 import de.remph.urlaubsplaner.core.schoolholidays.SchoolHolidayData
 import de.remph.urlaubsplaner.data.UserDataRepository
@@ -147,6 +148,7 @@ class PlannerViewModel(
                                 )
                             },
                         schoolData = schoolHolidays.value,
+                        bridgeFinder = check?.let { BridgeFinder(clock, settings.schedule, it) },
                     )
                 }
             }.flowOn(Dispatchers.Default)
