@@ -43,7 +43,7 @@ Rules:
 | M0 | Skeleton | `LICENSE`, Gradle setup, `:core` with a smoke test, `:app` with an empty screen in German and English, Spotless, README, this plan | 1 |
 | M1 | Rules in `:core` | Public holidays for all 16 Länder (Easter rule plus tables, regional cases noted); vacation balance (entitlement, Resturlaub expiry, half days); Brückentage | 3 |
 | M2 | Data and storage | Room (settings, marked days, entitlement); school holiday file and loader (ODbL); backup export/import | 3 |
-| M3 | Screens | Status home (remaining days, next trip), year and month view, marking single and half days, settings (Bundesland, language), Brückentage in the view | 2 to 3 |
+| M3 | Screens | Status home (remaining days, next trip), year and month view, marking single and half days, settings (Bundesland, language, regional holiday opt-ins and the Mariä Himmelfahrt opt-out for Bayern), Brückentage in the view | 2 to 3 |
 | M4 | Export and widget | ICS export (with the ODbL credit), home screen widget; both follow the chosen app language | 2 |
 | M5 | Release prep | About screen with credits, icon, F-Droid metadata, signing; the Google Play decision comes up here | 1 to 2 |
 
@@ -62,6 +62,13 @@ years differ). Mariä Himmelfahrt counts for all of Bayern (Nick, 2026-10-25); A
 Friedensfest and Fronleichnam in parts of Sachsen/Thüringen are opt-in `RegionalExtra`s. Berlin
 one-offs (8 May 2020 and 2025, 17 June 2028) are in the table. Each year: check the Länder laws for
 new or changed holidays and extend `HolidayRules`.
+
+Opt-out for Mariä Himmelfahrt in Bayern (Nick, 2026-10-25): the holiday is counted for all of
+Bayern by default, but some communities do not have it, so there is a setting to switch it off.
+It sits in the M3 settings next to the regional opt-ins. `:core` needs a way to switch the Bayern
+default off (an opt-out next to `extras` in `PublicHolidays.of`; design it with its own test
+before the M3 screen needs it). Marked days, the vacation balance and Brückentage must read the
+holidays through the same setting.
 
 Known snags:
 
