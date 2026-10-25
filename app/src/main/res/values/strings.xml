@@ -171,6 +171,25 @@
     <string name="day_planned">Urlaub geplant</string>
     <string name="day_planned_half">Halber Urlaubstag geplant</string>
     <string name="day_today">heute</string>
+    <string name="bridges_title">Brückentage</string>
+    <string name="bridge_anchor">%1$s, %2$s</string>
+    <string name="bridge_before">davor: %1$s nehmen, %2$s</string>
+    <string name="bridge_after">danach: %1$s nehmen, %2$s</string>
+    <string name="list_and">%1$s und %2$s</string>
+    <plurals name="bridge_days_off">
+        <item quantity="one">%1$d Tag frei</item>
+        <item quantity="other">%1$d Tage frei</item>
+    </plurals>
+    <string name="bridge_sheet_title">Brückentage eintragen</string>
+    <plurals name="bridge_stretch">
+        <item quantity="one">%1$d Tag frei am Stück, %2$s</item>
+        <item quantity="other">%1$d Tage frei am Stück, %2$s</item>
+    </plurals>
+    <string name="bridge_christmas_eve">Heiligabend</string>
+    <string name="bridge_new_years_eve">Silvester</string>
+    <string name="bridge_day_off">Freier Tag</string>
+    <string name="day_bridge">möglicher Brückentag</string>
+    <string name="legend_bridge">Brückentag</string>
 
     <!-- Tagesblatt -->
     <string name="mark_full">Ganzer Tag</string>

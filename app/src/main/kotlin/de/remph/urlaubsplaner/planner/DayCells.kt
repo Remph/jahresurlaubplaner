@@ -22,12 +22,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.remph.urlaubsplaner.R
@@ -47,6 +54,8 @@ class DayLook(
     val taken: Boolean,
     val today: Boolean,
     val workDay: Boolean,
+    /** A day to take for a possible Brückentag that is not marked yet. */
+    val bridge: Boolean = false,
 )
 
 /** [mark] counts only when it costs something, so a mark left on a Sunday shows nothing. */
@@ -59,6 +68,7 @@ fun YearView.look(date: LocalDate): DayLook {
         taken = mark != null && !date.isAfter(today),
         today = date == today,
         workDay = settings.schedule.workingValue(date) > VacationDays.ZERO,
+        bridge = mark == null && date in bridgeDays,
     )
 }
 
@@ -155,10 +165,10 @@ private fun DayCell(
                     .clip(shape)
                     .background(fill)
                     .then(
-                        if (planned) {
-                            Modifier.border(BorderStroke(2.dp, colors.planned), shape)
-                        } else {
-                            Modifier
+                        when {
+                            planned -> Modifier.border(BorderStroke(2.dp, colors.planned), shape)
+                            look.bridge -> Modifier.dashedBorder(colors.planned, shape)
+                            else -> Modifier
                         },
                     ),
             contentAlignment = Alignment.Center,
@@ -223,6 +233,7 @@ fun dayDescription(
         look.taken -> parts += stringResource(R.string.day_taken)
         else -> parts += stringResource(R.string.day_planned)
     }
+    if (look.bridge) parts += stringResource(R.string.day_bridge)
     if (look.today) parts += stringResource(R.string.day_today)
     return parts.joinToString(", ")
 }
@@ -230,7 +241,10 @@ fun dayDescription(
 /** The colour key under the calendar, in the same shapes as the days. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun Legend(modifier: Modifier = Modifier) {
+fun Legend(
+    modifier: Modifier = Modifier,
+    showBridge: Boolean = false,
+) {
     val colors = dayColors()
     val shape = RoundedCornerShape(5.dp)
     FlowRow(
@@ -244,8 +258,34 @@ fun Legend(modifier: Modifier = Modifier) {
         LegendItem(R.string.legend_planned) {
             Modifier.border(BorderStroke(2.dp, colors.planned), shape)
         }
+        if (showBridge) {
+            LegendItem(R.string.legend_bridge) {
+                Modifier.dashedBorder(colors.planned, shape, dash = 4.dp, gap = 3.dp)
+            }
+        }
     }
 }
+
+/** A dashed outline in the shape of a tile: a day that could be marked, but is not yet. */
+fun Modifier.dashedBorder(
+    color: Color,
+    shape: Shape,
+    dash: Dp = 6.dp,
+    gap: Dp = 4.dp,
+    width: Dp = 2.dp,
+): Modifier =
+    drawWithContent {
+        drawContent()
+        val stroke =
+            Stroke(
+                width = width.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash.toPx(), gap.toPx())),
+            )
+        // The line is centred on the edge, so it is drawn half its width inside.
+        inset(width.toPx() / 2) {
+            drawOutline(shape.createOutline(size, layoutDirection, this), color, style = stroke)
+        }
+    }
 
 /**
  * Says so when the school holiday file does not reach all of [from] to [to]: no colour then means

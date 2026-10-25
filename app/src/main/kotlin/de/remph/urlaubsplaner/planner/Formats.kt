@@ -35,3 +35,15 @@ fun LocalDate.fullText(locale: Locale): String =
 fun SchoolHoliday.nameIn(locale: Locale): String = if (locale.language == "de") nameDe else nameEn
 
 fun VacationDays.text(locale: Locale): String = AmountText.format(this, locale)
+
+/** "Mi 03.10." in German, "Wed, Oct 3" in English: short enough for a line, with the weekday. */
+fun LocalDate.weekdayDateText(locale: Locale): String =
+    if (locale.language == "de") {
+        "${weekdayText(locale)} ${DateTimeFormatter.ofPattern("dd.MM.", locale).format(this)}"
+    } else {
+        "${weekdayText(locale)}, ${DateTimeFormatter.ofPattern("MMM d", locale).format(this)}"
+    }
+
+/** "Mi" or "Wed": the short weekday without the German full stop. */
+fun LocalDate.weekdayText(locale: Locale): String =
+    dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, locale).trimEnd('.')

@@ -5,6 +5,7 @@ import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.VacationCalculator
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.YearEntitlement
+import de.remph.urlaubsplaner.core.bridge.BridgeFinder
 import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.holidays.Holiday
 import de.remph.urlaubsplaner.core.settings.UserSettings
@@ -47,7 +48,79 @@ class YearViewTest {
                 VacationCalculator(fixture.clock, settings.schedule, it)
             },
         schoolData = fixture.schoolHolidays,
+        bridgeFinder =
+            settings.publicHolidayCheck()?.let {
+                BridgeFinder(fixture.clock, settings.schedule, it)
+            },
     )
+
+    @Test
+    fun `NRW 2027 has the Fridays after Himmelfahrt and Fronleichnam as bridges`() {
+        val view = view()
+
+        assertEquals(
+            listOf(fixture.date("2027-05-07"), fixture.date("2027-05-28")),
+            view.upcomingBridges.map { it.leave.single() },
+        )
+        assertEquals(setOf("2027-05-07", "2027-05-28").map(fixture::date).toSet(), view.bridgeDays)
+        val groups = view.bridgeGroups
+        assertEquals(
+            listOf(fixture.date("2027-05-06"), fixture.date("2027-05-27")),
+            groups.map { it.anchor },
+        )
+        assertEquals(Holiday.CHRISTI_HIMMELFAHRT, view.holidayOn(groups.first().anchor))
+        assertNull(groups.first().before)
+        assertTrue(view.look(fixture.date("2027-05-07")).bridge)
+        assertFalse(view.look(fixture.date("2027-05-10")).bridge)
+    }
+
+    @Test
+    fun `a bridge day that is marked is no longer offered`() {
+        val friday = fixture.date("2027-05-07")
+
+        val view = view(marks = mapOf(friday to DayMark.FULL))
+
+        assertEquals(listOf(fixture.date("2027-05-28")), view.bridgeDays.toList())
+        assertFalse(view.look(friday).bridge)
+    }
+
+    @Test
+    fun `a Wednesday holiday gives one group with a bridge before and after`() {
+        val view = view(settings = UserSettings(land = Bundesland.SACHSEN))
+
+        // 17 Nov 2027 is Buß- und Bettag, a Wednesday in Sachsen.
+        val group = view.bridgeGroups.single { it.anchor == fixture.date("2027-11-17") }
+        assertEquals(Holiday.BUSS_UND_BETTAG, view.holidayOn(group.anchor))
+        assertEquals(
+            listOf(fixture.date("2027-11-15"), fixture.date("2027-11-16")),
+            group.before?.leave,
+        )
+        assertEquals(
+            listOf(fixture.date("2027-11-18"), fixture.date("2027-11-19")),
+            group.after?.leave,
+        )
+    }
+
+    @Test
+    fun `without a Land and in the first supported year there are no bridges`() {
+        assertTrue(view(settings = UserSettings()).upcomingBridges.isEmpty())
+
+        // The finder reads the day before the year, which the holiday rules cannot answer for 2019.
+        val s = settings
+        val first =
+            YearView(
+                year = 2019,
+                today = fixture.date("2019-01-01"),
+                settings = s,
+                entitlement = null,
+                marks = emptyMap(),
+                calculator = null,
+                schoolData = fixture.schoolHolidays,
+                bridgeFinder = BridgeFinder(fixture.clock, s.schedule, s.publicHolidayCheck()!!),
+            )
+        assertTrue(first.upcomingBridges.isEmpty())
+        assertTrue(first.bridgeGroups.isEmpty())
+    }
 
     @Test
     fun `the year knows its public holidays by date`() {

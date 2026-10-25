@@ -71,7 +71,7 @@ fun CalendarScreen(
         if (shown.year == month.year) {
             if (mode == CalendarMode.MONTH) {
                 MonthGrid(shown, month) { sheetDate = it }
-                Legend()
+                Legend(showBridge = shown.bridgeDays.any { YearMonth.from(it) == month })
                 MonthNotes(shown, month, locale)
             } else {
                 YearGrid(
