@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Urlaubsplaner</string>
 
-    <string name="settings_title">Settings</string>
+    <string name="nav_settings">Settings</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
 
@@ -10,7 +10,6 @@
     <string name="section_land">State</string>
     <string name="land_first_start">Which German state applies to you? Public holidays depend on it.</string>
     <string name="land_choose">Choose state</string>
-    <string name="land_button_description">State: %1$s. Tap to change.</string>
     <string name="land_baden_wuerttemberg">Baden-Württemberg</string>
     <string name="land_bayern">Bavaria</string>
     <string name="land_berlin">Berlin</string>
@@ -65,7 +64,7 @@
 
     <!-- Language -->
     <string name="section_language">Language</string>
-    <string name="language_system">Same as the phone</string>
+    <string name="language_system">System language</string>
     <string name="language_german">Deutsch</string>
     <string name="language_english">English</string>
 
@@ -96,4 +95,36 @@
     <string name="notice_not_a_backup">This is not an Urlaubsplaner backup. Nothing was changed.</string>
     <string name="notice_newer_version">This backup was made by a newer version of the app (format %1$d, this app reads up to format %2$d). Please update the app. Nothing was changed.</string>
     <string name="notice_damaged">The backup is damaged and was not loaded. Nothing was changed.\n\nDetails: %1$s</string>
+
+    <!-- Navigation -->
+    <string name="nav_overview">Overview</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="back">Back</string>
+    <string name="overview_placeholder">The overview comes next.</string>
+    <string name="calendar_placeholder">The calendar comes next.</string>
+
+    <!-- Settings list -->
+    <string name="settings_vacation_title">Vacation %1$d</string>
+    <string name="vacation_not_entered">Not entered yet</string>
+    <string name="vacation_suggested">Suggestion from %1$d</string>
+    <string name="vacation_with_carry_over">%1$s, plus %2$s carried over until %3$s</string>
+    <string name="days_one">%1$s day</string>
+    <string name="days_other">%1$s days</string>
+    <string name="work_days_range">%1$s to %2$s</string>
+    <string name="regional_none">None</string>
+    <string name="regional_short_mariae">Assumption Day</string>
+    <string name="regional_short_augsburg">Peace Festival</string>
+    <string name="regional_short_fronleichnam">Corpus Christi</string>
+    <string name="backup_row_value">Save and restore</string>
+
+    <!-- Appearance -->
+    <string name="section_appearance">Appearance</string>
+    <string name="theme_system">Same as the system</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_oled">Pure black</string>
+    <string name="theme_oled_short">pure black</string>
+    <string name="theme_oled_support">A black background in dark mode. Saves power on OLED screens.</string>
+    <string name="system_colors">System colours</string>
+    <string name="system_colors_support">The colours come from the wallpaper (Android 12 and up). Off: the app\'s own colours.</string>
 </resources>

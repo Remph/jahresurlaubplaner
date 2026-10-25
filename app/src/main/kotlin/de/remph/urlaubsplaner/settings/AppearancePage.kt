@@ -1,0 +1,52 @@
+package de.remph.urlaubsplaner.settings
+
+import android.os.Build
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import de.remph.urlaubsplaner.R
+import de.remph.urlaubsplaner.appearance.AppearanceStore
+import de.remph.urlaubsplaner.appearance.ThemeMode
+
+/**
+ * Light, dark or the system's choice, pure black for the dark theme, and the colours from the
+ * wallpaper (Android 12 and up only, so the row is not there on Android 11).
+ */
+@Composable
+fun AppearancePage(
+    store: AppearanceStore,
+    outerPadding: PaddingValues,
+    onBack: () -> Unit,
+) {
+    val appearance by store.state.collectAsStateWithLifecycle()
+    SettingsPageFrame(stringResource(R.string.section_appearance), outerPadding, onBack) {
+        for (
+        (mode, label) in
+        listOf(
+            ThemeMode.SYSTEM to R.string.theme_system,
+            ThemeMode.LIGHT to R.string.theme_light,
+            ThemeMode.DARK to R.string.theme_dark,
+        )
+        ) {
+            ChoiceRow(stringResource(label), appearance.mode == mode) {
+                store.update { it.copy(mode = mode) }
+            }
+        }
+        SwitchRow(
+            label = stringResource(R.string.theme_oled),
+            support = stringResource(R.string.theme_oled_support),
+            checked = appearance.oled,
+            onChange = { on -> store.update { it.copy(oled = on) } },
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            SwitchRow(
+                label = stringResource(R.string.system_colors),
+                support = stringResource(R.string.system_colors_support),
+                checked = appearance.systemColors,
+                onChange = { on -> store.update { it.copy(systemColors = on) } },
+            )
+        }
+    }
+}

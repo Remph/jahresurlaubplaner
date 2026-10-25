@@ -218,6 +218,29 @@ Brückentage in both.
 - Not built: home status, year and month view, marking days, Brückentage, school holidays on a
   screen (the next PRs); an about screen with credits (M5).
 
+Navigation and appearance (M3, second piece, "PR A"): Nick's changes after trying the settings
+page, 2026-10-25. M3 is now PR 1 (merged as #13), PR A (this), PR B (Übersicht, Kalender, marking)
+and PR C (Brückentage).
+
+- `ui/AppRoot`: bottom navigation with three tabs, Übersicht, Kalender, Einstellungen (the two
+  first are placeholders until PR B), and the one snackbar host. The app starts on Einstellungen.
+- Settings are a short list (`SettingsListScreen`): one row per topic with what is set now as a
+  second line. Bundesland and language answer in a small dialog; Urlaub of the year, Arbeitstage,
+  Regionale Feiertage (only for a Land that has some), Darstellung and Datensicherung open a page
+  of their own (`SettingsHost`; system back goes page to list). Same fields and the same
+  `SettingsViewModel` as before, only split up; this also fixed the missing space between the
+  weekday chips. "Wie das Telefon" is now "Systemsprache" / "System language".
+- Darstellung (`appearance/`): Wie das System / Hell / Dunkel, a switch for pure black (OLED, only
+  has an effect in the dark theme) and a switch for system colours (Material You, Android 12 and
+  up, on by default; off or on Android 11 the app's own teal and gold colours). Kept in
+  SharedPreferences (`AppearanceStore`), not in the database and not in the backup file, like the
+  language. The light/dark choice goes through `AppCompatDelegate.setDefaultNightMode`, re-applied
+  in `UrlaubsplanerApp.onCreate` because AppCompat does not remember it.
+- Library: `material-icons-core` (back arrow and the tab icons; not the big extended set).
+- Tests: the settings screen tests now walk list and pages; `AppRootTest`, `AppearanceStoreTest`,
+  `ThemeTest` (colour choice, pure black), `SummariesTest`. Screenshots of the real screens in
+  light, dark and pure black are in `/mnt/project-files/design/pr-a/` (not in the repo).
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
@@ -230,6 +253,6 @@ Known snags:
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
 - [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (PR #12, merged 2026-10-25)
-- [ ] M3 Screens: settings page and backup screen (this PR, in review); home status, year/month view, marking; Brückentage
+- [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR A, in review); home status, year/month view, marking (PR B); Brückentage (PR C)
 - [ ] M4 Export and widget
 - [ ] M5 Release prep

@@ -1,10 +1,13 @@
 package de.remph.urlaubsplaner.settings
 
 import android.content.Context
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -16,6 +19,8 @@ import androidx.compose.ui.test.performTextInput
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import de.remph.urlaubsplaner.appearance.AppearanceStore
+import de.remph.urlaubsplaner.appearance.ThemeMode
 import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.settings.UserSettings
 import de.remph.urlaubsplaner.data.BackupFileStore
@@ -27,6 +32,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -37,7 +44,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 
 /**
- * Composes the real page on the JVM (Robolectric) and looks at what it shows. It does not replace
+ * Composes the real settings list and pages on the JVM (Robolectric) and looks at what it shows. It does not replace
  * trying the app on a phone: pickers, the keyboard and TalkBack are not covered.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -49,6 +56,7 @@ class SettingsScreenTest {
     private lateinit var database: UrlaubsplanerDatabase
     private lateinit var repository: UserDataRepository
     private lateinit var viewModel: SettingsViewModel
+    private lateinit var appearance: AppearanceStore
 
     @Before
     fun open() {
@@ -58,13 +66,18 @@ class SettingsScreenTest {
         repository = UserDataRepository(database)
         val clock = Clock.fixed(Instant.parse("2027-01-15T10:00:00Z"), ZoneOffset.UTC)
         viewModel = SettingsViewModel(repository, BackupFileStore(context.contentResolver), clock)
+        val preferences = context.getSharedPreferences("appearance-test", Context.MODE_PRIVATE)
+        preferences.edit().clear().commit()
+        appearance = AppearanceStore(preferences)
     }
 
     @After
     fun close() = database.close()
 
     private fun show(title: String) {
-        compose.setContent { SettingsRoute(viewModel) }
+        compose.setContent {
+            SettingsHost(viewModel, appearance, SnackbarHostState(), PaddingValues())
+        }
         waitForText(title)
     }
 
@@ -84,22 +97,23 @@ class SettingsScreenTest {
         waitForText(shownAs)
     }
 
+    private fun openRow(title: String) {
+        compose.onNodeWithText(title).performScrollTo().performClick()
+    }
+
     @Test
     @Config(qualifiers = "de")
-    fun `a fresh start in German asks for the Land and shows nothing else about vacation`() {
+    fun `a fresh start in German asks for the Land and shows only what is needed to start`() {
         show("Einstellungen")
 
-        compose.onNodeWithText("Einstellungen").assertIsDisplayed()
         compose
-            .onNodeWithText(
-                "Welches Bundesland gilt für dich?",
-                substring = true,
-            ).assertIsDisplayed()
+            .onNodeWithText("Welches Bundesland gilt für dich?", substring = true)
+            .assertIsDisplayed()
         compose.onNodeWithText("Bundesland wählen").assertIsDisplayed()
-        compose.onNodeWithText("Urlaubstage im Jahr").assertDoesNotExist()
-        // Restoring a backup is possible from the start, saving one is pointless with no data.
-        compose.onNodeWithText("Sicherung wiederherstellen").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Sicherung speichern").assertDoesNotExist()
+        compose.onNodeWithText("Sprache").assertIsDisplayed()
+        compose.onNodeWithText("Datensicherung").assertIsDisplayed()
+        compose.onNodeWithText("Urlaub 2027").assertDoesNotExist()
+        compose.onNodeWithText("Darstellung").assertDoesNotExist()
     }
 
     @Test
@@ -107,14 +121,22 @@ class SettingsScreenTest {
     fun `a fresh start in English has the English texts`() {
         show("Settings")
 
-        compose.onNodeWithText("Settings").assertIsDisplayed()
         compose.onNodeWithText("Choose state").assertIsDisplayed()
-        compose.onNodeWithText("Restore backup").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Language").assertIsDisplayed()
+        compose.onNodeWithText("Backup").assertIsDisplayed()
     }
 
     @Test
     @Config(qualifiers = "de")
-    fun `tapping the button opens the list of all 16 Länder`() {
+    fun `the language row says Systemsprache when the phone decides`() {
+        show("Einstellungen")
+
+        compose.onNodeWithText("Systemsprache").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `tapping the Bundesland row opens the list of all 16 Länder`() {
         show("Einstellungen")
 
         compose.onNodeWithText("Bundesland wählen").performClick()
@@ -125,35 +147,49 @@ class SettingsScreenTest {
 
     @Test
     @Config(qualifiers = "de")
-    fun `with a Land the vacation, working days and language sections appear`() {
+    fun `with a Land the list shows each topic with what is set`() {
         show("Einstellungen")
         chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
 
-        compose.onNodeWithText("Nordrhein-Westfalen").assertIsDisplayed()
-        compose.onNodeWithText("Urlaubstage im Jahr").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Resturlaub").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Heiligabend (24.12.)").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Deutsch").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Sicherung speichern").performScrollTo().assertIsDisplayed()
-        // The year stepper has descriptions for TalkBack.
-        compose.onNodeWithContentDescription("Vorheriges Jahr").assertExists()
-        compose.onNodeWithContentDescription("Nächstes Jahr").assertExists()
-        // The Bayern-only holiday does not show for another Land.
-        compose.onNodeWithText("Mariä Himmelfahrt", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Urlaub 2027").assertIsDisplayed()
+        compose.onNodeWithText("Noch nicht eingetragen").assertIsDisplayed()
+        compose.onNodeWithText("Arbeitstage").assertIsDisplayed()
+        compose.onNodeWithText("Mo bis Fr").assertIsDisplayed()
+        compose.onNodeWithText("Darstellung").assertIsDisplayed()
+        compose.onNodeWithText("Wie das System").assertIsDisplayed()
+        // NRW has no regional holiday to decide, so the row is not offered.
+        compose.onNodeWithText("Regionale Feiertage").assertDoesNotExist()
     }
 
     @Test
     @Config(qualifiers = "de")
-    fun `the Bayern holiday switch only shows for Bayern`() {
+    fun `the Bayern row shows its holiday and the page has the switch`() {
         show("Einstellungen")
         chooseLand(Bundesland.BAYERN, "Bayern")
 
+        compose.onNodeWithText("Regionale Feiertage").assertIsDisplayed()
+        compose.onNodeWithText("Mariä Himmelfahrt").assertIsDisplayed()
+
+        openRow("Regionale Feiertage")
+
         compose
-            .onNodeWithText(
-                "Mariä Himmelfahrt",
-                substring = true,
-            ).performScrollTo()
+            .onNodeWithText("Mariä Himmelfahrt (15. August) ist bei mir frei")
             .assertIsDisplayed()
+            .assertIsOn()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the back arrow on a page returns to the list`() {
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Arbeitstage")
+        compose.onNodeWithText("Heiligabend (24.12.)").assertIsDisplayed()
+
+        compose.onNodeWithContentDescription("Zurück").performClick()
+
+        compose.onNodeWithText("Heiligabend (24.12.)").assertDoesNotExist()
+        compose.onNodeWithText("Mo bis Fr").assertIsDisplayed()
     }
 
     @Test
@@ -161,7 +197,11 @@ class SettingsScreenTest {
     fun `typing days enables Speichern and a wrong amount shows the error`() {
         show("Einstellungen")
         chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
         compose.onNodeWithText("Speichern").performScrollTo().assertIsNotEnabled()
+        // The year stepper has descriptions for TalkBack.
+        compose.onNodeWithContentDescription("Vorheriges Jahr").assertExists()
+        compose.onNodeWithContentDescription("Nächstes Jahr").assertExists()
 
         compose.onNodeWithText("Urlaubstage im Jahr").performScrollTo().performTextInput("12,3")
         compose.onNodeWithText("Bitte ganze oder halbe Tage", substring = true).assertIsDisplayed()
@@ -177,6 +217,7 @@ class SettingsScreenTest {
     fun `the carry-over option shows in German and is off by default`() {
         show("Einstellungen")
         chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
 
         compose
             .onNodeWithText("Übrige Tage als Resturlaub vorschlagen")
@@ -190,11 +231,37 @@ class SettingsScreenTest {
     fun `the carry-over option shows in English and is off by default`() {
         show("Settings")
         chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "North Rhine-Westphalia")
+        openRow("Vacation 2027")
 
         compose
             .onNodeWithText("Suggest unused days as carried-over days")
             .performScrollTo()
             .assertIsDisplayed()
             .assertIsOff()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the backup page offers restoring from the start and saving once there is data`() {
+        show("Einstellungen")
+        openRow("Datensicherung")
+
+        compose.onNodeWithText("Sicherung wiederherstellen").assertIsDisplayed()
+        compose.onNodeWithText("Sicherung speichern").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `choosing dark and pure black on the appearance page is stored`() {
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Darstellung")
+
+        compose.onNodeWithText("Dunkel").performClick()
+        compose.onNodeWithText("Reines Schwarz").performScrollTo().performClick()
+
+        assertEquals(ThemeMode.DARK, appearance.state.value.mode)
+        assertTrue(appearance.state.value.oled)
+        compose.onNodeWithText("Reines Schwarz").assertIsOn()
     }
 }

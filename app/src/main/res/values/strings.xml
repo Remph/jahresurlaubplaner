@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Urlaubsplaner</string>
 
-    <string name="settings_title">Einstellungen</string>
+    <string name="nav_settings">Einstellungen</string>
     <string name="ok">OK</string>
     <string name="cancel">Abbrechen</string>
 
@@ -10,7 +10,6 @@
     <string name="section_land">Bundesland</string>
     <string name="land_first_start">Welches Bundesland gilt für dich? Danach richten sich die Feiertage.</string>
     <string name="land_choose">Bundesland wählen</string>
-    <string name="land_button_description">Bundesland: %1$s. Tippen zum Ändern.</string>
     <string name="land_baden_wuerttemberg">Baden-Württemberg</string>
     <string name="land_bayern">Bayern</string>
     <string name="land_berlin">Berlin</string>
@@ -65,7 +64,7 @@
 
     <!-- Sprache -->
     <string name="section_language">Sprache</string>
-    <string name="language_system">Wie das Telefon</string>
+    <string name="language_system">Systemsprache</string>
     <string name="language_german">Deutsch</string>
     <string name="language_english">English</string>
 
@@ -96,4 +95,36 @@
     <string name="notice_not_a_backup">Das ist keine Sicherung des Urlaubsplaners. Es wurde nichts geändert.</string>
     <string name="notice_newer_version">Diese Sicherung stammt aus einer neueren Version der App (Format %1$d, diese App liest bis Format %2$d). Bitte die App aktualisieren. Es wurde nichts geändert.</string>
     <string name="notice_damaged">Die Sicherung ist beschädigt und wurde nicht geladen. Es wurde nichts geändert.\n\nGenauer (auf Englisch): %1$s</string>
+
+    <!-- Navigation -->
+    <string name="nav_overview">Übersicht</string>
+    <string name="nav_calendar">Kalender</string>
+    <string name="back">Zurück</string>
+    <string name="overview_placeholder">Die Übersicht kommt als Nächstes.</string>
+    <string name="calendar_placeholder">Der Kalender kommt als Nächstes.</string>
+
+    <!-- Einstellungsliste -->
+    <string name="settings_vacation_title">Urlaub %1$d</string>
+    <string name="vacation_not_entered">Noch nicht eingetragen</string>
+    <string name="vacation_suggested">Vorschlag aus %1$d</string>
+    <string name="vacation_with_carry_over">%1$s, dazu %2$s Resturlaub bis %3$s</string>
+    <string name="days_one">%1$s Tag</string>
+    <string name="days_other">%1$s Tage</string>
+    <string name="work_days_range">%1$s bis %2$s</string>
+    <string name="regional_none">Keine</string>
+    <string name="regional_short_mariae">Mariä Himmelfahrt</string>
+    <string name="regional_short_augsburg">Friedensfest</string>
+    <string name="regional_short_fronleichnam">Fronleichnam</string>
+    <string name="backup_row_value">Speichern und wiederherstellen</string>
+
+    <!-- Darstellung -->
+    <string name="section_appearance">Darstellung</string>
+    <string name="theme_system">Wie das System</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_oled">Reines Schwarz</string>
+    <string name="theme_oled_short">reines Schwarz</string>
+    <string name="theme_oled_support">Im dunklen Modus ein schwarzer Hintergrund. Das spart Strom bei OLED-Bildschirmen.</string>
+    <string name="system_colors">Farben vom System</string>
+    <string name="system_colors_support">Die Farben kommen vom Hintergrundbild (ab Android 12). Aus: die Farben der App.</string>
 </resources>
