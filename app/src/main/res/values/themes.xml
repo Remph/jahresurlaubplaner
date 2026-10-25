@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Urlaubsplaner" parent="android:Theme.DeviceDefault.DayNight" />
+</resources>
