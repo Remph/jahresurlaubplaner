@@ -81,6 +81,22 @@ Vacation balance (M1, second piece): `VacationCalculator(clock, schedule, isPubl
 - Not built: pro-rata entitlement in the first year, and the rule that Resturlaub only lapses when
   the employer has told the employee about it.
 
+Brückentage (M1, third piece): `BridgeFinder(clock, schedule, isPublicHoliday)` in `core.bridge`.
+Decided with Nick on 2026-10-25:
+
+- A bridge is a whole gap of days that cost vacation between two free stretches (weekend, holiday,
+  day off in the schedule, marked day) that costs at most 2 days by default (`maxCost`, half days
+  counted). The joined stretch must hold a public holiday or special day off on a weekday the user
+  works, so plain weekends and holidays on never-worked days give no bridge. Works with a 4-day week.
+- Days already marked count as free time and cost nothing more; a half marked day still leaves
+  half a day to take.
+- `find(year, marks, maxCost)` lists the year's bridges by date (a bridge belongs to the year of its
+  first day to take, the stretch may cross New Year); `best(year, 3, ...)` returns the three with
+  the most days off per vacation day from tomorrow on.
+- Use years after 2019 with `PublicHolidays`: a stretch at the start of January looks at the
+  last days of the year before, which that class does not know for 2018.
+- Not built: combining several gaps, ICS, screens.
+
 Opt-out for Mariä Himmelfahrt in Bayern (Nick, 2026-10-25): the holiday is counted for all of
 Bayern by default, but some communities do not have it, so there is a setting to switch it off.
 It sits in the M3 settings next to the regional opt-ins. `:core` needs a way to switch the Bayern
@@ -98,7 +114,7 @@ Known snags:
 ## Status
 
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
-- [ ] M1 Rules in `:core`: public holidays done (PR #5), vacation balance done (second piece); Brückentage open
+- [ ] M1 Rules in `:core`: public holidays done (PR #5), vacation balance done (PR #7), Brückentage built (third piece, in review)
 - [ ] M2 Data and storage
 - [ ] M3 Screens
 - [ ] M4 Export and widget
