@@ -114,7 +114,7 @@ class SchoolHolidayDataTest {
     @Test
     fun `comments, blank lines, Windows line ends and a byte order mark are fine`() {
         val text =
-            "# c\r\nformat: 1\r\nversion: 2026-10-25\r\ncovers: 2026-01-01..2026-12-31\r\n\r\n" +
+            "﻿# c\r\nformat: 1\r\nversion: 2026-10-25\r\ncovers: 2026-01-01..2026-12-31\r\n\r\n" +
                 "BY;2026-08-03;2026-09-14;Sommerferien;Summer holidays\r\n"
         val data = SchoolHolidayData.parse(text)
         assertEquals(1, data.on(Bundesland.BAYERN, date("2026-08-03")).size)

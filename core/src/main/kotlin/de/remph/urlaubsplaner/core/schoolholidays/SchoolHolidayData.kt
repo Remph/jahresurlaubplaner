@@ -72,7 +72,8 @@ class SchoolHolidayData private constructor(
         fun parse(text: String): SchoolHolidayData {
             val meta = mutableMapOf<String, String>()
             val holidays = mutableListOf<SchoolHoliday>()
-            text.removePrefix("").lines().forEachIndexed { index, raw ->
+            // A Windows editor may save the file with a byte order mark; it would break line 1.
+            text.removePrefix("﻿").lines().forEachIndexed { index, raw ->
                 val line = raw.trim()
                 val number = index + 1
                 if (line.isEmpty() || line.startsWith("#")) return@forEachIndexed
