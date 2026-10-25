@@ -63,6 +63,24 @@ Friedensfest and Fronleichnam in parts of Sachsen/Thüringen are opt-in `Regiona
 one-offs (8 May 2020 and 2025, 17 June 2028) are in the table. Each year: check the Länder laws for
 new or changed holidays and extend `HolidayRules`.
 
+Vacation balance (M1, second piece): `VacationCalculator(clock, schedule, isPublicHoliday)` in
+`core.balance`. Decided with Nick on 2026-10-25:
+
+- Amounts are `VacationDays`, counted in half days. A marked day is a full or a half day
+  (`DayMark`); it costs vacation only on a working day that is not a public holiday. Working
+  weekdays are a setting (Monday to Friday by default).
+- Heiligabend and Silvester are full working days by default. `WorkSchedule.specialDays` can set
+  either (or any other date) to a half working day or a day off like a holiday. A half working day
+  caps the cost at half a day, even for a full mark.
+- Public holidays come in as a function `(LocalDate) -> Boolean`, so regional extras and the
+  Bayern opt-out reach the balance without changing it.
+- Resturlaub is typed in per year (the employer's figure), not computed. It is used first by days
+  up to and including the expiry date (31 March by default, configurable) and lost the day after.
+- Marked days up to and including today (from the `Clock`) are taken, later ones are planned.
+  Remaining days can go negative.
+- Not built: pro-rata entitlement in the first year, and the rule that Resturlaub only lapses when
+  the employer has told the employee about it.
+
 Opt-out for Mariä Himmelfahrt in Bayern (Nick, 2026-10-25): the holiday is counted for all of
 Bayern by default, but some communities do not have it, so there is a setting to switch it off.
 It sits in the M3 settings next to the regional opt-ins. `:core` needs a way to switch the Bayern
@@ -80,7 +98,7 @@ Known snags:
 ## Status
 
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
-- [ ] M1 Rules in `:core`: public holidays done (PR #5); balance and Brückentage open
+- [ ] M1 Rules in `:core`: public holidays done (PR #5), vacation balance done (second piece); Brückentage open
 - [ ] M2 Data and storage
 - [ ] M3 Screens
 - [ ] M4 Export and widget
