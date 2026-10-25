@@ -16,12 +16,22 @@ Local-first, no backend for the MVP. The repo is new and still empty: no code, n
   ICS export; backup export/import; home screen widget (next vacation day, remaining days).
 - Not MVP, only when Nick asks: categories and trips, AT/CH, multi-person overlap, cloud sync.
 
+## Decided (design decisions, 2026-10-25)
+- Stack: Kotlin, Jetpack Compose with Material 3, Room.
+- Licence of the app source: GPL-3.0.
+- Package name (application ID): `de.remph.urlaubsplaner`. Permanent, do not change it.
+- App name (label): Urlaubsplaner. Only a string resource, easy to change.
+- Holiday data: public holidays are computed by rules in `:core` (Easter rule plus Länder tables,
+  unit-tested). Only school holidays come from a bundled, versioned yearly data file, built from
+  an OpenHolidays export and cross-checked with KMK. Details and licence notes:
+  `docs/data-sources.md`.
+- Google Play: no developer account for now. Decide before a public release and re-check
+  Google's rules and fee on their own pages first.
+
 ## Open decisions (ask Nick, don't assume)
-Stack (proposed: Kotlin, Jetpack Compose with Material 3, Room), licence (proposed: GPL-3.0),
-app name and package name (hard to change later), holiday data source (candidates: OpenHolidays
-API, Nager.Date, feiertage-api.de; check the licence before redistributing), Google Play account.
-Move each one into this file when decided. Everything below that names Gradle, Kotlin, Compose
-or Room is the proposed stack and applies only once Nick confirms it.
+- Before the first school holiday data file is bundled: confirm the OpenHolidays data licence on
+  the official site (`docs/data-sources.md`) and add the credit to the app's about screen.
+- Before the first release: Google Play account (see above) and the F-Droid metadata.
 
 ## What to read
 - `README.md`: what the app does and how to build it (to be written with the first code).
@@ -29,7 +39,7 @@ or Room is the proposed stack and applies only once Nick confirms it.
 - Check facts that change over time (store rules, data sources, API terms, Google's developer
   verification) with search and write the date next to what you found.
 
-## Commands (proposed stack, not yet runnable)
+## Commands (stack decided, project not yet created)
 Run from the repo root (JDK 17 or newer; the Gradle wrapper is committed). Replace this section
 with commands that were actually run once the project exists:
 
@@ -94,7 +104,7 @@ why. A review runs them again. A docs-only PR says "no code, no checks".
   gets a unit test. Use an injected clock, never `now()` in logic. Dates are `java.time` types.
 - Holidays and school holidays come from the bundled, versioned data file, never from the
   network at runtime. Verify each year against official sources (KMK, Länder ministries).
-- Room (if chosen): schema changes need a migration and a migration test; schemas are exported
+- Room: schema changes need a migration and a migration test; schemas are exported
   and committed.
 - Comment the "why", not the "what".
 - Personal notes and real device or account details stay out of the repo if it is public.
