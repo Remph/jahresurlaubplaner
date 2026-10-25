@@ -47,25 +47,12 @@ private fun UrlaubsplanerTheme(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     val context = LocalContext.current
     // Dynamic colour needs Android 12 (API 31); minSdk is 30.
+    val dynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val colors =
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && dark -> {
-                dynamicDarkColorScheme(
-                    context,
-                )
-            }
-
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                dynamicLightColorScheme(context)
-            }
-
-            dark -> {
-                darkColorScheme()
-            }
-
-            else -> {
-                lightColorScheme()
-            }
+        if (dynamic) {
+            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        } else {
+            if (dark) darkColorScheme() else lightColorScheme()
         }
     MaterialTheme(colorScheme = colors, content = content)
 }

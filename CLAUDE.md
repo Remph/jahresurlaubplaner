@@ -44,12 +44,13 @@ yet); the plan and milestones are in `docs/plan.md`.
 
 ## Commands
 Run from the repo root (JDK 17 or newer; the Gradle wrapper is committed). All of these were run
-in the cloud container on 2026-10-25:
+in the cloud container on 2026-10-25, except the instrumented tests:
 
 - `./gradlew lint test assembleDebug spotlessCheck`: lint, unit tests, debug APK, format check.
   The standard check.
 - `./gradlew spotlessApply`: fix formatting (ktlint through Spotless).
-- `./gradlew test --tests '*SomeTest'`: one class while working.
+- `./gradlew :core:test --tests '*SomeTest'`: one class while working. Name the module: plain
+  `test --tests` fails in a module that has no matching test.
 - `./gradlew -PcoreOnly :core:test`: only the rules module, no Android SDK needed.
 - `./gradlew connectedDebugAndroidTest`: instrumented tests, need an emulator or device. Not
   possible in the cloud container: say "not run" in the PR and ask Nick to run it on his PC.
