@@ -3,8 +3,10 @@ package de.remph.urlaubsplaner.settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -139,16 +141,25 @@ private fun ExpiryYearChoice(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // As high as the text field next to it (56dp), which is also above the 48dp touch target.
-    SingleChoiceSegmentedButtonRow(modifier = modifier.height(56.dp)) {
+    // As high as the text field next to it (56dp, above the 48dp touch target). The field's box
+    // starts 8dp below its top because the label sticks out there, so the buttons start there too.
+    SingleChoiceSegmentedButtonRow(modifier = modifier.padding(top = 8.dp).height(56.dp)) {
         val count = YearEntitlement.MAX_EXPIRY_YEARS + 1
         for (offset in 0 until count) {
             val description = stringResource(R.string.expiry_in_year_description, year + offset)
             SegmentedButton(
                 selected = selected == offset,
                 onClick = { onSelect(offset) },
-                shape = SegmentedButtonDefaults.itemShape(index = offset, count = count),
-                modifier = Modifier.semantics { contentDescription = description },
+                shape =
+                    SegmentedButtonDefaults.itemShape(
+                        index = offset,
+                        count = count,
+                        baseShape = MaterialTheme.shapes.large,
+                    ),
+                modifier =
+                    Modifier
+                        .fillMaxHeight()
+                        .semantics { contentDescription = description },
             ) { Text((year + offset).toString()) }
         }
     }
