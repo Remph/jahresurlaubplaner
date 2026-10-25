@@ -1,5 +1,6 @@
 package de.remph.urlaubsplaner.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -21,6 +22,8 @@ data class SettingsEntity(
     val optOuts: String,
     /** Comma separated `day:halves` pairs like `--12-24:1`; a day not listed is a normal day. */
     val specialDays: String,
+    /** Added in version 2; rows from version 1 get 0 (off). */
+    @ColumnInfo(defaultValue = "0") val suggestCarryOver: Boolean = false,
 ) {
     companion object {
         const val SETTINGS_ID = 1

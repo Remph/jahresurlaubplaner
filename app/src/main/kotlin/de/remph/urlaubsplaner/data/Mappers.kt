@@ -42,6 +42,7 @@ internal fun UserSettings.toEntity() =
             schedule.specialDays.entries
                 .sortedBy { it.key }
                 .joinToString(",") { (day, value) -> "$day:${value.halves()}" },
+        suggestCarryOver = suggestCarryOver,
     )
 
 /** No row yet means the defaults: no Land chosen, Monday to Friday, nothing else. */
@@ -56,6 +57,7 @@ internal fun SettingsEntity?.toUserSettings(): UserSettings {
                 workingDays = enumSet<DayOfWeek>(workingDays),
                 specialDays = parseSpecialDays(specialDays),
             ),
+        suggestCarryOver = suggestCarryOver,
     )
 }
 
