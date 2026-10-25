@@ -1,9 +1,5 @@
 package de.remph.urlaubsplaner.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
@@ -21,13 +17,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.appearance.AppearanceStore
+import de.remph.urlaubsplaner.planner.CalendarMode
+import de.remph.urlaubsplaner.planner.CalendarScreen
+import de.remph.urlaubsplaner.planner.OverviewScreen
+import de.remph.urlaubsplaner.planner.PlannerViewModel
 import de.remph.urlaubsplaner.settings.SettingsHost
 import de.remph.urlaubsplaner.settings.SettingsViewModel
 
@@ -43,16 +42,18 @@ enum class Tab(
 
 /**
  * The frame of the app: the bottom navigation and the one place messages (snackbars) appear.
- * Until the first Land is chosen the app has nothing to show elsewhere, so it starts on the
- * settings and the other tabs are placeholders until the next pieces arrive.
+ * It starts on the overview; until a Land is chosen that points to the settings.
  */
 @Composable
 fun AppRoot(
     settingsViewModel: SettingsViewModel,
+    plannerViewModel: PlannerViewModel,
     appearanceStore: AppearanceStore,
 ) {
-    var tab by rememberSaveable { mutableStateOf(Tab.SETTINGS) }
+    var tab by rememberSaveable { mutableStateOf(Tab.OVERVIEW) }
     val snackbar = remember { SnackbarHostState() }
+    // A phone keeps the app in memory for days; the status must follow the date.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { plannerViewModel.refreshToday() }
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
@@ -70,19 +71,26 @@ fun AppRoot(
         },
     ) { padding ->
         when (tab) {
-            Tab.OVERVIEW -> Placeholder(R.string.overview_placeholder, padding)
-            Tab.CALENDAR -> Placeholder(R.string.calendar_placeholder, padding)
-            Tab.SETTINGS -> SettingsHost(settingsViewModel, appearanceStore, snackbar, padding)
-        }
-    }
-}
+            Tab.OVERVIEW -> {
+                OverviewScreen(
+                    plannerViewModel,
+                    padding,
+                    onOpenSettings = { tab = Tab.SETTINGS },
+                    onOpenMonth = {
+                        plannerViewModel.showMode(CalendarMode.MONTH)
+                        plannerViewModel.showMonth(it)
+                        tab = Tab.CALENDAR
+                    },
+                )
+            }
 
-@Composable
-private fun Placeholder(
-    text: Int,
-    padding: PaddingValues,
-) {
-    Box(Modifier.fillMaxSize().padding(padding).padding(16.dp), Alignment.Center) {
-        Text(stringResource(text))
+            Tab.CALENDAR -> {
+                CalendarScreen(plannerViewModel, padding, onOpenSettings = { tab = Tab.SETTINGS })
+            }
+
+            Tab.SETTINGS -> {
+                SettingsHost(settingsViewModel, appearanceStore, snackbar, padding)
+            }
+        }
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.remph.urlaubsplaner.appearance.UrlaubsplanerTheme
+import de.remph.urlaubsplaner.planner.PlannerViewModel
 import de.remph.urlaubsplaner.settings.SettingsViewModel
 import de.remph.urlaubsplaner.ui.AppRoot
 
@@ -24,6 +25,14 @@ class MainActivity : AppCompatActivity() {
                 AppRoot(
                     settingsViewModel =
                         viewModel { SettingsViewModel(app.repository, app.backupStore, app.clock) },
+                    plannerViewModel =
+                        viewModel {
+                            PlannerViewModel(
+                                app.repository,
+                                app.schoolHolidays,
+                                app.clock,
+                            )
+                        },
                     appearanceStore = app.appearanceStore,
                 )
             }

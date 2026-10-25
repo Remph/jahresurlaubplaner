@@ -2,6 +2,7 @@ package de.remph.urlaubsplaner.core.settings
 
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.holidays.Bundesland
+import de.remph.urlaubsplaner.core.holidays.Holiday
 import de.remph.urlaubsplaner.core.holidays.RegionalExtra
 import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -55,5 +56,50 @@ class UserSettingsTest {
         assertTrue(check(LocalDate.of(2026, 1, 1)))
         assertTrue(check(LocalDate.of(2027, 1, 1)))
         assertFalse(check(LocalDate.of(2027, 1, 2)))
+    }
+
+    @Test
+    fun `the next public holiday is the same day when today is one`() {
+        val settings = UserSettings(land = Bundesland.NORDRHEIN_WESTFALEN)
+
+        val next = settings.nextPublicHoliday(LocalDate.of(2026, 10, 3))
+
+        assertEquals(LocalDate.of(2026, 10, 3), next?.date)
+        assertEquals(Holiday.TAG_DER_DEUTSCHEN_EINHEIT, next?.holiday)
+    }
+
+    @Test
+    fun `the next public holiday after the last one of the year is in the next year`() {
+        val settings = UserSettings(land = Bundesland.BAYERN)
+
+        val next = settings.nextPublicHoliday(LocalDate.of(2026, 12, 27))
+
+        assertEquals(LocalDate.of(2027, 1, 1), next?.date)
+        assertEquals(Holiday.NEUJAHR, next?.holiday)
+    }
+
+    @Test
+    fun `the next public holiday follows the regional choices`() {
+        val withOptOut =
+            UserSettings(
+                land = Bundesland.BAYERN,
+                optOuts = setOf(RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN),
+            )
+        val without = UserSettings(land = Bundesland.BAYERN)
+
+        assertEquals(
+            Holiday.MARIAE_HIMMELFAHRT,
+            without.nextPublicHoliday(LocalDate.of(2026, 8, 10))?.holiday,
+        )
+        assertEquals(
+            Holiday.TAG_DER_DEUTSCHEN_EINHEIT,
+            withOptOut.nextPublicHoliday(LocalDate.of(2026, 8, 10))?.holiday,
+        )
+    }
+
+    @Test
+    fun `without a Land there are no public holidays`() {
+        assertEquals(emptyList<Any>(), UserSettings().publicHolidays(2026))
+        assertNull(UserSettings().nextPublicHoliday(LocalDate.of(2026, 1, 1)))
     }
 }

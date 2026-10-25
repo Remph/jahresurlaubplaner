@@ -21,6 +21,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.appearance.AppearanceStore
 import de.remph.urlaubsplaner.appearance.ThemeMode
+import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.core.balance.YearEntitlement
 import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.settings.UserSettings
 import de.remph.urlaubsplaner.data.BackupFileStore
@@ -263,5 +265,38 @@ class SettingsScreenTest {
         assertEquals(ThemeMode.DARK, appearance.state.value.mode)
         assertTrue(appearance.state.value.oled)
         compose.onNodeWithText("Reines Schwarz").assertIsOn()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a suggestion from the year that is still running says so`() {
+        runBlocking {
+            repository.saveSettings(UserSettings(land = Bundesland.NORDRHEIN_WESTFALEN))
+            repository.saveEntitlement(YearEntitlement(2027, VacationDays.of(30)))
+        }
+        show("Einstellungen")
+        waitForText("Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
+        compose.onNodeWithContentDescription("Nächstes Jahr").performClick()
+
+        waitForText("Vorschlag aus 2027", substring = true)
+        compose
+            .onNodeWithText("Das Jahr 2027 läuft noch", substring = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a suggestion from a finished year has no running-year hint`() {
+        runBlocking {
+            repository.saveSettings(UserSettings(land = Bundesland.NORDRHEIN_WESTFALEN))
+            repository.saveEntitlement(YearEntitlement(2026, VacationDays.of(30)))
+        }
+        show("Einstellungen")
+        waitForText("Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
+
+        waitForText("Vorschlag aus 2026", substring = true)
+        compose.onNodeWithText("läuft noch", substring = true).assertDoesNotExist()
     }
 }
