@@ -49,7 +49,8 @@ class SettingsViewModel(
     private val store: BackupFileStore,
     private val clock: Clock,
 ) : ViewModel() {
-    private val currentYear = LocalDate.now(clock).year
+    /** The year the page starts on, and the one the settings list shows. */
+    val currentYear = LocalDate.now(clock).year
     private val firstYear = PublicHolidays.FIRST_SUPPORTED_YEAR
     private val lastYear = currentYear + 1
 

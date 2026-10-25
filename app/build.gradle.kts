@@ -62,6 +62,8 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     // AppCompatActivity and AppCompatDelegate carry the in-app language (Android 11 and up).
     implementation(libs.androidx.appcompat)
+    // A few standard icons (back arrow, navigation bar); the core set only, not the big one.
+    implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.lifecycle.runtime.compose)
