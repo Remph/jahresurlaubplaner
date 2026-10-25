@@ -35,7 +35,8 @@ import java.time.format.DateTimeParseException
  *   "settings": { "land": "BY" or null, "regionalExtras": [...], "regionalOptOuts": [...],
  *                 "workingDays": ["MONDAY", ...], "specialDays": [{"day": "--12-24", "halfDays": 1}],
  *                 "suggestCarryOver": false },
- *   "entitlements": [{"year": 2026, "halfDays": 60, "carryOverHalfDays": 10, "carryOverExpiry": "--03-31"}],
+ *   "entitlements": [{"year": 2026, "halfDays": 60, "carryOverHalfDays": 10, "carryOverExpiry": "--03-31",
+ *                    "carryOverExpiryYears": 0}],
  *   "markedDays": [{"date": "2026-07-01", "mark": "full"}] }
  * ```
  *
@@ -90,6 +91,7 @@ object BackupFile {
                                 put("halfDays", entitlement.days.halfDays())
                                 put("carryOverHalfDays", entitlement.carryOver.halfDays())
                                 put("carryOverExpiry", entitlement.carryOverExpiry.toString())
+                                put("carryOverExpiryYears", entitlement.carryOverExpiryYears)
                             }
                         },
                     ),
@@ -256,6 +258,7 @@ object BackupFile {
                     days = entry.halfDays("halfDays", path),
                     carryOver = entry.halfDays("carryOverHalfDays", path),
                     carryOverExpiry = entry.monthDay("carryOverExpiry", path),
+                    carryOverExpiryYears = entry.expiryYears(path),
                 )
             }
         val years = entitlements.map { it.year }
@@ -370,6 +373,18 @@ object BackupFile {
         val halves = int(key, path)
         if (halves !in 0..MAX_HALF_DAYS) damaged("$path.$key must be between 0 and $MAX_HALF_DAYS")
         return VacationDays.ofHalves(halves)
+    }
+
+    /** 0 when the key is missing (files from before it existed); out of range is damaged. */
+    private fun JsonObject.expiryYears(path: String): Int {
+        if (this["carryOverExpiryYears"] == null) return 0
+        val years = int("carryOverExpiryYears", path)
+        if (years !in 0..YearEntitlement.MAX_EXPIRY_YEARS) {
+            damaged(
+                "$path.carryOverExpiryYears must be between 0 and ${YearEntitlement.MAX_EXPIRY_YEARS}",
+            )
+        }
+        return years
     }
 
     private fun JsonObject.date(

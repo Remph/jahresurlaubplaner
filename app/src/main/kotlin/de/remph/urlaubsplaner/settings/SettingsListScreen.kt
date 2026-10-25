@@ -145,7 +145,11 @@ private fun vacationSummary(
         R.string.vacation_with_carry_over,
         days,
         carry,
-        AmountText.formatDayMonth(base.expiry),
+        if (base.expiryYears == 0) {
+            AmountText.formatDayMonth(base.expiry)
+        } else {
+            AmountText.formatDate(base.expiry.atYear(ui.year + base.expiryYears))
+        },
     )
 }
 

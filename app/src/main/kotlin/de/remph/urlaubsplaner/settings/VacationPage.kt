@@ -3,10 +3,16 @@ package de.remph.urlaubsplaner.settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.AmountText
 import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.core.balance.YearEntitlement
 import java.time.MonthDay
 
 /** The vacation of one year: a year stepper, three fields, Speichern, and the carry-over option. */
@@ -100,16 +107,26 @@ fun VacationPage(
             error = stringResource(R.string.error_days),
             onChange = viewModel::editCarryOver,
         )
-        AmountField(
-            label = stringResource(R.string.field_carry_over_expiry),
-            value =
-                form.typedExpiry
-                    ?: AmountText.formatDayMonth(form.base?.expiry ?: MonthDay.of(3, 31)),
-            isError = form.expiryError,
-            error = stringResource(R.string.error_expiry),
-            placeholder = stringResource(R.string.field_expiry_format),
-            onChange = viewModel::editExpiry,
-        )
+        // Day and year share a line: the field is the shorter part, the year is a two-way choice.
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AmountField(
+                label = stringResource(R.string.field_carry_over_expiry),
+                value =
+                    form.typedExpiry
+                        ?: AmountText.formatDayMonth(form.base?.expiry ?: MonthDay.of(3, 31)),
+                isError = form.expiryError,
+                error = stringResource(R.string.error_expiry),
+                placeholder = stringResource(R.string.field_expiry_format),
+                onChange = viewModel::editExpiry,
+                modifier = Modifier.weight(0.45f),
+            )
+            ExpiryYearChoice(
+                year = ui.year,
+                selected = form.typedExpiryYears ?: form.base?.expiryYears ?: 0,
+                onSelect = viewModel::editExpiryYears,
+                modifier = Modifier.weight(0.55f),
+            )
+        }
         Button(
             onClick = viewModel::saveEntitlement,
             enabled = form.canSave,
@@ -121,5 +138,37 @@ fun VacationPage(
             checked = ui.settings.suggestCarryOver,
             onChange = viewModel::setSuggestCarryOver,
         )
+    }
+}
+
+/** In which year the Resturlaub expires: the entitlement's own, or the one after. */
+@Composable
+private fun ExpiryYearChoice(
+    year: Int,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // As high as the text field next to it (56dp, above the 48dp touch target). The field's box
+    // starts 8dp below its top because the label sticks out there, so the buttons start there too.
+    SingleChoiceSegmentedButtonRow(modifier = modifier.padding(top = 8.dp).height(56.dp)) {
+        val count = YearEntitlement.MAX_EXPIRY_YEARS + 1
+        for (offset in 0 until count) {
+            val description = stringResource(R.string.expiry_in_year_description, year + offset)
+            SegmentedButton(
+                selected = selected == offset,
+                onClick = { onSelect(offset) },
+                shape =
+                    SegmentedButtonDefaults.itemShape(
+                        index = offset,
+                        count = count,
+                        baseShape = MaterialTheme.shapes.large,
+                    ),
+                modifier =
+                    Modifier
+                        .fillMaxHeight()
+                        .semantics { contentDescription = description },
+            ) { Text((year + offset).toString()) }
+        }
     }
 }

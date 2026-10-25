@@ -89,6 +89,7 @@ internal fun YearEntitlement.toEntity() =
         halves = days.halves(),
         carryOverHalves = carryOver.halves(),
         carryOverExpiry = carryOverExpiry.toString(),
+        carryOverExpiryYears = carryOverExpiryYears,
     )
 
 internal fun YearEntitlementEntity.toYearEntitlement(): YearEntitlement? =
@@ -98,6 +99,7 @@ internal fun YearEntitlementEntity.toYearEntitlement(): YearEntitlement? =
             days = VacationDays.ofHalves(halves),
             carryOver = VacationDays.ofHalves(carryOverHalves),
             carryOverExpiry = MonthDay.parse(carryOverExpiry),
+            carryOverExpiryYears = carryOverExpiryYears,
         )
     }
 

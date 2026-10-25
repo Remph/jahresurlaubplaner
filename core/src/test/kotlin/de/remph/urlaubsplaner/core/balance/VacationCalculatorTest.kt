@@ -253,6 +253,52 @@ class VacationCalculatorTest {
     }
 
     @Test
+    fun `Resturlaub can expire in the year after the entitlement's`() {
+        val entitlement =
+            YearEntitlement(
+                2027,
+                VacationDays.of(30),
+                VacationDays.of(5),
+                MonthDay.of(3, 31),
+                carryOverExpiryYears = 1,
+            )
+        assertEquals(d(3, 31, 2028), entitlement.carryOverExpiryDate)
+
+        // Long after 31 March 2027 nothing is lost, and the Resturlaub is still open.
+        val autumn = calculator(today = d(10, 1, 2027)).balance(entitlement, full(d(9, 6, 2027)))
+        assertEquals(d(3, 31, 2028), autumn.carryOverExpiry)
+        assertEquals(VacationDays.ONE, autumn.carryOverUsed)
+        assertEquals(VacationDays.ZERO, autumn.carryOverLost)
+        assertEquals(VacationDays.of(4), autumn.carryOverOpen)
+        assertEquals(VacationDays.of(34), autumn.remaining)
+    }
+
+    @Test
+    fun `an expiry in the year after still lets the Resturlaub run out in that year`() {
+        val entitlement =
+            YearEntitlement(
+                2027,
+                VacationDays.of(30),
+                VacationDays.of(5),
+                MonthDay.of(3, 31),
+                carryOverExpiryYears = 1,
+            )
+        // The day after the expiry the unused rest is lost, though no marked day lies that far.
+        val after = calculator(today = d(4, 1, 2028)).balance(entitlement, emptyMap())
+        assertEquals(VacationDays.of(5), after.carryOverLost)
+        assertEquals(VacationDays.of(30), after.remaining)
+    }
+
+    @Test
+    fun `the expiry year offset is 0 or 1`() {
+        for (bad in listOf(-1, 2)) {
+            assertThrows(IllegalArgumentException::class.java) {
+                YearEntitlement(2026, VacationDays.of(30), carryOverExpiryYears = bad)
+            }
+        }
+    }
+
+    @Test
     fun `half days use the Resturlaub too`() {
         val marks = mapOf(d(3, 2) to DayMark.HALF, d(3, 3) to DayMark.FULL)
         val balance = calculator().balance(year2026(carryOver = 5), marks)

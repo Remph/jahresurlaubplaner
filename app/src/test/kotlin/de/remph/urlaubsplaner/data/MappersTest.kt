@@ -121,6 +121,18 @@ class MappersTest {
     }
 
     @Test
+    fun `an expiry in the year after survives a round trip and a wrong offset row is skipped`() {
+        val entitlement =
+            YearEntitlement(2027, VacationDays.of(30), VacationDays.of(4), carryOverExpiryYears = 1)
+
+        val row = entitlement.toEntity()
+        assertEquals(1, row.carryOverExpiryYears)
+        assertEquals(entitlement, row.toYearEntitlement())
+        assertNull(row.copy(carryOverExpiryYears = 2).toYearEntitlement())
+        assertNull(row.copy(carryOverExpiryYears = -1).toYearEntitlement())
+    }
+
+    @Test
     fun `a damaged entitlement row is skipped`() {
         val row = YearEntitlement(2026, VacationDays.of(30)).toEntity()
 

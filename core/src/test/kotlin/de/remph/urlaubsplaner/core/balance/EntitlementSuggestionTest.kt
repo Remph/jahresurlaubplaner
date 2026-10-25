@@ -55,6 +55,17 @@ class EntitlementSuggestionTest {
     }
 
     @Test
+    fun `the expiry year offset comes along from the year before`() {
+        val later = previous.copy(carryOverExpiryYears = 1)
+
+        val suggestion =
+            EntitlementSuggestion.forYear(2027, later, null, carryOverUnused = false)
+
+        assertEquals(1, suggestion?.carryOverExpiryYears)
+        assertEquals(java.time.LocalDate.of(2028, 6, 30), suggestion?.carryOverExpiryDate)
+    }
+
+    @Test
     fun `with the option on the unused days become the Resturlaub`() {
         val suggestion =
             EntitlementSuggestion.forYear(

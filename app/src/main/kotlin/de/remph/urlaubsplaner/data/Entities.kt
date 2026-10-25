@@ -36,6 +36,8 @@ data class YearEntitlementEntity(
     val halves: Int,
     val carryOverHalves: Int,
     val carryOverExpiry: String,
+    /** Added in version 3; rows from version 2 get 0 (the expiry is in the entitlement's year). */
+    @ColumnInfo(defaultValue = "0") val carryOverExpiryYears: Int = 0,
 )
 
 /** A day the user marked as vacation; [mark] is the name of a `DayMark`. */

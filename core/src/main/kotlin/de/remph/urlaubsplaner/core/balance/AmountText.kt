@@ -3,6 +3,7 @@ package de.remph.urlaubsplaner.core.balance
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.time.DateTimeException
+import java.time.LocalDate
 import java.time.MonthDay
 import java.util.Locale
 
@@ -34,6 +35,9 @@ object AmountText {
 
     /** "31.03." for the Verfall day; the same in both languages. */
     fun formatDayMonth(day: MonthDay): String = "%02d.%02d.".format(day.dayOfMonth, day.monthValue)
+
+    /** "31.03.2028" for a Verfall day in a later year, where the year is what matters. */
+    fun formatDate(date: LocalDate): String = formatDayMonth(MonthDay.from(date)) + date.year
 
     /** "31.3.", "31.03" and "31.03." all mean 31 March. Null if it is not a real day. */
     fun parseDayMonth(text: String): MonthDay? {

@@ -54,7 +54,13 @@ class BackupFileTest {
                         VacationDays.of(2.5),
                         MonthDay.of(4, 30),
                     ),
-                    YearEntitlement(2027, VacationDays.of(28)),
+                    YearEntitlement(
+                        2027,
+                        VacationDays.of(28),
+                        VacationDays.of(3),
+                        MonthDay.of(3, 31),
+                        carryOverExpiryYears = 1,
+                    ),
                 ),
             marks =
                 mapOf(
@@ -83,7 +89,8 @@ class BackupFileTest {
           },
           "entitlements": [
             {"year": 2026, "halfDays": 60, "carryOverHalfDays": 5, "carryOverExpiry": "--04-30"},
-            {"year": 2027, "halfDays": 56, "carryOverHalfDays": 0, "carryOverExpiry": "--03-31"}
+            {"year": 2027, "halfDays": 56, "carryOverHalfDays": 6, "carryOverExpiry": "--03-31",
+             "carryOverExpiryYears": 1}
           ],
           "markedDays": [
             {"date": "2026-07-01", "mark": "full"},
@@ -391,6 +398,26 @@ class BackupFileTest {
         refused<BackupException.Damaged>(
             withEdit("\"suggestCarryOver\": true", "\"suggestCarryOver\": null"),
         )
+    }
+
+    @Test
+    fun `a file without the expiry year reads as the entitlement's own year`() {
+        val data = BackupFile.decode(fixture)
+
+        assertEquals(0, data.entitlements.first { it.year == 2026 }.carryOverExpiryYears)
+        assertEquals(1, data.entitlements.first { it.year == 2027 }.carryOverExpiryYears)
+    }
+
+    @Test
+    fun `the expiry year is written and must be 0 or 1`() {
+        assertTrue(
+            BackupFile.encode(everything, exportedOn).contains("\"carryOverExpiryYears\": 1"),
+        )
+        for (bad in listOf("2", "-1", "\"1\"", "null", "1.5")) {
+            refused<BackupException.Damaged>(
+                withEdit("\"carryOverExpiryYears\": 1", "\"carryOverExpiryYears\": $bad"),
+            )
+        }
     }
 
     @Test

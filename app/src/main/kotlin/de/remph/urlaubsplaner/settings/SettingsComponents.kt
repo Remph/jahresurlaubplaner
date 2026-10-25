@@ -214,6 +214,7 @@ fun AmountField(
     error: String,
     onChange: (String) -> Unit,
     placeholder: String? = null,
+    modifier: Modifier = Modifier.fillMaxWidth(),
 ) {
     OutlinedTextField(
         value = value,
@@ -224,6 +225,8 @@ fun AmountField(
         supportingText = if (isError) ({ Text(error) }) else null,
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = Modifier.fillMaxWidth(),
+        // The theme's large corner (16dp), the same as the year buttons next to it and the rows.
+        shape = MaterialTheme.shapes.large,
+        modifier = modifier,
     )
 }

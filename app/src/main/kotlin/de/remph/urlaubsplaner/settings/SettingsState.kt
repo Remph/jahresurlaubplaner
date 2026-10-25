@@ -32,6 +32,7 @@ data class YearForm(
     val typedDays: String?,
     val typedCarryOver: String?,
     val typedExpiry: String?,
+    val typedExpiryYears: Int?,
     val daysError: Boolean,
     val carryOverError: Boolean,
     val expiryError: Boolean,
@@ -41,6 +42,8 @@ data class YearForm(
         val days: VacationDays,
         val carryOver: VacationDays,
         val expiry: MonthDay,
+        /** How many years after the entitlement's year the Resturlaub expires, 0 or 1. */
+        val expiryYears: Int = 0,
     )
 
     val isSuggestion: Boolean get() = suggestedFrom != null

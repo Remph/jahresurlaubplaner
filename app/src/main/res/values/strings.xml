@@ -34,8 +34,9 @@
     <string name="year_description">Jahr %1$d</string>
     <string name="field_days">Urlaubstage im Jahr</string>
     <string name="field_carry_over">Resturlaub</string>
-    <string name="field_carry_over_expiry">Resturlaub verfällt am</string>
+    <string name="field_carry_over_expiry">Verfällt am</string>
     <string name="field_expiry_format">TT.MM.</string>
+    <string name="expiry_in_year_description">Verfällt im Jahr %1$d</string>
     <string name="error_days">Bitte ganze oder halbe Tage eingeben, zum Beispiel 30 oder 12,5.</string>
     <string name="error_expiry">Bitte einen echten Tag eingeben, zum Beispiel 31.03.</string>
     <string name="suggestion_from_year">Vorschlag aus %1$d. Noch nicht gespeichert.</string>

@@ -8,17 +8,29 @@ import java.time.MonthDay
  * The numbers the user enters for one calendar year. [carryOver] (Resturlaub) is typed in, not
  * computed from the year before, because the employer's figure is the one that counts. It can be
  * used up to and including [carryOverExpiry] (31 March by default, the usual German rule) and is
- * lost after that.
+ * lost after that. Some employers let it run into a later year (a 2027 Resturlaub that expires
+ * on 31 March 2028); [carryOverExpiryYears] is how many years after [year] that is, 0 or 1.
  */
 data class YearEntitlement(
     val year: Int,
     val days: VacationDays,
     val carryOver: VacationDays = VacationDays.ZERO,
     val carryOverExpiry: MonthDay = MonthDay.of(3, 31),
+    val carryOverExpiryYears: Int = 0,
 ) {
     init {
         require(days >= VacationDays.ZERO) { "The entitlement cannot be negative" }
         require(carryOver >= VacationDays.ZERO) { "The Resturlaub cannot be negative" }
+        require(carryOverExpiryYears in 0..MAX_EXPIRY_YEARS) {
+            "The Resturlaub can run at most $MAX_EXPIRY_YEARS year after the entitlement's year"
+        }
+    }
+
+    /** The last day the Resturlaub can be used. */
+    val carryOverExpiryDate: LocalDate get() = carryOverExpiry.atYear(year + carryOverExpiryYears)
+
+    companion object {
+        const val MAX_EXPIRY_YEARS = 1
     }
 }
 
@@ -146,7 +158,7 @@ class VacationCalculator(
         marks: Map<LocalDate, DayMark>,
     ): VacationBalance {
         val today = LocalDate.now(clock)
-        val expiry = entitlement.carryOverExpiry.atYear(entitlement.year)
+        val expiry = entitlement.carryOverExpiryDate
         val costs =
             marks
                 .filterKeys { it.year == entitlement.year }
