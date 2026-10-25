@@ -236,6 +236,11 @@ and PR C (Brückentage).
   SharedPreferences (`AppearanceStore`), not in the database and not in the backup file, like the
   language. The light/dark choice goes through `AppCompatDelegate.setDefaultNightMode`, re-applied
   in `UrlaubsplanerApp.onCreate` because AppCompat does not remember it.
+  Some phones (Nick's Samsung) already give Material You a nearly black dark background, which
+  made "Dunkel" look like pure black. `appColorScheme` lifts such a palette to a soft dark grey
+  (`liftedFromBlack`); pure black stays pure black.
+- Rows with a tap effect (switch and choice rows) are clipped to the rounded `large` shape, so the
+  ripple is no longer rectangular.
 - Library: `material-icons-core` (back arrow and the tab icons; not the big extended set).
 - Tests: the settings screen tests now walk list and pages; `AppRootTest`, `AppearanceStoreTest`,
   `ThemeTest` (colour choice, pure black), `SummariesTest`. Screenshots of the real screens in

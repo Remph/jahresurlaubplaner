@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 
@@ -71,8 +73,26 @@ fun appColorScheme(
     system: ColorScheme?,
 ): ColorScheme {
     val base = system?.takeIf { appearance.systemColors } ?: if (dark) FixedDark else FixedLight
-    return if (dark && appearance.oled) base.onPureBlack() else base
+    return when {
+        !dark -> base
+        appearance.oled -> base.onPureBlack()
+        else -> base.liftedFromBlack()
+    }
 }
+
+/**
+ * Some phones (Samsung, seen 2026-10-25) hand out a wallpaper palette whose dark background is
+ * already almost black, so "Dunkel" would look like pure black and the pure black switch would do
+ * nothing. A background that dark is moved halfway towards the card colour: a soft dark grey,
+ * with the pure black choice still a step darker. Palettes with a normal dark grey stay as is.
+ */
+private fun ColorScheme.liftedFromBlack(): ColorScheme {
+    if (background.luminance() >= NEAR_BLACK) return this
+    val lifted = lerp(background, surfaceContainerLow, 0.5f)
+    return copy(background = lifted, surface = lifted, surfaceDim = lifted)
+}
+
+private const val NEAR_BLACK = 0.003f
 
 /** Black background, and surfaces that rise from black in small steps so cards stay visible. */
 private fun ColorScheme.onPureBlack() =

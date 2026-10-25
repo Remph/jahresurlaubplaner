@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -156,6 +157,8 @@ fun ChoiceRow(
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 48.dp)
+                // Rounded, so the tap feedback is not a hard rectangle.
+                .clip(MaterialTheme.shapes.large)
                 .selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -164,6 +167,7 @@ fun ChoiceRow(
     }
 }
 
+/** A switch with its explanation, on a rounded card so the tap feedback has rounded corners. */
 @Composable
 fun SwitchRow(
     label: String,
@@ -171,27 +175,34 @@ fun SwitchRow(
     checked: Boolean,
     onChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .heightIn(min = 56.dp)
-                .toggleable(value = checked, onValueChange = onChange, role = Role.Switch),
-        verticalAlignment = Alignment.CenterVertically,
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(modifier = Modifier.weight(1f).padding(vertical = 8.dp)) {
-            Text(label, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                support,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .toggleable(value = checked, onValueChange = onChange, role = Role.Switch)
+                    .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f).padding(vertical = 12.dp)) {
+                Text(label, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    support,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(
+                checked = checked,
+                onCheckedChange = null,
+                modifier = Modifier.padding(start = 16.dp),
             )
         }
-        Switch(
-            checked = checked,
-            onCheckedChange = null,
-            modifier = Modifier.padding(start = 16.dp),
-        )
     }
 }
 
