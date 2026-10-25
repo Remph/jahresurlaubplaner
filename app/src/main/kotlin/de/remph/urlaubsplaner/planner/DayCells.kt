@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -120,7 +121,8 @@ private fun DayCell(
     val planned = look.mark != null && !look.taken
     // Every day is a tile of its own, so the days stand out from the background (Nick,
     // 2026-10-25). The tile's colour is the strongest thing the day is; a school holiday under a
-    // taken day or a holiday still shows as a bar along the bottom.
+    // taken day or a holiday still shows as a bar along the bottom (in the text colour on a taken
+    // day, since the wallpaper's colour can be close to any fixed blue).
     val fill =
         when {
             look.taken -> colors.taken
@@ -136,54 +138,66 @@ private fun DayCell(
             else -> MaterialTheme.colorScheme.onSurface
         }
     val schoolBar = look.school && (look.taken || look.holiday || planned)
+    // The touch area is the whole cell; the tile is drawn 2 dp inside it, so a narrow phone does
+    // not lose 4 dp of the 48 dp target.
     Box(
         modifier =
             modifier
                 .height(52.dp)
-                .padding(2.dp)
-                .clip(shape)
-                .background(fill)
-                .then(
-                    if (planned) {
-                        Modifier.border(BorderStroke(2.dp, colors.planned), shape)
-                    } else {
-                        Modifier
-                    },
-                ).clickable { onClick(date) }
+                .clickable { onClick(date) }
                 .semantics(mergeDescendants = true) { contentDescription = description },
-        contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = date.dayOfMonth.toString(),
-            color = textColor,
-            fontWeight = if (look.today) FontWeight.Bold else FontWeight.Normal,
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        if (look.mark == DayMark.HALF) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(2.dp)
+                    .clip(shape)
+                    .background(fill)
+                    .then(
+                        if (planned) {
+                            Modifier.border(BorderStroke(2.dp, colors.planned), shape)
+                        } else {
+                            Modifier
+                        },
+                    ),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
-                text = "½",
-                color = if (look.taken) colors.onTaken else colors.planned,
-                fontSize = 11.sp,
-                modifier = Modifier.align(Alignment.TopEnd).padding(end = 5.dp, top = 2.dp),
+                text = date.dayOfMonth.toString(),
+                color = textColor,
+                fontWeight = if (look.today) FontWeight.Bold else FontWeight.Normal,
+                style = MaterialTheme.typography.bodyLarge,
             )
-        }
-        if (schoolBar) {
-            Box(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 4.dp)
-                    .size(width = 22.dp, height = 3.dp)
-                    .background(colors.schoolBar, RoundedCornerShape(2.dp)),
-            )
-        }
-        if (look.today) {
-            Box(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = if (schoolBar) 9.dp else 5.dp)
-                    .size(width = 14.dp, height = 2.dp)
-                    .background(textColor),
-            )
+            if (look.mark == DayMark.HALF) {
+                Text(
+                    text = "½",
+                    color = if (look.taken) colors.onTaken else colors.planned,
+                    fontSize = 11.sp,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(end = 5.dp, top = 2.dp),
+                )
+            }
+            if (schoolBar) {
+                Box(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 4.dp)
+                        .size(width = 22.dp, height = 3.dp)
+                        .background(
+                            if (look.taken) colors.onTaken else colors.schoolBar,
+                            RoundedCornerShape(2.dp),
+                        ),
+                )
+            }
+            if (look.today) {
+                Box(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (schoolBar) 9.dp else 5.dp)
+                        .size(width = 14.dp, height = 2.dp)
+                        .background(textColor),
+                )
+            }
         }
     }
 }

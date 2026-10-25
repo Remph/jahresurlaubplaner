@@ -31,7 +31,7 @@ fun dayColors(): DayColors {
         holiday = if (dark) Color(0xFF6B5320) else Color(0xFFF7E3B5),
         onHoliday = if (dark) Color(0xFFF3D9A0) else Color(0xFF5A3C0A),
         school = if (dark) Color(0xFF244A68) else Color(0xFFD3E8F8),
-        schoolBar = if (dark) Color(0xFF5B97C9) else Color(0xFF6FA9D8),
+        schoolBar = if (dark) Color(0xFF8CC4F0) else Color(0xFF2A78B0),
         taken = scheme.primary,
         onTaken = scheme.onPrimary,
         planned = scheme.primary,
