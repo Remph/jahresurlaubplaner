@@ -18,6 +18,15 @@ class VacationDaysTest {
     }
 
     @Test
+    fun `infinite, not-a-number and too large amounts are rejected`() {
+        assertThrows(
+            IllegalArgumentException::class.java,
+        ) { VacationDays.of(Double.POSITIVE_INFINITY) }
+        assertThrows(IllegalArgumentException::class.java) { VacationDays.of(Double.NaN) }
+        assertThrows(IllegalArgumentException::class.java) { VacationDays.of(1.0e12) }
+    }
+
+    @Test
     fun `days add and subtract`() {
         val sum = VacationDays.of(2) + VacationDays.HALF
         assertEquals(VacationDays.of(2.5), sum)

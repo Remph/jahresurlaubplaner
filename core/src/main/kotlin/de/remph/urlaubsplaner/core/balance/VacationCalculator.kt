@@ -35,7 +35,11 @@ data class VacationBalance(
     val taken: VacationDays,
     /** Cost of marked days after today. */
     val planned: VacationDays,
-    /** What can still be planned: entitlement plus usable Resturlaub, minus taken and planned. */
+    /**
+     * What can still be booked: entitlement plus Resturlaub that has not expired, minus taken and
+     * planned. Until [carryOverExpiry] passes this still counts [carryOverOpen], which only days up
+     * to that date can use; a plan beyond it shows as overbooked the day after.
+     */
     val remaining: VacationDays,
 ) {
     /** Resturlaub that is still usable and not yet used or planned. */
@@ -65,15 +69,10 @@ class VacationCalculator(
     fun cost(
         date: LocalDate,
         mark: DayMark = DayMark.FULL,
-    ): VacationDays =
-        if (isPublicHoliday(
-                date,
-            )
-        ) {
-            VacationDays.ZERO
-        } else {
-            minOf(mark.value, schedule.workingValue(date))
-        }
+    ): VacationDays {
+        if (isPublicHoliday(date)) return VacationDays.ZERO
+        return minOf(mark.value, schedule.workingValue(date))
+    }
 
     /** The balance of [entitlement]'s year. Marks from other years are ignored. */
     fun balance(
@@ -87,23 +86,17 @@ class VacationCalculator(
                 .filterKeys { it.year == entitlement.year }
                 .map { (date, mark) -> date to cost(date, mark) }
 
-        fun total(include: (LocalDate) -> Boolean) =
-            costs.filter { include(it.first) }.fold(VacationDays.ZERO) { sum, it ->
-                sum +
-                    it.second
-            }
+        fun total(include: (LocalDate) -> Boolean): VacationDays {
+            var sum = VacationDays.ZERO
+            for ((date, cost) in costs) if (include(date)) sum += cost
+            return sum
+        }
 
         val taken = total { it <= today }
         val planned = total { it > today }
         val carryOverUsed = minOf(entitlement.carryOver, total { it <= expiry })
         val carryOverLost =
-            if (today >
-                expiry
-            ) {
-                entitlement.carryOver - carryOverUsed
-            } else {
-                VacationDays.ZERO
-            }
+            if (today > expiry) entitlement.carryOver - carryOverUsed else VacationDays.ZERO
         return VacationBalance(
             entitlement = entitlement.days,
             carryOver = entitlement.carryOver,

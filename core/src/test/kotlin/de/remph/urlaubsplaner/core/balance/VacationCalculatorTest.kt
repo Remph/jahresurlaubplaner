@@ -251,6 +251,76 @@ class VacationCalculatorTest {
     }
 
     @Test
+    fun `half days use the Resturlaub too`() {
+        val marks = mapOf(d(3, 2) to DayMark.HALF, d(3, 3) to DayMark.FULL)
+        val balance = calculator().balance(year2026(carryOver = 5), marks)
+        assertEquals(VacationDays.of(1.5), balance.carryOverUsed)
+        assertEquals(VacationDays.of(3.5), balance.carryOverLost)
+    }
+
+    @Test
+    fun `a 29 February expiry falls on 28 February in a year without one`() {
+        val balance =
+            calculator().balance(year2026(carryOver = 5, expiry = MonthDay.of(2, 29)), emptyMap())
+        assertEquals(d(2, 28), balance.carryOverExpiry)
+        val leap =
+            calculator().balance(
+                YearEntitlement(2028, VacationDays.of(30), VacationDays.of(5), MonthDay.of(2, 29)),
+                emptyMap(),
+            )
+        assertEquals(d(2, 29, 2028), leap.carryOverExpiry)
+    }
+
+    @Test
+    fun `a year that has not started plans everything and loses nothing`() {
+        val balance =
+            calculator(today = d(12, 1, 2025)).balance(year2026(carryOver = 5), full(d(6, 16)))
+        assertEquals(VacationDays.ZERO, balance.taken)
+        assertEquals(VacationDays.ONE, balance.planned)
+        assertEquals(VacationDays.ZERO, balance.carryOverLost)
+    }
+
+    @Test
+    fun `a past year has everything taken and the unused Resturlaub lost`() {
+        val balance =
+            calculator(today = d(2, 1, 2027)).balance(year2026(carryOver = 5), full(d(6, 16)))
+        assertEquals(VacationDays.ONE, balance.taken)
+        assertEquals(VacationDays.ZERO, balance.planned)
+        assertEquals(VacationDays.of(5), balance.carryOverLost)
+        assertEquals(VacationDays.of(29), balance.remaining)
+    }
+
+    @Test
+    fun `before the expiry a plan beyond it still counts the open Resturlaub as bookable`() {
+        val balance =
+            calculator(today = d(2, 10)).balance(
+                year2026(days = 1, carryOver = 1),
+                full(d(6, 16), d(6, 17)),
+            )
+        assertEquals(VacationDays.ZERO, balance.remaining)
+        val later =
+            calculator(
+                today = d(4, 1),
+            ).balance(year2026(days = 1, carryOver = 1), full(d(6, 16), d(6, 17)))
+        assertEquals(VacationDays.of(-1), later.remaining)
+    }
+
+    @Test
+    fun `a half working Heiligabend costs half a day in the balance`() {
+        val schedule =
+            WorkSchedule(
+                specialDays =
+                    mapOf(WorkSchedule.HEILIGABEND to VacationDays.HALF),
+            )
+        val balance =
+            calculator(
+                schedule = schedule,
+                holidays = setOf(d(12, 25)),
+            ).balance(year2026(), full(d(12, 23), d(12, 24), d(12, 25)))
+        assertEquals(VacationDays.of(1.5), balance.planned)
+    }
+
+    @Test
     fun `the entitlement and the Resturlaub cannot be negative`() {
         assertThrows(IllegalArgumentException::class.java) { year2026(days = -1) }
         assertThrows(IllegalArgumentException::class.java) { year2026(carryOver = -1) }

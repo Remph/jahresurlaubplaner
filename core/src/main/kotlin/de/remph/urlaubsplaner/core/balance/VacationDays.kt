@@ -32,7 +32,9 @@ value class VacationDays private constructor(
         /** [days] must be a multiple of 0.5. */
         fun of(days: Double): VacationDays {
             val halves = days * 2
-            require(halves == Math.rint(halves)) { "Vacation is counted in half days, got $days" }
+            require(Math.abs(halves) <= Int.MAX_VALUE && halves == Math.rint(halves)) {
+                "Vacation is counted in half days, got $days"
+            }
             return VacationDays(halves.toInt())
         }
     }

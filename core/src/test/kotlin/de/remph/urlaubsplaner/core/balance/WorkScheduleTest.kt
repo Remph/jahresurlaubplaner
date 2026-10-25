@@ -80,6 +80,13 @@ class WorkScheduleTest {
     }
 
     @Test
+    fun `a special day cannot be worth less than nothing`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            WorkSchedule(specialDays = mapOf(WorkSchedule.SILVESTER to -VacationDays.HALF))
+        }
+    }
+
+    @Test
     fun `a half day mark is worth half a day and a full mark a full day`() {
         assertEquals(VacationDays.HALF, DayMark.HALF.value)
         assertEquals(VacationDays.ONE, DayMark.FULL.value)

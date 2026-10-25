@@ -32,8 +32,8 @@ data class WorkSchedule(
     val specialDays: Map<MonthDay, VacationDays> = emptyMap(),
 ) {
     init {
-        require(specialDays.values.all { it <= VacationDays.ONE }) {
-            "A special day cannot be worth more than a full working day"
+        require(specialDays.values.all { it >= VacationDays.ZERO && it <= VacationDays.ONE }) {
+            "A special day is worth between no and a full working day"
         }
     }
 
