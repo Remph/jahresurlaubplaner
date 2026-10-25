@@ -2,7 +2,8 @@
 
 Personal, non-profit Android app for planning the year's vacation in Germany: holidays, school
 holidays, vacation balance and bridge days, status first. Nick's own phone, used on the go.
-Local-first, no backend for the MVP. The repo is new and still empty: no code, no build files yet.
+Local-first, no backend for the MVP. The skeleton is in (Gradle with `:core` and `:app`, no features
+yet); the plan and milestones are in `docs/plan.md`.
 
 ## Decided
 - Android first; no web app for now. Distribution: F-Droid preferred, Google Play optional.
@@ -25,6 +26,7 @@ Local-first, no backend for the MVP. The repo is new and still empty: no code, n
   unit-tested). Only school holidays come from a bundled, versioned yearly data file, built from
   an OpenHolidays export and cross-checked with KMK. Details and licence notes:
   `docs/data-sources.md`.
+- minSdk 30 (Android 11), compileSdk and targetSdk 37; details in `docs/plan.md`. Decided 2026-10-25.
 - Google Play: no developer account for now. Decide before a public release and re-check
   Google's rules and fee on their own pages first.
 
@@ -35,38 +37,37 @@ Local-first, no backend for the MVP. The repo is new and still empty: no code, n
 - Before the first release: Google Play account (see above) and the F-Droid metadata.
 
 ## What to read
-- `README.md`: what the app does and how to build it (to be written with the first code).
-- `docs/`: plan, data sources, decisions; create when there is something to put in it.
+- `README.md`: what the app does and how to build it.
+- `docs/`: `plan.md` (layout, build settings, milestones), `data-sources.md`.
 - Check facts that change over time (store rules, data sources, API terms, Google's developer
   verification) with search and write the date next to what you found.
 
-## Commands (stack decided, project not yet created)
-Run from the repo root (JDK 17 or newer; the Gradle wrapper is committed). Replace this section
-with commands that were actually run once the project exists:
+## Commands
+Run from the repo root (JDK 17 or newer; the Gradle wrapper is committed). All of these were run
+in the cloud container on 2026-10-25:
 
-- `./gradlew lint test assembleDebug`: lint, unit tests, debug APK. The standard check.
+- `./gradlew lint test assembleDebug spotlessCheck`: lint, unit tests, debug APK, format check.
+  The standard check.
+- `./gradlew spotlessApply`: fix formatting (ktlint through Spotless).
 - `./gradlew test --tests '*SomeTest'`: one class while working.
-- `./gradlew spotlessCheck` / `spotlessApply` (or `ktlintCheck`): format check and fix, if the
-  project picks one.
+- `./gradlew -PcoreOnly :core:test`: only the rules module, no Android SDK needed.
 - `./gradlew connectedDebugAndroidTest`: instrumented tests, need an emulator or device. Not
   possible in the cloud container: say "not run" in the PR and ask Nick to run it on his PC.
 
 ### Cloud containers
-The cloud allows the Gradle Plugin Portal, a Maven Central mirror and the Gradle wrapper
-download, but blocks `dl.google.com` (Android SDK, Google Maven: Android Gradle Plugin, AndroidX,
-Compose). If `$ANDROID_HOME/platforms` is empty, `dl.google.com` is not in the environment's
-network policy; tell Nick (Project settings > Cloud environment > Network access) instead of
-working around it. Meanwhile:
+Since 2026-10-25 `dl.google.com` is reachable, so the app module builds in the cloud. The
+environment's setup script `/mnt/project-files/ops/cloud-setup-script.sh` installs the Android SDK
+(platform 37.0, build-tools 37.0.0) into `/opt/android-sdk`; in a resumed thread without
+`$ANDROID_HOME` run it once by hand and `export ANDROID_HOME=/opt/android-sdk`. If
+`$ANDROID_HOME/platforms` stays empty, `dl.google.com` is missing from the network policy; tell
+Nick (Project settings > Cloud environment > Network access) instead of working around it.
 
-- Keep the app's rules (holidays, vacation balance, bridge days, ICS export, backup format) in a
-  plain Kotlin/JVM module `:core` with no Android imports. Its tests run in the cloud:
-  `./gradlew -PcoreOnly :core:test`.
-- `settings.gradle.kts` includes `:app` unless `-PcoreOnly` is set:
-  `if (!providers.gradleProperty("coreOnly").isPresent) include(":app")`. Do not apply Android
-  plugins in the root build file, or `-PcoreOnly` cannot skip them.
-- The environment's setup script is `/mnt/project-files/ops/cloud-setup-script.sh` (project
-  files); in a resumed thread without `$ANDROID_HOME` run it once by hand.
-- The app module can also be built on Nick's PC through Remote Control when it is online.
+- Keep the app's rules (holidays, vacation balance, bridge days, ICS export, backup format) in
+  the plain Kotlin/JVM module `:core` with no Android imports; it also builds without the SDK.
+- `settings.gradle.kts` skips `:app` with `-PcoreOnly`. Do not apply Android plugins in the root
+  build file, or `-PcoreOnly` cannot skip them.
+- Versions live in `gradle/libs.versions.toml`; the plan and milestones in `docs/plan.md`.
+- openholidaysapi.org and similar sites are blocked unless Nick adds them to the trusted sites.
 
 ## Git
 - Every change on its own `feature/<topic>` branch with a PR into `main`; Nick reviews and
@@ -111,6 +112,7 @@ why. A review runs them again. A docs-only PR says "no code, no checks".
 - Personal notes and real device or account details stay out of the repo if it is public.
 
 ## Dependencies
-Common well-maintained libraries may be added without asking (name them in the PR). No paid
-services, no premium features, nothing from Palantir or tied in a major positive way to Peter
-Thiel. For F-Droid: no proprietary dependencies (no Google Play Services, no tracking).
+Well-known, maintained libraries may be added when they make development easier (name them in the
+PR; ask Nick first only when unsure). No paid services, no premium features, nothing from Palantir
+or tied in a major positive way to Peter Thiel. For F-Droid: no proprietary dependencies (no
+Google Play Services, no tracking).
