@@ -1,5 +1,7 @@
 package de.remph.urlaubsplaner.data
 
+import androidx.room.withTransaction
+import de.remph.urlaubsplaner.core.backup.BackupData
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.YearEntitlement
 import de.remph.urlaubsplaner.core.settings.UserSettings
@@ -50,4 +52,31 @@ class UserDataRepository(
     ) = markedDayDao.upsert(markedDayEntity(date, mark))
 
     suspend fun unmark(date: LocalDate) = markedDayDao.delete(date.toString())
+
+    /**
+     * Everything the user has entered, for the backup file. A row that cannot be read (a damaged
+     * value) is left out here as it is everywhere else in the app.
+     */
+    suspend fun readAll(): BackupData =
+        database.withTransaction {
+            BackupData(
+                settings = settingsDao.get().toUserSettings(),
+                entitlements = entitlementDao.getAll().mapNotNull { it.toYearEntitlement() },
+                marks = markedDayDao.getAll().toMarks(),
+            )
+        }
+
+    /**
+     * Replaces everything with [data] in one transaction: afterwards the app holds exactly what
+     * the backup holds, and if anything fails it still holds what it held before. Screens show
+     * [readAll]'s summary next to the file's before they call this.
+     */
+    suspend fun replaceAll(data: BackupData) =
+        database.withTransaction {
+            settingsDao.upsert(data.settings.toEntity())
+            entitlementDao.deleteAll()
+            entitlementDao.upsertAll(data.entitlements.map { it.toEntity() })
+            markedDayDao.deleteAll()
+            markedDayDao.upsertAll(data.marks.map { (date, mark) -> markedDayEntity(date, mark) })
+        }
 }

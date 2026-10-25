@@ -1,0 +1,400 @@
+package de.remph.urlaubsplaner.core.backup
+
+import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.core.balance.WorkSchedule
+import de.remph.urlaubsplaner.core.balance.YearEntitlement
+import de.remph.urlaubsplaner.core.holidays.Bundesland
+import de.remph.urlaubsplaner.core.holidays.RegionalExtra
+import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
+import de.remph.urlaubsplaner.core.settings.UserSettings
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.MonthDay
+
+class BackupFileTest {
+    private val exportedOn = LocalDate.of(2026, 10, 25)
+
+    private val everything =
+        BackupData(
+            settings =
+                UserSettings(
+                    land = Bundesland.BAYERN,
+                    extras = setOf(RegionalExtra.AUGSBURGER_FRIEDENSFEST),
+                    optOuts = setOf(RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN),
+                    schedule =
+                        WorkSchedule(
+                            workingDays =
+                                setOf(
+                                    DayOfWeek.MONDAY,
+                                    DayOfWeek.TUESDAY,
+                                    DayOfWeek.THURSDAY,
+                                ),
+                            specialDays =
+                                mapOf(
+                                    WorkSchedule.HEILIGABEND to VacationDays.HALF,
+                                    WorkSchedule.SILVESTER to VacationDays.ZERO,
+                                ),
+                        ),
+                ),
+            entitlements =
+                listOf(
+                    YearEntitlement(
+                        2026,
+                        VacationDays.of(30),
+                        VacationDays.of(2.5),
+                        MonthDay.of(4, 30),
+                    ),
+                    YearEntitlement(2027, VacationDays.of(28)),
+                ),
+            marks =
+                mapOf(
+                    LocalDate.of(2026, 7, 1) to DayMark.FULL,
+                    LocalDate.of(2026, 7, 2) to DayMark.HALF,
+                    LocalDate.of(2027, 1, 4) to DayMark.FULL,
+                ),
+        )
+
+    private fun roundTrip(data: BackupData) = BackupFile.decode(BackupFile.encode(data, exportedOn))
+
+    /** A version 1 file written by hand: the names in it are the format, so renaming code must not change them. */
+    private val fixture =
+        """
+        {
+          "app": "urlaubsplaner",
+          "formatVersion": 1,
+          "exportedOn": "2026-10-25",
+          "settings": {
+            "land": "BY",
+            "regionalExtras": ["augsburger-friedensfest"],
+            "regionalOptOuts": ["mariae-himmelfahrt-bayern"],
+            "workingDays": ["MONDAY", "TUESDAY", "THURSDAY"],
+            "specialDays": [{"day": "--12-24", "halfDays": 1}, {"day": "--12-31", "halfDays": 0}]
+          },
+          "entitlements": [
+            {"year": 2026, "halfDays": 60, "carryOverHalfDays": 5, "carryOverExpiry": "--04-30"},
+            {"year": 2027, "halfDays": 56, "carryOverHalfDays": 0, "carryOverExpiry": "--03-31"}
+          ],
+          "markedDays": [
+            {"date": "2026-07-01", "mark": "full"},
+            {"date": "2026-07-02", "mark": "half"},
+            {"date": "2027-01-04", "mark": "full"}
+          ]
+        }
+        """.trimIndent()
+
+    private fun withEdit(
+        from: String,
+        to: String,
+    ): String {
+        assertTrue(fixture.contains(from), "the fixture has no $from")
+        return fixture.replace(from, to)
+    }
+
+    private inline fun <reified T : BackupException> refused(text: String): T =
+        assertThrows<T> {
+            BackupFile.decode(text)
+        }
+
+    @Test
+    fun `everything survives a round trip`() {
+        assertEquals(everything, roundTrip(everything))
+    }
+
+    @Test
+    fun `an empty app round trips, with no Land chosen`() {
+        val empty = BackupData()
+
+        val back = roundTrip(empty)
+
+        assertEquals(empty, back)
+        assertEquals(null, back.settings.land)
+        assertTrue(back.isEmpty)
+    }
+
+    @Test
+    fun `the written file has the documented names`() {
+        assertEquals(everything, BackupFile.decode(fixture))
+    }
+
+    @Test
+    fun `the written file carries the version, the app marker and the export date`() {
+        val text = BackupFile.encode(everything, exportedOn)
+
+        assertTrue(text.contains("\"app\": \"urlaubsplaner\""))
+        assertTrue(text.contains("\"formatVersion\": 1"))
+        assertTrue(text.contains("\"exportedOn\": \"2026-10-25\""))
+    }
+
+    @Test
+    fun `entries are written in date order so two exports of the same data are the same file`() {
+        val shuffled =
+            everything.copy(
+                entitlements = everything.entitlements.reversed(),
+                marks =
+                    everything.marks.entries
+                        .reversed()
+                        .associate { it.key to it.value },
+            )
+
+        assertEquals(
+            BackupFile.encode(everything, exportedOn),
+            BackupFile.encode(shuffled, exportedOn),
+        )
+    }
+
+    @Test
+    fun `half days and Resturlaub keep their halves`() {
+        val back = roundTrip(everything)
+
+        assertEquals(VacationDays.of(2.5), back.entitlements.first().carryOver)
+        assertEquals(DayMark.HALF, back.marks.getValue(LocalDate.of(2026, 7, 2)))
+        assertEquals(
+            VacationDays.HALF,
+            back.settings.schedule.specialDays
+                .getValue(WorkSchedule.HEILIGABEND),
+        )
+    }
+
+    @Test
+    fun `the file name has the export date`() {
+        assertEquals("urlaubsplaner-2026-10-25.json", BackupFile.fileName(exportedOn))
+    }
+
+    @Test
+    fun `every enum value has a name that reads back`() {
+        val all =
+            BackupData(
+                settings =
+                    UserSettings(
+                        land = null,
+                        extras = RegionalExtra.entries.toSet(),
+                        optOuts = RegionalOptOut.entries.toSet(),
+                        schedule = WorkSchedule(workingDays = DayOfWeek.entries.toSet()),
+                    ),
+                marks =
+                    DayMark.entries.withIndex().associate { (i, mark) ->
+                        LocalDate.of(
+                            2026,
+                            1,
+                            1 + i,
+                        ) to
+                            mark
+                    },
+            )
+
+        assertEquals(all, roundTrip(all))
+        Bundesland.entries.forEach {
+            val data = BackupData(settings = UserSettings(land = it))
+            assertEquals(it, roundTrip(data).settings.land)
+        }
+    }
+
+    @Test
+    fun `a stream round trip works and a byte order mark in front is ignored`() {
+        val out = ByteArrayOutputStream()
+        BackupFile.writeTo(out, everything, exportedOn)
+        val bytes = out.toByteArray()
+
+        assertEquals(everything, BackupFile.readFrom(ByteArrayInputStream(bytes)))
+        assertEquals(
+            everything,
+            BackupFile.readFrom(
+                ByteArrayInputStream(
+                    byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + bytes,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `a stream is read as UTF-8`() {
+        val text =
+            fixture.replace(
+                "\"exportedOn\"",
+                "\"note\": \"Urlaub für Müller\", \"exportedOn\"",
+            )
+
+        assertEquals(
+            everything,
+            BackupFile.readFrom(ByteArrayInputStream(text.toByteArray(Charsets.UTF_8))),
+        )
+    }
+
+    @Test
+    fun `a file over the size limit is refused without reading all of it`() {
+        var read = 0L
+        val endless =
+            object : InputStream() {
+                override fun read(): Int = 'x'.code.also { read++ }
+
+                override fun read(
+                    b: ByteArray,
+                    off: Int,
+                    len: Int,
+                ): Int {
+                    read += len
+                    return len
+                }
+            }
+
+        assertThrows<BackupException.NotABackup> { BackupFile.readFrom(endless) }
+        assertTrue(read < BackupFile.MAX_BYTES + 16_384)
+    }
+
+    @Test
+    fun `an empty file and text that is not JSON are not a backup`() {
+        refused<BackupException.NotABackup>("")
+        refused<BackupException.NotABackup>("Urlaub 2026")
+        refused<BackupException.NotABackup>("{\"app\": ")
+    }
+
+    @Test
+    fun `a deeply nested file is refused instead of crashing the app`() {
+        // Within the size limit, but a recursive parser would overflow the stack.
+        val nested = "[".repeat(1_000_000)
+
+        refused<BackupException.NotABackup>(nested)
+        refused<BackupException.NotABackup>("{\"a\":".repeat(500_000))
+    }
+
+    @Test
+    fun `JSON that is not an object, or not ours, is not a backup`() {
+        refused<BackupException.NotABackup>("[1, 2]")
+        refused<BackupException.NotABackup>("{}")
+        refused<BackupException.NotABackup>(withEdit("\"urlaubsplaner\"", "\"other\""))
+        refused<BackupException.NotABackup>(withEdit("\"urlaubsplaner\"", "42"))
+    }
+
+    @Test
+    fun `a newer version is refused with both version numbers`() {
+        val e =
+            refused<BackupException.NewerVersion>(
+                withEdit("\"formatVersion\": 1", "\"formatVersion\": 2"),
+            )
+
+        assertEquals(2, e.found)
+        assertEquals(BackupFile.VERSION, e.supported)
+    }
+
+    @Test
+    fun `a newer version is recognised even when its structure is different`() {
+        val e =
+            refused<BackupException.NewerVersion>(
+                """{"app": "urlaubsplaner", "formatVersion": 7, "vacation": {"somethingNew": true}}""",
+            )
+
+        assertEquals(7, e.found)
+    }
+
+    @Test
+    fun `a missing, zero or non-numeric version is damaged`() {
+        refused<BackupException.Damaged>("""{"app": "urlaubsplaner"}""")
+        refused<BackupException.Damaged>(withEdit("\"formatVersion\": 1", "\"formatVersion\": 0"))
+        refused<BackupException.Damaged>(
+            withEdit("\"formatVersion\": 1", "\"formatVersion\": \"1\""),
+        )
+        refused<BackupException.Damaged>(withEdit("\"formatVersion\": 1", "\"formatVersion\": 1.5"))
+    }
+
+    @Test
+    fun `an unknown name is refused, not skipped`() {
+        refused<BackupException.Damaged>(withEdit("\"BY\"", "\"XX\""))
+        refused<BackupException.Damaged>(withEdit("augsburger-friedensfest", "from-the-future"))
+        refused<BackupException.Damaged>(withEdit("mariae-himmelfahrt-bayern", "from-the-future"))
+        refused<BackupException.Damaged>(withEdit("\"THURSDAY\"", "\"DONNERSTAG\""))
+        refused<BackupException.Damaged>(withEdit("\"half\"", "\"quarter\""))
+    }
+
+    @Test
+    fun `a bad date or day is refused`() {
+        refused<BackupException.Damaged>(withEdit("2026-07-01", "2026-02-30"))
+        refused<BackupException.Damaged>(withEdit("2026-07-01", "01.07.2026"))
+        refused<BackupException.Damaged>(withEdit("--12-24", "12-24"))
+        refused<BackupException.Damaged>(withEdit("--04-30", "--02-30"))
+    }
+
+    @Test
+    fun `values outside the rules are refused`() {
+        // Negative entitlement and Resturlaub, a year of more than 366 days, a special day above a full day.
+        refused<BackupException.Damaged>(withEdit("\"halfDays\": 60", "\"halfDays\": -2"))
+        refused<BackupException.Damaged>(
+            withEdit("\"carryOverHalfDays\": 5", "\"carryOverHalfDays\": -1"),
+        )
+        refused<BackupException.Damaged>(withEdit("\"halfDays\": 60", "\"halfDays\": 2000000000"))
+        refused<BackupException.Damaged>(withEdit("\"halfDays\": 1}", "\"halfDays\": 3}"))
+    }
+
+    @Test
+    fun `a missing or wrongly typed part is refused and names the place`() {
+        val missing =
+            refused<BackupException.Damaged>(withEdit("\"markedDays\"", "\"somethingElse\""))
+        assertTrue(missing.message!!.contains("markedDays"))
+
+        refused<BackupException.Damaged>(withEdit("\"settings\"", "\"unrelated\""))
+        refused<BackupException.Damaged>(withEdit("\"land\": \"BY\"", "\"land\": 7"))
+        refused<BackupException.Damaged>(withEdit("\"year\": 2026", "\"year\": \"2026\""))
+        refused<BackupException.Damaged>(
+            """
+            {"app": "urlaubsplaner", "formatVersion": 1,
+             "settings": {"land": null, "regionalExtras": [], "regionalOptOuts": [], "workingDays": [], "specialDays": []},
+             "entitlements": {}, "markedDays": []}
+            """.trimIndent(),
+        )
+        refused<BackupException.Damaged>(
+            withEdit("{\"date\": \"2026-07-01\", \"mark\": \"full\"}", "\"2026-07-01\""),
+        )
+
+        val bad =
+            refused<BackupException.Damaged>(
+                withEdit("\"mark\": \"half\"", "\"mark\": \"quarter\""),
+            )
+        assertTrue(bad.message!!.contains("markedDays[1]"))
+    }
+
+    @Test
+    fun `listing the same year, date or special day twice is refused`() {
+        refused<BackupException.Damaged>(withEdit("\"year\": 2027", "\"year\": 2026"))
+        refused<BackupException.Damaged>(withEdit("2027-01-04", "2026-07-01"))
+        refused<BackupException.Damaged>(withEdit("--12-31", "--12-24"))
+    }
+
+    @Test
+    fun `no Land in the file means no Land chosen`() {
+        val data = BackupFile.decode(withEdit("\"land\": \"BY\"", "\"land\": null"))
+
+        assertEquals(null, data.settings.land)
+    }
+
+    @Test
+    fun `a backup with a key this version does not know is still read`() {
+        // Hand-edited or from a tool; a real format change would have a new version number.
+        val data =
+            BackupFile.decode(
+                withEdit("\"exportedOn\"", "\"comment\": \"hi\", \"exportedOn\""),
+            )
+
+        assertEquals(everything, data)
+    }
+
+    @Test
+    fun `the summary counts what an import would replace`() {
+        assertEquals(
+            BackupSummary(landChosen = true, years = 2, markedDays = 3),
+            everything.summary(),
+        )
+        assertEquals(
+            BackupSummary(landChosen = false, years = 0, markedDays = 0),
+            BackupData().summary(),
+        )
+        assertFalse(everything.isEmpty)
+    }
+}

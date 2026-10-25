@@ -22,6 +22,10 @@ sourceSets {
 }
 
 dependencies {
+    // Only the JSON tree API for the backup file; no compiler plugin, so the format is written
+    // out by hand and every bad value gets its own message.
+    implementation(libs.kotlinx.serialization.json)
+
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
