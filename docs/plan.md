@@ -270,6 +270,12 @@ and PR C (Brückentage).
 - School holiday file: `UrlaubsplanerApp.schoolHolidays` is read once (off the main thread, on
   the first view); `covers()` decides between "no school holidays" and "unknown".
 - Settings: a suggestion made from the year that is still running now says so.
+- Review fixes: the date is read again when the app comes back to the front
+  (`PlannerViewModel.refreshToday`), because the app stays in memory for days; the year grid
+  (Übersicht and Kalender year mode) says "noch keine Schulferien" like the month does and has
+  one TalkBack action per month (its canvas is one touch area). The year grid rows are 20 dp
+  (28 dp in the calendar), below 48 dp, by design: a tap opens the month and the month grid has
+  the big targets.
 - Tests: `:core` unit tests for the new rules; `:app` `YearViewTest`, `PlannerViewModelTest`
   (Robolectric, in-memory Room), `OverviewScreenTest` and `CalendarScreenTest` (German and
   English, compose the real screens). Not covered: the date picker, TalkBack, real wallpaper

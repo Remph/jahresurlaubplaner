@@ -18,7 +18,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import de.remph.urlaubsplaner.R
@@ -48,7 +50,24 @@ fun YearGrid(
             }
         }
     val description = stringResource(R.string.year_grid_description, view.year)
-    Row(modifier.fillMaxWidth().semantics { contentDescription = description }) {
+    // The canvas is one touch area, so TalkBack gets one action per month instead.
+    val monthActions =
+        (1..12).map { month ->
+            val name =
+                java.time.Month
+                    .of(month)
+                    .getDisplayName(TextStyle.FULL_STANDALONE, locale)
+            CustomAccessibilityAction(name) {
+                onMonthClick(YearMonth.of(view.year, month))
+                true
+            }
+        }
+    Row(
+        modifier.fillMaxWidth().semantics {
+            contentDescription = description
+            customActions = monthActions
+        },
+    ) {
         Column {
             for (month in 1..12) {
                 Text(

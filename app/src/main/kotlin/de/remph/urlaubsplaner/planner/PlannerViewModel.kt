@@ -40,17 +40,21 @@ class PlannerViewModel(
     private val schoolHolidays: Lazy<SchoolHolidayData>,
     private val clock: Clock,
 ) : ViewModel() {
-    val currentYear = LocalDate.now(clock).year
+    // The app can stay in memory for days, so "today" is read again when it comes back to the
+    // front (refreshToday), not only once when this ViewModel is made.
+    private val today = MutableStateFlow(LocalDate.now(clock))
+
+    val currentYear: Int get() = today.value.year
     val firstYear = PublicHolidays.FIRST_SUPPORTED_YEAR
-    val lastYear = currentYear + 1
+    val lastYear: Int get() = currentYear + 1
 
     private val firstMonth = YearMonth.of(firstYear, 1)
-    private val lastMonth = YearMonth.of(lastYear, 12)
+    private val lastMonth: YearMonth get() = YearMonth.of(lastYear, 12)
 
-    private val shownMonth = MutableStateFlow(YearMonth.now(clock))
+    private val shownMonth = MutableStateFlow(YearMonth.from(today.value))
     private val shownMode = MutableStateFlow(CalendarMode.MONTH)
 
-    val overview: StateFlow<YearView?> = yearView(MutableStateFlow(currentYear))
+    val overview: StateFlow<YearView?> = yearView(today.map { it.year }.distinctUntilChanged())
 
     val calendar: StateFlow<YearView?> =
         yearView(shownMonth.map { it.year }.distinctUntilChanged())
@@ -59,6 +63,11 @@ class PlannerViewModel(
     val calendarMonth: StateFlow<YearMonth> = shownMonth
 
     val calendarMode: StateFlow<CalendarMode> = shownMode
+
+    /** Reads the date again, so the status is right after midnight or a new year. */
+    fun refreshToday() {
+        today.value = LocalDate.now(clock)
+    }
 
     /** The calendar never goes below 2019 (the first year with holiday rules) or past next year. */
     fun showMonth(month: YearMonth) {
@@ -120,11 +129,12 @@ class PlannerViewModel(
                         LocalDate.of(year - 1, 12, 1).coerceAtLeast(LocalDate.of(firstYear, 1, 1)),
                         LocalDate.of(year + 1, 12, 31),
                     ),
-                ) { settings, entitlement, marks ->
+                    today,
+                ) { settings, entitlement, marks, now ->
                     val check = settings.publicHolidayCheck()
                     YearView(
                         year = year,
-                        today = LocalDate.now(clock),
+                        today = now,
                         settings = settings,
                         entitlement = entitlement,
                         marks = marks,

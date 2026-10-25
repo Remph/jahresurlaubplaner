@@ -233,6 +233,24 @@ fun Legend(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Says so when the school holiday file does not reach all of [from] to [to]: no colour then means
+ * "not known", not "no school holidays". Nothing is shown while the file covers the time.
+ */
+@Composable
+fun SchoolHolidaysUnknownNote(
+    view: YearView,
+    from: LocalDate,
+    to: LocalDate,
+) {
+    if (view.schoolHolidaysKnown(from, to)) return
+    Text(
+        stringResource(R.string.school_holidays_unknown),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
 @Composable
 private fun LegendItem(
     label: Int,
