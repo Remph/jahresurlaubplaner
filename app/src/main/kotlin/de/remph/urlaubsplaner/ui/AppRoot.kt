@@ -19,6 +19,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.appearance.AppearanceStore
 import de.remph.urlaubsplaner.planner.CalendarMode
@@ -50,6 +52,8 @@ fun AppRoot(
 ) {
     var tab by rememberSaveable { mutableStateOf(Tab.OVERVIEW) }
     val snackbar = remember { SnackbarHostState() }
+    // A phone keeps the app in memory for days; the status must follow the date.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { plannerViewModel.refreshToday() }
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {

@@ -80,6 +80,11 @@ fun CalendarScreen(
                     rowHeight = 28.dp,
                 )
                 Legend()
+                SchoolHolidaysUnknownNote(
+                    shown,
+                    LocalDate.of(shown.year, 1, 1),
+                    LocalDate.of(shown.year, 12, 31),
+                )
             }
         }
         if (shown.entitlement == null) {
@@ -196,13 +201,7 @@ private fun MonthNotes(
                 entry.nameIn(locale),
             )
         }
-        if (!view.schoolHolidaysKnown(first, last)) {
-            Text(
-                stringResource(R.string.school_holidays_unknown),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        SchoolHolidaysUnknownNote(view, first, last)
     }
 }
 

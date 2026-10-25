@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.VacationDays
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 import java.util.Locale
@@ -164,6 +165,11 @@ private fun Status(
         )
         YearGrid(view, { onOpenMonth(it) })
         Legend()
+        SchoolHolidaysUnknownNote(
+            view,
+            LocalDate.of(view.year, 1, 1),
+            LocalDate.of(view.year, 12, 31),
+        )
     }
 }
 

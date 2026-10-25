@@ -1,6 +1,7 @@
 package de.remph.urlaubsplaner.planner
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -199,6 +201,37 @@ class CalendarScreenTest {
             .onNode(hasContentDescription("Jahresübersicht 2027", substring = true))
             .assertIsDisplayed()
         compose.onNodeWithContentDescription("Nächstes Jahr").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the year mode says too when the school holidays of that year are unknown`() {
+        show()
+        compose.onNodeWithText("Jahr").performClick()
+
+        compose.onNodeWithContentDescription("Nächstes Jahr").performClick()
+
+        waitForText("noch keine Schulferien", substring = true)
+        compose
+            .onNodeWithText("noch keine Schulferien", substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the year grid offers a TalkBack action per month that opens it`() {
+        show()
+        compose.onNodeWithText("Jahr").performClick()
+        waitForText("2027")
+
+        val grid = compose.onNode(hasContentDescription("Jahresübersicht 2027", substring = true))
+        val actions = grid.fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        assertEquals(12, actions.size)
+        assertEquals("April", actions[3].label)
+        compose.runOnUiThread { actions[3].action() }
+
+        waitForText("April 2027")
     }
 
     @Test

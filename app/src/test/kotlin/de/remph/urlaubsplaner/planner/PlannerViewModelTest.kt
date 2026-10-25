@@ -134,4 +134,43 @@ class PlannerViewModelTest {
         model.showMonth(YearMonth.of(2019, 1))
         assertEquals(2019, await(model.calendar) { it.year == 2019 }.year)
     }
+
+    @Test
+    fun `the overview follows the date after refreshToday`() {
+        fixture.fill()
+        val clock = SteppingClock(fixture.clock)
+        val model = PlannerViewModel(fixture.repository, lazyOf(fixture.schoolHolidays), clock)
+        viewModels.put("planner", model)
+        assertEquals(fixture.date("2027-03-10"), await(model.overview) { it.balance != null }.today)
+
+        // Past Verfall day and into the next year while the app stayed in memory.
+        clock.today = "2028-01-02"
+        model.refreshToday()
+        val next = await(model.overview) { it.year == 2028 }
+
+        assertEquals(fixture.date("2028-01-02"), next.today)
+        assertEquals(2028, model.currentYear)
+        assertEquals(2029, model.lastYear)
+    }
+}
+
+/** A clock that tells the same time of day as [base] on a day the test can change. */
+private class SteppingClock(
+    private val base: java.time.Clock,
+) : java.time.Clock() {
+    var today: String =
+        java.time.LocalDate
+            .now(base)
+            .toString()
+
+    override fun getZone() = base.zone
+
+    override fun withZone(zone: java.time.ZoneId) = SteppingClock(base.withZone(zone))
+
+    override fun instant(): java.time.Instant =
+        java.time.LocalDate
+            .parse(today)
+            .atTime(10, 0)
+            .atZone(base.zone)
+            .toInstant()
 }
