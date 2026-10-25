@@ -1,5 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Urlaubsplaner</string>
-    <string name="home_empty">Your vacation status will appear here.</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Bundesland -->
+    <string name="section_land">State</string>
+    <string name="land_first_start">Which German state applies to you? Public holidays depend on it.</string>
+    <string name="land_choose">Choose state</string>
+    <string name="land_button_description">State: %1$s. Tap to change.</string>
+    <string name="land_baden_wuerttemberg">Baden-Württemberg</string>
+    <string name="land_bayern">Bavaria</string>
+    <string name="land_berlin">Berlin</string>
+    <string name="land_brandenburg">Brandenburg</string>
+    <string name="land_bremen">Bremen</string>
+    <string name="land_hamburg">Hamburg</string>
+    <string name="land_hessen">Hesse</string>
+    <string name="land_mecklenburg_vorpommern">Mecklenburg-Western Pomerania</string>
+    <string name="land_niedersachsen">Lower Saxony</string>
+    <string name="land_nordrhein_westfalen">North Rhine-Westphalia</string>
+    <string name="land_rheinland_pfalz">Rhineland-Palatinate</string>
+    <string name="land_saarland">Saarland</string>
+    <string name="land_sachsen">Saxony</string>
+    <string name="land_sachsen_anhalt">Saxony-Anhalt</string>
+    <string name="land_schleswig_holstein">Schleswig-Holstein</string>
+    <string name="land_thueringen">Thuringia</string>
+
+    <!-- Vacation of one year -->
+    <string name="section_vacation">Vacation</string>
+    <string name="year_previous">Previous year</string>
+    <string name="year_next">Next year</string>
+    <string name="year_description">Year %1$d</string>
+    <string name="field_days">Vacation days this year</string>
+    <string name="field_carry_over">Carried-over days (Resturlaub)</string>
+    <string name="field_carry_over_expiry">Carried-over days expire on</string>
+    <string name="field_expiry_format">DD.MM.</string>
+    <string name="error_days">Please enter whole or half days, for example 30 or 12.5.</string>
+    <string name="error_expiry">Please enter a real day, for example 31.03.</string>
+    <string name="suggestion_from_year">Suggested from %1$d. Not saved yet.</string>
+    <string name="suggestion_from_year_with_carry_over">Suggested from %1$d, with the days left over as carried-over days (as of today). Not saved yet.</string>
+    <string name="save">Save</string>
+    <string name="suggest_carry_over">Suggest unused days as carried-over days</string>
+    <string name="suggest_carry_over_support">For a new year: days left over from the year before are suggested as carried-over days. You can change them; nothing is stored until you tap Save.</string>
+
+    <!-- Working days -->
+    <string name="section_work_days">Working days</string>
+    <string name="special_christmas_eve">Christmas Eve (24 Dec)</string>
+    <string name="special_new_years_eve">New Year\'s Eve (31 Dec)</string>
+    <string name="special_full">Full day</string>
+    <string name="special_half">Half day</string>
+    <string name="special_off">Day off</string>
+    <string name="special_options_description">%1$s: %2$s</string>
+
+    <!-- Regional -->
+    <string name="section_regional">Regional holidays</string>
+    <string name="extra_augsburg">Augsburg Peace Festival (8 August) counts</string>
+    <string name="extra_augsburg_support">A public holiday in the city of Augsburg only.</string>
+    <string name="extra_fronleichnam">Corpus Christi counts</string>
+    <string name="extra_fronleichnam_support">In Saxony and Thuringia a public holiday in some communities only.</string>
+    <string name="mariae_himmelfahrt_bayern">Assumption Day (15 August) is a day off for me</string>
+    <string name="mariae_himmelfahrt_bayern_support">A public holiday in most Bavarian communities, but not in all. Switch it off if yours does not have it.</string>
+
+    <!-- Language -->
+    <string name="section_language">Language</string>
+    <string name="language_system">Same as the phone</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_english">English</string>
+
+    <!-- Backup -->
+    <string name="section_backup">Backup</string>
+    <string name="backup_explain">The backup is a file you choose yourself. It holds your settings, your entitlement and the days you marked.</string>
+    <string name="backup_export">Save backup</string>
+    <string name="backup_import">Restore backup</string>
+    <string name="backup_import_title">Replace your data?</string>
+    <string name="backup_import_body">Now in the app: %1$s.\nIn the file: %2$s.\n\nIf you continue, everything now in the app is replaced by the file.</string>
+    <string name="backup_import_no_land">The file has no state chosen.</string>
+    <string name="backup_import_confirm">Replace</string>
+    <string name="backup_summary_empty">no entries</string>
+    <string name="backup_summary_join">%1$s and %2$s</string>
+    <plurals name="backup_marked_days">
+        <item quantity="one">%d marked day</item>
+        <item quantity="other">%d marked days</item>
+    </plurals>
+    <plurals name="backup_years">
+        <item quantity="one">%d year with an entitlement</item>
+        <item quantity="other">%d years with an entitlement</item>
+    </plurals>
+    <string name="notice_saved">Saved.</string>
+    <string name="notice_exported">Backup saved.</string>
+    <string name="notice_imported">Backup restored.</string>
+    <string name="notice_export_failed">The file could not be saved.</string>
+    <string name="notice_import_unreadable">The file could not be read. Nothing was changed.</string>
+    <string name="notice_not_a_backup">This is not an Urlaubsplaner backup. Nothing was changed.</string>
+    <string name="notice_newer_version">This backup was made by a newer version of the app (format %1$d, this app reads up to format %2$d). Please update the app. Nothing was changed.</string>
+    <string name="notice_damaged">The backup is damaged and was not loaded. Nothing was changed.\n\nDetails: %1$s</string>
 </resources>

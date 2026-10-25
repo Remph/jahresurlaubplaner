@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Urlaubsplaner" parent="android:Theme.DeviceDefault.DayNight" />
+    <!-- AppCompat, because AppCompatActivity carries the in-app language. Compose draws everything. -->
+    <style name="Theme.Urlaubsplaner" parent="Theme.AppCompat.DayNight.NoActionBar" />
 </resources>

@@ -6,9 +6,12 @@
          user chooses. allowBackup is off, so there is nothing for data extraction rules to
          govern. No permissions are needed yet. -->
     <application
+        android:name=".UrlaubsplanerApp"
         android:allowBackup="false"
         tools:ignore="DataExtractionRules"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
+        tools:targetApi="33"
         android:supportsRtl="true"
         android:theme="@style/Theme.Urlaubsplaner">
         <activity
@@ -19,6 +22,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Below Android 13 the system does not keep the app language; AppCompat does, with this. -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
     </application>
 
 </manifest>
