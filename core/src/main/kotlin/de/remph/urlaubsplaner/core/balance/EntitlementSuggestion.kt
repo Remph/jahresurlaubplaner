@@ -6,10 +6,11 @@ package de.remph.urlaubsplaner.core.balance
  */
 object EntitlementSuggestion {
     /**
-     * The days and the Verfall day (with its year offset) come from the year before. The Resturlaub is zero, unless the
-     * user switched on carrying over ([carryOverUnused], off by default): then it is what
-     * [previousBalance] still has left, never below zero. That is the state of today. Days that
-     * are still planned in the year before already count as used, days not planned yet do not.
+     * The days and the Verfall day (with its year offset) come from the year before. The
+     * Resturlaub is zero, unless the user switched on carrying over ([carryOverUnused], off by
+     * default): then it is what [previousBalance] still has left, never below zero. That is the
+     * state of today. Days that are still planned in the year before already count as used, days
+     * not planned yet do not.
      *
      * Null when there is no year before to learn from.
      */

@@ -247,7 +247,11 @@ class SettingsViewModelTest {
         vm.editCarryOver("viel")
         vm.editExpiry("31.04.")
 
-        val form = vm.await { it.form.daysError }.form
+        // All three edits must have landed, or the state is read between two of them.
+        val form =
+            vm
+                .await { it.form.daysError && it.form.carryOverError && it.form.expiryError }
+                .form
         assertTrue(form.daysError)
         assertTrue(form.carryOverError)
         assertTrue(form.expiryError)
