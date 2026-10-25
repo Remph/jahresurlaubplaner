@@ -220,7 +220,7 @@ class SettingsScreenTest {
         chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
         openRow("Urlaub 2027")
 
-        compose.onNodeWithText("Verfällt im Jahr").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Verfällt am").performScrollTo().assertIsDisplayed()
         compose.onNodeWithContentDescription("Verfällt im Jahr 2027").assertIsDisplayed()
         compose.onNodeWithText("Urlaubstage im Jahr").performScrollTo().performTextInput("30")
         // The field starts with 0, so it is cleared before typing.

@@ -203,6 +203,7 @@ fun AmountField(
     error: String,
     onChange: (String) -> Unit,
     placeholder: String? = null,
+    modifier: Modifier = Modifier.fillMaxWidth(),
 ) {
     OutlinedTextField(
         value = value,
@@ -213,6 +214,6 @@ fun AmountField(
         supportingText = if (isError) ({ Text(error) }) else null,
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
     )
 }
