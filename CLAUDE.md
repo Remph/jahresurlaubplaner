@@ -49,6 +49,9 @@ in the cloud container on 2026-10-25, except the instrumented tests:
 - `./gradlew lint test assembleDebug spotlessCheck`: lint, unit tests, debug APK, format check.
   The standard check.
 - `./gradlew spotlessApply`: fix formatting (ktlint through Spotless).
+- In the cloud add `-ProbolectricRepoUrl=https://maven-central.storage-download.googleapis.com/maven2`
+  to any command that runs `:app` tests (`test`, `:app:testDebugUnitTest`): Robolectric downloads
+  its Android image from Maven Central, which answers 429 there. Not needed on Nick's PC.
 - `./gradlew :core:test --tests '*SomeTest'`: one class while working. Name the module: plain
   `test --tests` fails in a module that has no matching test.
 - `./gradlew -PcoreOnly :core:test`: only the rules module, no Android SDK needed.
@@ -108,7 +111,8 @@ why. A review runs them again. A docs-only PR says "no code, no checks".
 - Holidays and school holidays come from the bundled, versioned data file, never from the
   network at runtime. Verify each year against official sources (KMK, Länder ministries).
 - Room: schema changes need a migration and a migration test; schemas are exported
-  and committed.
+  and committed (`app/schemas/`). Bump `UrlaubsplanerDatabase.VERSION` and add the migration to
+  `MIGRATIONS`; the tests fail if one is missing.
 - Comment the "why", not the "what".
 - Personal notes and real device or account details stay out of the repo if it is public.
 
