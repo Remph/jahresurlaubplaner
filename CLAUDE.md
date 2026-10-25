@@ -1,4 +1,4 @@
-# Jahresurlaubsplaner (name TBD): notes for Claude
+# Urlaubsplaner (repo: jahresurlaubplaner): notes for Claude
 
 Personal, non-profit Android app for planning the year's vacation in Germany: holidays, school
 holidays, vacation balance and bridge days, status first. Nick's own phone, used on the go.
