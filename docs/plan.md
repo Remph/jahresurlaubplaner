@@ -178,6 +178,46 @@ everything".
   compiler plugin. The about screen (M5) lists its licence.
 - Not built: the picker launchers and the confirm dialog (M3 screens), merging, cloud sync.
 
+Settings page (M3, first piece): design approved by Nick on 2026-10-25. M3 is three PRs: this one
+(foundation, settings, backup), then home status with the year/month view and marking, then
+Brückentage in both.
+
+- `UrlaubsplanerApp` (an `Application`) holds the clock, the database, `UserDataRepository` and
+  `BackupFileStore`. `MainActivity` is an `AppCompatActivity` (the in-app language needs it) and
+  shows only the settings page until the home screen exists. The school holiday file is not loaded
+  yet; the PR that shows school holidays loads it once in `UrlaubsplanerApp`.
+- One scrolling page, no sub-pages: Bundesland; Urlaub of one year (stepper 2019 to next year,
+  Urlaubstage, Resturlaub, Verfall day, Speichern); Arbeitstage (weekday chips, Heiligabend and
+  Silvester as whole day, half day or day off); regional holidays (only what the Land has: the
+  Bayern Mariä Himmelfahrt switch says "holiday" and stores the opposite, the opt-out); language;
+  backup. On a fresh start only Bundesland, language and "restore backup" show (a new phone
+  restores from a file before anything else).
+- Everything except the year form saves at once, read-modify-write against the database under a
+  lock. The year form saves with Speichern, because a new year starts with a suggestion.
+- Suggestion for a year with nothing stored (Nick, 2026-10-25): the days and Verfall day of the
+  year before. Resturlaub is 0, unless the new setting `UserSettings.suggestCarryOver` (off by
+  default, Nick's request) is on: then it is what `EntitlementSuggestion` takes from the year
+  before's `remaining` (state of today, never below 0). Never stored without Speichern.
+- That setting is a column in `settings` (database version 2, migration 1 to 2 with a test) and a
+  key in the backup file. The key is optional on reading (a file without it means off), so backups
+  written before it still restore; `formatVersion` stays 1 because there was no release yet.
+- Amounts are typed and shown with the language's decimal separator (`AmountText`: "12,5" in
+  German, "12.5" in English, both accepted when typing, only half steps, 0 to 366). The Verfall
+  day is typed as `TT.MM.`.
+- Language: `AppCompatDelegate.setApplicationLocales`, remembered by `AppLocalesMetadataHolderService`
+  below Android 13, listed by `locales_config.xml` on Android 13+. Not in the database or backup.
+- Backup: `CreateDocument` with `BackupFile.fileName(today)` and `OpenDocument` for any file type
+  (a hand-saved file does not always keep its type). Import reads and checks first, then, unless
+  the app is empty, asks "Jetzt in der App: ... In der Datei: ... wird ersetzt". Errors: not a
+  backup, newer version (both numbers), damaged (with the English detail), unreadable. Nothing
+  changes in any of those cases.
+- Tests: `:core` unit tests for `AmountText`, `EntitlementSuggestion`, `publicHolidayCheck` and the
+  backup key; `:app` ViewModel tests (Room in memory, Robolectric), migration test, and Compose
+  tests that compose the real page in German and English on the JVM. Not covered: the two file
+  pickers, the keyboard, TalkBack and the language switch on a real phone.
+- Not built: home status, year and month view, marking days, Brückentage, school holidays on a
+  screen (the next PRs); an about screen with credits (M5).
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
@@ -189,7 +229,7 @@ Known snags:
 
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
-- [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (in review)
-- [ ] M3 Screens
+- [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (PR #12, merged 2026-10-25)
+- [ ] M3 Screens: settings page and backup screen (this PR, in review); home status, year/month view, marking; Brückentage
 - [ ] M4 Export and widget
 - [ ] M5 Release prep
