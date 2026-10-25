@@ -162,6 +162,70 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `the Resturlaub can be set to expire in the year after`() {
+        val vm = viewModel()
+        vm.land()
+        vm.editDays("30")
+        vm.editCarryOver("5")
+        vm.editExpiry("31.3.")
+        vm.editExpiryYears(1)
+
+        assertEquals(1, vm.await { it.form.canSave }.form.typedExpiryYears)
+        vm.saveEntitlement()
+
+        val state = vm.await { it.notice == Notice.EntitlementSaved }
+        assertEquals(
+            YearEntitlement(
+                2027,
+                VacationDays.of(30),
+                VacationDays.of(5),
+                MonthDay.of(3, 31),
+                carryOverExpiryYears = 1,
+            ),
+            runBlocking { repository.observeEntitlement(2027).first() },
+        )
+        assertEquals(1, state.form.base?.expiryYears)
+        assertNull(state.form.typedExpiryYears)
+    }
+
+    @Test
+    fun `only the year choice alone is enough to save, and a year further away is ignored`() {
+        runBlocking {
+            repository.saveEntitlement(YearEntitlement(2027, VacationDays.of(30)))
+        }
+        val vm = viewModel()
+        vm.land()
+        vm.await { it.form.base != null && !it.form.canSave }
+
+        vm.editExpiryYears(2)
+        assertNull(vm.await().form.typedExpiryYears)
+
+        vm.editExpiryYears(1)
+        assertTrue(vm.await { it.form.canSave }.form.canSave)
+        vm.saveEntitlement()
+        vm.await { it.notice == Notice.EntitlementSaved }
+        assertEquals(
+            1,
+            runBlocking { repository.observeEntitlement(2027).first() }?.carryOverExpiryYears,
+        )
+    }
+
+    @Test
+    fun `a new year is suggested with the expiry year of the year before`() {
+        runBlocking {
+            repository.saveEntitlement(
+                YearEntitlement(2026, VacationDays.of(30), carryOverExpiryYears = 1),
+            )
+        }
+        val vm = viewModel()
+        vm.land()
+
+        val form = vm.await { it.form.suggestedFrom != null }.form
+
+        assertEquals(1, form.base?.expiryYears)
+    }
+
+    @Test
     fun `an empty Resturlaub field means none`() {
         val vm = viewModel()
         vm.land()

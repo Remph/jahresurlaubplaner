@@ -36,7 +36,18 @@ abstract class UrlaubsplanerDatabase : RoomDatabase() {
                 }
             }
 
-        const val VERSION = 2
+        /** Version 3: Resturlaub that expires in a later year than the entitlement's. */
+        private val MIGRATION_2_3 =
+            object : Migration(2, 3) {
+                override fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL(
+                        "ALTER TABLE year_entitlement " +
+                            "ADD COLUMN carryOverExpiryYears INTEGER NOT NULL DEFAULT 0",
+                    )
+                }
+            }
+
+        const val VERSION = 3
         const val FILE_NAME = "urlaubsplaner.db"
 
         /**
@@ -44,7 +55,7 @@ abstract class UrlaubsplanerDatabase : RoomDatabase() {
          * goes up; a test fails if one is missing. There is deliberately no fallback to
          * destructive migration: this is the user's vacation data.
          */
-        val MIGRATIONS: List<Migration> = listOf(MIGRATION_1_2)
+        val MIGRATIONS: List<Migration> = listOf(MIGRATION_1_2, MIGRATION_2_3)
 
         fun create(context: Context): UrlaubsplanerDatabase =
             Room

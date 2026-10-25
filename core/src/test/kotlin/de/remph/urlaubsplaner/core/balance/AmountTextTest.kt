@@ -80,6 +80,11 @@ class AmountTextTest {
     }
 
     @Test
+    fun `a Verfall date in a later year is written with the year`() {
+        assertEquals("31.03.2028", AmountText.formatDate(java.time.LocalDate.of(2028, 3, 31)))
+    }
+
+    @Test
     fun `the Verfall day is read in short and long forms`() {
         val march31 = MonthDay.of(3, 31)
         for (text in listOf("31.03.", "31.3.", "31.03", "31.3", " 31.03. ")) {

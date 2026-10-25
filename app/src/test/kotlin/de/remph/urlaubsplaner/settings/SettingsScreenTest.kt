@@ -28,6 +28,7 @@ import de.remph.urlaubsplaner.data.UrlaubsplanerDatabase
 import de.remph.urlaubsplaner.data.UserDataRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.setMain
@@ -210,6 +211,30 @@ class SettingsScreenTest {
         compose.onNodeWithText("Urlaubstage im Jahr").performTextClearance()
         compose.onNodeWithText("Urlaubstage im Jahr").performTextInput("12,5")
         compose.onNodeWithText("Speichern").assertIsEnabled()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the Resturlaub expiry year is chosen with two chips and the list shows the full date`() {
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
+
+        compose.onNodeWithText("Verfällt im Jahr").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithContentDescription("Verfällt im Jahr 2027").assertIsDisplayed()
+        compose.onNodeWithText("Urlaubstage im Jahr").performScrollTo().performTextInput("30")
+        // The field starts with 0, so it is cleared before typing.
+        compose.onNodeWithText("Resturlaub").performScrollTo().performTextClearance()
+        compose.onNodeWithText("Resturlaub").performTextInput("4")
+        compose
+            .onNodeWithContentDescription(
+                "Verfällt im Jahr 2028",
+            ).performScrollTo()
+            .performClick()
+        compose.onNodeWithText("Speichern").performScrollTo().performClick()
+
+        compose.onNodeWithContentDescription("Zurück").performScrollTo().performClick()
+        waitForText("30 Tage, dazu 4 Resturlaub bis 31.03.2028")
     }
 
     @Test

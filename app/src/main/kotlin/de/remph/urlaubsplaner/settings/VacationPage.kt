@@ -1,11 +1,15 @@
 package de.remph.urlaubsplaner.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -20,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.AmountText
 import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.core.balance.YearEntitlement
 import java.time.MonthDay
 
 /** The vacation of one year: a year stepper, three fields, Speichern, and the carry-over option. */
@@ -102,6 +107,11 @@ fun VacationPage(
             placeholder = stringResource(R.string.field_expiry_format),
             onChange = viewModel::editExpiry,
         )
+        ExpiryYearChoice(
+            year = ui.year,
+            selected = form.typedExpiryYears ?: form.base?.expiryYears ?: 0,
+            onSelect = viewModel::editExpiryYears,
+        )
         Button(
             onClick = viewModel::saveEntitlement,
             enabled = form.canSave,
@@ -113,5 +123,36 @@ fun VacationPage(
             checked = ui.settings.suggestCarryOver,
             onChange = viewModel::setSuggestCarryOver,
         )
+    }
+}
+
+/** In which year the Resturlaub expires: the entitlement's own, or the one after. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ExpiryYearChoice(
+    year: Int,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+) {
+    Text(
+        stringResource(R.string.field_expiry_year),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        for (offset in 0..YearEntitlement.MAX_EXPIRY_YEARS) {
+            val description = stringResource(R.string.expiry_in_year_description, year + offset)
+            FilterChip(
+                selected = selected == offset,
+                onClick = { onSelect(offset) },
+                label = { Text((year + offset).toString()) },
+                modifier =
+                    Modifier
+                        .heightIn(min = 48.dp)
+                        .semantics { contentDescription = description },
+            )
+        }
     }
 }

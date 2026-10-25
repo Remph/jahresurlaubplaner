@@ -141,12 +141,14 @@ class SettingsViewModel(
                             it.days,
                             it.carryOver,
                             it.carryOverExpiry,
+                            it.carryOverExpiryYears,
                         )
                     },
                 suggestedFrom = if (base.isSuggestion) base.year - 1 else null,
                 typedDays = edits.days,
                 typedCarryOver = edits.carryOver,
                 typedExpiry = edits.expiry,
+                typedExpiryYears = edits.expiryYears,
                 daysError = daysError,
                 carryOverError = carryOverError,
                 expiryError = expiryError,
@@ -243,6 +245,11 @@ class SettingsViewModel(
 
     fun editExpiry(text: String) = edit { it.copy(expiry = text) }
 
+    /** 0 is the entitlement's own year, 1 the year after. */
+    fun editExpiryYears(years: Int) {
+        if (years in 0..YearEntitlement.MAX_EXPIRY_YEARS) edit { it.copy(expiryYears = years) }
+    }
+
     private fun edit(change: (Edits) -> Edits) =
         edits.update { current ->
             val own = if (current.year == selectedYear.value) current else Edits(selectedYear.value)
@@ -271,7 +278,8 @@ class SettingsViewModel(
             edits.expiry?.let { AmountText.parseDayMonth(it) }
                 ?: form.base?.expiry
                 ?: MonthDay.of(3, 31)
-        val saved = YearEntitlement(current.year, days, carryOver, expiry)
+        val expiryYears = edits.expiryYears ?: form.base?.expiryYears ?: 0
+        val saved = YearEntitlement(current.year, days, carryOver, expiry, expiryYears)
         viewModelScope.launch {
             repository.saveEntitlement(saved)
             // The typed text goes only once the stored values arrive, or the fields would be
@@ -279,7 +287,7 @@ class SettingsViewModel(
             withTimeoutOrNull(STORED_VALUE_WAIT_MS) {
                 state.filterNotNull().first {
                     it.year == saved.year && !it.form.isSuggestion &&
-                        it.form.base == YearForm.Base(days, carryOver, expiry)
+                        it.form.base == YearForm.Base(days, carryOver, expiry, expiryYears)
                 }
             }
             this@SettingsViewModel.edits.value = Edits(current.year)
@@ -377,7 +385,9 @@ class SettingsViewModel(
         val days: String? = null,
         val carryOver: String? = null,
         val expiry: String? = null,
+        val expiryYears: Int? = null,
     ) {
-        val dirty: Boolean get() = days != null || carryOver != null || expiry != null
+        val dirty: Boolean
+            get() = days != null || carryOver != null || expiry != null || expiryYears != null
     }
 }

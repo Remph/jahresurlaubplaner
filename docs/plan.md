@@ -237,6 +237,15 @@ and PR C (Brückentage).
   language. The light/dark choice goes through `AppCompatDelegate.setDefaultNightMode`, re-applied
   in `UrlaubsplanerApp.onCreate` because AppCompat does not remember it.
 - Library: `material-icons-core` (back arrow and the tab icons; not the big extended set).
+- Resturlaub that expires in a later year (Nick, 2026-10-25: "Urlaubsanspruch von 2026 verfällt am
+  31.03.2028"): `YearEntitlement.carryOverExpiryYears` is 0 (the entitlement's own year, default) or
+  1 (the year after); the Verfall day stays a `MonthDay`. `carryOverExpiryDate` is the real date and
+  `VacationCalculator.balance` uses it. Room version 3 (`carryOverExpiryYears INTEGER NOT NULL
+  DEFAULT 0`, migration 2 to 3 with a test), backup key `carryOverExpiryYears` (missing reads as 0,
+  formatVersion stays 1), new-year suggestions copy it. Settings: the Verfall field (TT.MM.) plus
+  two chips with the year; the list summary shows the full date when it is a later year. Not
+  built: marks in the following year do not use the earlier year's Resturlaub, the balance of
+  one year only looks at its own marks, and the Resturlaub of the next year is still typed in.
 - Tests: the settings screen tests now walk list and pages; `AppRootTest`, `AppearanceStoreTest`,
   `ThemeTest` (colour choice, pure black), `SummariesTest`. Screenshots of the real screens in
   light, dark and pure black are in `/mnt/project-files/design/pr-a/` (not in the repo).

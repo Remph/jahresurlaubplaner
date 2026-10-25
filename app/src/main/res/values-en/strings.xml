@@ -36,6 +36,8 @@
     <string name="field_carry_over">Carried-over days (Resturlaub)</string>
     <string name="field_carry_over_expiry">Carried-over days expire on</string>
     <string name="field_expiry_format">DD.MM.</string>
+    <string name="field_expiry_year">Expires in the year</string>
+    <string name="expiry_in_year_description">Expires in %1$d</string>
     <string name="error_days">Please enter whole or half days, for example 30 or 12.5.</string>
     <string name="error_expiry">Please enter a real day, for example 31.03.</string>
     <string name="suggestion_from_year">Suggested from %1$d. Not saved yet.</string>

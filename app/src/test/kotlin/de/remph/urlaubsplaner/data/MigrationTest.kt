@@ -130,6 +130,36 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun `version 2 entitlements migrate with the expiry in their own year`() {
+        helper.createDatabase(TEST_DB, 2).apply {
+            execSQL(
+                "INSERT INTO year_entitlement (year, halves, carryOverHalves, carryOverExpiry) " +
+                    "VALUES (2026, 60, 5, '--03-31')",
+            )
+            close()
+        }
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database =
+            Room
+                .databaseBuilder(context, UrlaubsplanerDatabase::class.java, TEST_DB)
+                .addMigrations(*UrlaubsplanerDatabase.MIGRATIONS.toTypedArray())
+                .build()
+        try {
+            val repository = UserDataRepository(database)
+            val entitlement = runBlocking { repository.observeEntitlement(2026).first() }
+            assertEquals(0, entitlement?.carryOverExpiryYears)
+            assertEquals(LocalDate.of(2026, 3, 31), entitlement?.carryOverExpiryDate)
+
+            runBlocking { repository.saveEntitlement(entitlement!!.copy(carryOverExpiryYears = 1)) }
+            val later = runBlocking { repository.observeEntitlement(2026).first() }
+            assertEquals(1, later?.carryOverExpiryYears)
+        } finally {
+            database.close()
+        }
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }
