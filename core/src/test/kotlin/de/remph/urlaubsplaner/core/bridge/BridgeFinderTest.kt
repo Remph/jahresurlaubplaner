@@ -77,6 +77,15 @@ class BridgeFinderTest {
     }
 
     @Test
+    fun `a gap is never cut into a smaller bridge`() {
+        // Mon 11 to Thu 14 May cost 4 days before the Friday holiday. Taking only Wed and Thu
+        // would leave Mon and Tue to work in the middle of the stretch, so there is no bridge.
+        val bridges = finder(setOf(d(5, 15))).find(2026)
+
+        assertTrue(bridges.isEmpty())
+    }
+
+    @Test
     fun `a limit of one day still finds the one day bridges`() {
         val bridges = finder(setOf(d(5, 14))).find(2026, maxCost = VacationDays.ONE)
 
