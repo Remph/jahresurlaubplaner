@@ -52,7 +52,8 @@ class PublicHolidaysTest {
         land: Bundesland,
         year: Int = 2026,
         extras: Set<RegionalExtra> = emptySet(),
-    ) = PublicHolidays.of(land, year, extras).map { it.holiday }
+        optOuts: Set<RegionalOptOut> = emptySet(),
+    ) = PublicHolidays.of(land, year, extras, optOuts).map { it.holiday }
 
     @Test
     fun `there are 16 Bundeslaender with unique codes`() {
@@ -456,6 +457,62 @@ class PublicHolidaysTest {
         assertFalse(PublicHolidays.isHoliday(BAYERN, day))
         assertTrue(
             PublicHolidays.isHoliday(BAYERN, day, setOf(RegionalExtra.AUGSBURGER_FRIEDENSFEST)),
+        )
+    }
+
+    @Test
+    fun `Bayern keeps Mariae Himmelfahrt unless the community opts out`() {
+        val optOut = setOf(RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN)
+
+        assertTrue(MARIAE_HIMMELFAHRT in holidays(BAYERN))
+        assertFalse(MARIAE_HIMMELFAHRT in holidays(BAYERN, optOuts = optOut))
+    }
+
+    @Test
+    fun `the Bayern opt-out removes only Mariae Himmelfahrt`() {
+        val optOut = setOf(RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN)
+
+        assertEquals(
+            holidays(BAYERN).filter { it != MARIAE_HIMMELFAHRT },
+            holidays(BAYERN, optOuts = optOut),
+        )
+    }
+
+    @Test
+    fun `the Bayern opt-out does nothing in other Laender`() {
+        val optOut = setOf(RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN)
+
+        // Saarland has the holiday in all communities, so the Bayern setting must not reach it.
+        assertTrue(MARIAE_HIMMELFAHRT in holidays(SAARLAND, optOuts = optOut))
+        for (land in Bundesland.entries - BAYERN) {
+            assertEquals(holidays(land), holidays(land, optOuts = optOut), land.toString())
+        }
+    }
+
+    @Test
+    fun `the opt-out works with extras and in every supported year`() {
+        val optOut = setOf(RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN)
+        val extra = setOf(RegionalExtra.AUGSBURGER_FRIEDENSFEST)
+
+        val result = holidays(BAYERN, 2030, extras = extra, optOuts = optOut)
+
+        assertTrue(AUGSBURGER_FRIEDENSFEST in result)
+        assertFalse(MARIAE_HIMMELFAHRT in result)
+        for (year in PublicHolidays.FIRST_SUPPORTED_YEAR..2035) {
+            assertFalse(MARIAE_HIMMELFAHRT in holidays(BAYERN, year, optOuts = optOut), "$year")
+        }
+    }
+
+    @Test
+    fun `isHoliday takes the opt-out into account`() {
+        val day = LocalDate.of(2026, 8, 15)
+        val optOut = setOf(RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN)
+
+        assertTrue(PublicHolidays.isHoliday(BAYERN, day))
+        assertFalse(PublicHolidays.isHoliday(BAYERN, day, optOuts = optOut))
+        assertTrue(PublicHolidays.isHoliday(SAARLAND, day, optOuts = optOut))
+        assertTrue(
+            PublicHolidays.isHoliday(BAYERN, LocalDate.of(2026, 12, 25), optOuts = optOut),
         )
     }
 

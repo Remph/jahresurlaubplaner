@@ -51,8 +51,8 @@ data class VacationBalance(
  *
  * A marked day costs vacation only on a working day that is not a public holiday, so weekends
  * and holidays in a marked week are free. [isPublicHoliday] is a function, not a Land plus
- * extras, so the regional extras and later the Bayern opt-out reach this code without changing
- * it. With `PublicHolidays.isHoliday` it throws for dates before 2019.
+ * extras and opt-outs, so the regional extras and the Bayern opt-out reach this code without
+ * changing it. With `PublicHolidays.isHoliday` it throws for dates before 2019.
  *
  * "Today" comes from [clock]: marked days up to and including today count as taken, later ones
  * as planned.

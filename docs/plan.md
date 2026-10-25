@@ -99,10 +99,13 @@ Decided with Nick on 2026-10-25:
 
 Opt-out for Mariä Himmelfahrt in Bayern (Nick, 2026-10-25): the holiday is counted for all of
 Bayern by default, but some communities do not have it, so there is a setting to switch it off.
-It sits in the M3 settings next to the regional opt-ins. `:core` needs a way to switch the Bayern
-default off (an opt-out next to `extras` in `PublicHolidays.of`; design it with its own test
-before the M3 screen needs it). Marked days, the vacation balance and Brückentage must read the
-holidays through the same setting.
+It sits in the M3 settings next to the regional opt-ins. Built in `:core` (M1, last piece):
+`RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN`, passed as `optOuts` next to `extras` to
+`PublicHolidays.of` and `isHoliday`. It only affects Bayern (Saarland has the holiday everywhere)
+and the default is unchanged. `VacationCalculator` and `BridgeFinder` needed no change; they read
+the holidays through the function the caller builds, and a test runs both through it with the
+opt-out. M3 stores the set like the extras and builds that function from Land, extras and opt-outs
+for marked days, the balance and Brückentage alike. Not built: Room, screen.
 
 Known snags:
 
@@ -114,7 +117,7 @@ Known snags:
 ## Status
 
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
-- [ ] M1 Rules in `:core`: public holidays done (PR #5), vacation balance done (PR #7), Brückentage built (third piece, in review)
+- [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (in review)
 - [ ] M2 Data and storage
 - [ ] M3 Screens
 - [ ] M4 Export and widget
