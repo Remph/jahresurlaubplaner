@@ -1,0 +1,385 @@
+package de.remph.urlaubsplaner.core.backup
+
+import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.core.balance.WorkSchedule
+import de.remph.urlaubsplaner.core.balance.YearEntitlement
+import de.remph.urlaubsplaner.core.holidays.Bundesland
+import de.remph.urlaubsplaner.core.holidays.RegionalExtra
+import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
+import de.remph.urlaubsplaner.core.settings.UserSettings
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.MonthDay
+import java.time.format.DateTimeParseException
+
+/**
+ * The backup file: one JSON document, UTF-8, version [VERSION].
+ *
+ * ```
+ * { "app": "urlaubsplaner", "formatVersion": 1, "exportedOn": "2026-10-25",
+ *   "settings": { "land": "BY" or null, "regionalExtras": [...], "regionalOptOuts": [...],
+ *                 "workingDays": ["MONDAY", ...], "specialDays": [{"day": "--12-24", "halfDays": 1}] },
+ *   "entitlements": [{"year": 2026, "halfDays": 60, "carryOverHalfDays": 10, "carryOverExpiry": "--03-31"}],
+ *   "markedDays": [{"date": "2026-07-01", "mark": "full"}] }
+ * ```
+ *
+ * Amounts are counted in half days, like in the database. Every value has a name owned by this
+ * file (a `when` per enum, so a new enum value does not compile until it has one), which means
+ * renaming something in the app cannot break old backups. A change that an older app would lose
+ * data on needs a new [VERSION].
+ *
+ * Reading is strict: a newer version, or one value that is missing or not understood, refuses the
+ * whole file with a [BackupException] before anything is changed. Dropping part of someone's
+ * vacation data without saying so is worse than not restoring.
+ */
+object BackupFile {
+    const val VERSION = 1
+    const val MIME_TYPE = "application/json"
+
+    /** Ten years of marked days are well below 1 MB; this only stops reading a random huge file. */
+    const val MAX_BYTES = 8 * 1024 * 1024
+
+    private const val APP = "urlaubsplaner"
+
+    // U+FEFF, written as a number because formatters like to turn the escape into the invisible character.
+    private val BYTE_ORDER_MARK = 0xFEFF.toChar()
+
+    // A year has at most 366 days; anything above is a typo, and a sum of such values must not overflow.
+    private const val MAX_HALF_DAYS = 2 * 366
+
+    private val json = Json { prettyPrint = true }
+
+    /** The name suggested to the file picker. */
+    fun fileName(exportedOn: LocalDate) = "urlaubsplaner-$exportedOn.json"
+
+    fun encode(
+        data: BackupData,
+        exportedOn: LocalDate,
+    ): String {
+        val document =
+            buildJsonObject {
+                put("app", APP)
+                put("formatVersion", VERSION)
+                put("exportedOn", exportedOn.toString())
+                put("settings", encodeSettings(data.settings))
+                put(
+                    "entitlements",
+                    JsonArray(
+                        data.entitlements.sortedBy { it.year }.map { entitlement ->
+                            buildJsonObject {
+                                put("year", entitlement.year)
+                                put("halfDays", entitlement.days.halfDays())
+                                put("carryOverHalfDays", entitlement.carryOver.halfDays())
+                                put("carryOverExpiry", entitlement.carryOverExpiry.toString())
+                            }
+                        },
+                    ),
+                )
+                put(
+                    "markedDays",
+                    JsonArray(
+                        data.marks.entries.sortedBy { it.key }.map { (date, mark) ->
+                            buildJsonObject {
+                                put("date", date.toString())
+                                put("mark", mark.backupName())
+                            }
+                        },
+                    ),
+                )
+            }
+        return json.encodeToString(JsonElement.serializer(), document)
+    }
+
+    fun writeTo(
+        output: OutputStream,
+        data: BackupData,
+        exportedOn: LocalDate,
+    ) {
+        output.write(encode(data, exportedOn).toByteArray(Charsets.UTF_8))
+        output.flush()
+    }
+
+    /** Reads at most [MAX_BYTES]; a longer stream is not a backup. */
+    fun readFrom(input: InputStream): BackupData {
+        val buffer = ByteArrayOutputStream()
+        val chunk = ByteArray(8192)
+        while (true) {
+            val count = input.read(chunk)
+            if (count < 0) break
+            if (buffer.size() + count > MAX_BYTES) {
+                throw BackupException.NotABackup("the file is larger than $MAX_BYTES bytes")
+            }
+            buffer.write(chunk, 0, count)
+        }
+        return decode(buffer.toString(Charsets.UTF_8))
+    }
+
+    /** @throws BackupException when [text] is not a backup this app can restore completely. */
+    fun decode(text: String): BackupData {
+        // Notepad on Windows writes a byte order mark when a user saves the file by hand.
+        val document =
+            try {
+                Json.parseToJsonElement(text.removePrefix(BYTE_ORDER_MARK.toString()))
+            } catch (e: SerializationException) {
+                throw BackupException.NotABackup(
+                    "it is not valid JSON (${e.message?.lineSequence()?.first()})",
+                )
+            }
+        val root =
+            document as? JsonObject ?: throw BackupException.NotABackup("it is not a JSON object")
+        if ((root["app"] as? JsonPrimitive)?.takeIf { it.isString }?.content != APP) {
+            throw BackupException.NotABackup("the app marker is missing")
+        }
+        // Before anything else, so a newer file with a different structure still gets the right message.
+        val version = root.int("formatVersion", "formatVersion")
+        if (version > VERSION) throw BackupException.NewerVersion(version, VERSION)
+        if (version < 1) damaged("formatVersion is $version")
+
+        try {
+            return BackupData(
+                settings = decodeSettings(root.obj("settings", "settings")),
+                entitlements = decodeEntitlements(root.array("entitlements", "entitlements")),
+                marks = decodeMarks(root.array("markedDays", "markedDays")),
+            )
+        } catch (e: IllegalArgumentException) {
+            // The domain types check their own rules (no negative entitlement, special days between
+            // none and a whole day); their message names the broken rule.
+            throw BackupException.Damaged(e.message ?: "a value is out of range")
+        }
+    }
+
+    private fun encodeSettings(settings: UserSettings) =
+        buildJsonObject {
+            put("land", settings.land?.code)
+            putJsonArray("regionalExtras") {
+                settings.extras
+                    .map { it.backupName() }
+                    .sorted()
+                    .forEach { add(it) }
+            }
+            putJsonArray("regionalOptOuts") {
+                settings.optOuts
+                    .map { it.backupName() }
+                    .sorted()
+                    .forEach { add(it) }
+            }
+            putJsonArray(
+                "workingDays",
+            ) {
+                settings.schedule.workingDays
+                    .sorted()
+                    .forEach { add(it.name) }
+            }
+            put(
+                "specialDays",
+                JsonArray(
+                    settings.schedule.specialDays.entries.sortedBy { it.key }.map { (day, value) ->
+                        buildJsonObject {
+                            put("day", day.toString())
+                            put("halfDays", value.halfDays())
+                        }
+                    },
+                ),
+            )
+        }
+
+    private fun decodeSettings(settings: JsonObject): UserSettings {
+        val land =
+            when (val element = settings["land"] ?: damaged("settings.land is missing")) {
+                is JsonNull -> {
+                    null
+                }
+
+                else -> {
+                    val code = element.string("settings.land")
+                    Bundesland.fromCode(code) ?: damaged("settings.land: unknown Land \"$code\"")
+                }
+            }
+        val specialDays =
+            settings.array("specialDays", "settings.specialDays").mapIndexed { index, element ->
+                val path = "settings.specialDays[$index]"
+                val entry = element.obj(path)
+                val day = entry.monthDay("day", path)
+                day to VacationDays.ofHalves(entry.int("halfDays", path))
+            }
+        val days = specialDays.map { it.first }
+        if (days.size != days.toSet().size) damaged("settings.specialDays lists a day twice")
+        return UserSettings(
+            land = land,
+            extras =
+                settings.names("regionalExtras", "settings") { name ->
+                    RegionalExtra.entries.find { it.backupName() == name }
+                },
+            optOuts =
+                settings.names("regionalOptOuts", "settings") { name ->
+                    RegionalOptOut.entries.find { it.backupName() == name }
+                },
+            schedule =
+                WorkSchedule(
+                    workingDays =
+                        settings.names("workingDays", "settings") { name ->
+                            DayOfWeek.entries.find { it.name == name }
+                        },
+                    specialDays = specialDays.toMap(),
+                ),
+        )
+    }
+
+    private fun decodeEntitlements(array: JsonArray): List<YearEntitlement> {
+        val entitlements =
+            array.mapIndexed { index, element ->
+                val path = "entitlements[$index]"
+                val entry = element.obj(path)
+                YearEntitlement(
+                    year = entry.int("year", path),
+                    days = entry.halfDays("halfDays", path),
+                    carryOver = entry.halfDays("carryOverHalfDays", path),
+                    carryOverExpiry = entry.monthDay("carryOverExpiry", path),
+                )
+            }
+        val years = entitlements.map { it.year }
+        if (years.size != years.toSet().size) damaged("entitlements lists a year twice")
+        return entitlements
+    }
+
+    private fun decodeMarks(array: JsonArray): Map<LocalDate, DayMark> {
+        val marks = mutableMapOf<LocalDate, DayMark>()
+        array.forEachIndexed { index, element ->
+            val path = "markedDays[$index]"
+            val entry = element.obj(path)
+            val date = entry.date("date", path)
+            val name = entry.string("mark", path)
+            val mark =
+                DayMark.entries.find { it.backupName() == name }
+                    ?: damaged("$path.mark: unknown mark \"$name\"")
+            if (marks.put(date, mark) != null) damaged("markedDays lists $date twice")
+        }
+        return marks
+    }
+
+    // The names below are part of the file format; the fixture in BackupFileTest pins them.
+
+    private fun DayMark.backupName() =
+        when (this) {
+            DayMark.FULL -> "full"
+            DayMark.HALF -> "half"
+        }
+
+    private fun RegionalExtra.backupName() =
+        when (this) {
+            RegionalExtra.AUGSBURGER_FRIEDENSFEST -> "augsburger-friedensfest"
+            RegionalExtra.FRONLEICHNAM_IN_TEILEN -> "fronleichnam-in-teilen"
+        }
+
+    private fun RegionalOptOut.backupName() =
+        when (this) {
+            RegionalOptOut.MARIAE_HIMMELFAHRT_BAYERN -> "mariae-himmelfahrt-bayern"
+        }
+
+    private fun VacationDays.halfDays() = (days * 2).toInt()
+
+    // Reading helpers: every failure names the place in the file.
+
+    private fun damaged(detail: String): Nothing = throw BackupException.Damaged(detail)
+
+    private fun JsonElement.obj(path: String) =
+        this as? JsonObject ?: damaged("$path must be an object")
+
+    private fun JsonElement.string(path: String): String {
+        val primitive = this as? JsonPrimitive
+        if (primitive == null || primitive is JsonNull ||
+            !primitive.isString
+        ) {
+            damaged("$path must be text")
+        }
+        return primitive.content
+    }
+
+    private fun JsonObject.field(
+        key: String,
+        path: String,
+    ) = this[key] ?: damaged("$path.$key is missing")
+
+    private fun JsonObject.string(
+        key: String,
+        path: String,
+    ) = field(key, path).string("$path.$key")
+
+    private fun JsonObject.int(
+        key: String,
+        path: String,
+    ): Int {
+        val primitive = field(key, path) as? JsonPrimitive
+        if (primitive == null || primitive is JsonNull ||
+            primitive.isString
+        ) {
+            damaged("$path.$key must be a number")
+        }
+        return primitive.content.toIntOrNull() ?: damaged("$path.$key must be a whole number")
+    }
+
+    private fun JsonObject.obj(
+        key: String,
+        path: String,
+    ) = field(key, path).obj("$path.$key")
+
+    private fun JsonObject.array(
+        key: String,
+        path: String,
+    ) = field(key, path) as? JsonArray ?: damaged("$path.$key must be a list")
+
+    private fun JsonObject.halfDays(
+        key: String,
+        path: String,
+    ): VacationDays {
+        val halves = int(key, path)
+        if (halves !in 0..MAX_HALF_DAYS) damaged("$path.$key must be between 0 and $MAX_HALF_DAYS")
+        return VacationDays.ofHalves(halves)
+    }
+
+    private fun JsonObject.date(
+        key: String,
+        path: String,
+    ): LocalDate =
+        try {
+            LocalDate.parse(string(key, path))
+        } catch (_: DateTimeParseException) {
+            damaged("$path.$key is not a date like 2026-07-01")
+        }
+
+    private fun JsonObject.monthDay(
+        key: String,
+        path: String,
+    ): MonthDay =
+        try {
+            MonthDay.parse(string(key, path))
+        } catch (_: DateTimeParseException) {
+            damaged("$path.$key is not a day like --12-24")
+        }
+
+    private fun <T> JsonObject.names(
+        key: String,
+        path: String,
+        lookup: (String) -> T?,
+    ): Set<T> =
+        array(key, path)
+            .mapIndexed { index, element ->
+                val name = element.string("$path.$key[$index]")
+                lookup(name) ?: damaged("$path.$key[$index]: unknown value \"$name\"")
+            }.toSet()
+}

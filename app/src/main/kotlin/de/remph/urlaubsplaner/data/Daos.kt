@@ -10,6 +10,9 @@ interface SettingsDao {
     @Query("SELECT * FROM settings WHERE id = ${SettingsEntity.SETTINGS_ID}")
     fun observeSettings(): Flow<SettingsEntity?>
 
+    @Query("SELECT * FROM settings WHERE id = ${SettingsEntity.SETTINGS_ID}")
+    suspend fun get(): SettingsEntity?
+
     @Upsert
     suspend fun upsert(settings: SettingsEntity)
 }
@@ -24,6 +27,15 @@ interface EntitlementDao {
 
     @Query("DELETE FROM year_entitlement WHERE year = :year")
     suspend fun delete(year: Int)
+
+    @Query("SELECT * FROM year_entitlement ORDER BY year")
+    suspend fun getAll(): List<YearEntitlementEntity>
+
+    @Upsert
+    suspend fun upsertAll(entitlements: List<YearEntitlementEntity>)
+
+    @Query("DELETE FROM year_entitlement")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -40,4 +52,13 @@ interface MarkedDayDao {
 
     @Query("DELETE FROM marked_day WHERE date = :date")
     suspend fun delete(date: String)
+
+    @Query("SELECT * FROM marked_day ORDER BY date")
+    suspend fun getAll(): List<MarkedDayEntity>
+
+    @Upsert
+    suspend fun upsertAll(days: List<MarkedDayEntity>)
+
+    @Query("DELETE FROM marked_day")
+    suspend fun deleteAll()
 }

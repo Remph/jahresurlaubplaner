@@ -130,7 +130,7 @@ Storage (M2, first piece): Room in `:app`, package `de.remph.urlaubsplaner.data`
   downloads its Android image from Maven Central, which answers 429 there.
 - The schema directory is a `debug` asset directory because Robolectric reads assets from the
   debug build; the release APK does not contain the schemas.
-- Not built: backup, screens, a place that creates the database
+- Not built: screens, a place that creates the database
   (`UrlaubsplanerDatabase.create(context)` exists; M3 calls it from an `Application`).
 
 School holidays (M2, second piece): design approved by Nick on 2026-10-25.
@@ -153,6 +153,31 @@ School holidays (M2, second piece): design approved by Nick on 2026-10-25.
 - Not built: showing the holidays, the credit in the about screen or the ICS, the yearly renewal
   of the file (next due before 2027 ends; `covers` says when the file runs out).
 
+Backup (M2, third piece): design approved by Nick on 2026-10-25, including "import replaces
+everything".
+
+- `:core.backup`: `BackupFile.encode/decode/writeTo/readFrom/fileName` and `BackupData` (settings,
+  entitlements, marked days). One UTF-8 JSON file with `app`, `formatVersion` (1) and `exportedOn`.
+  The file has its own stable names (a `when` per enum, so a new enum value does not compile until
+  it has one) and counts amounts in half days. Not in it: the app language and the school holiday
+  file. The format is documented in the `BackupFile` comment; a test reads a hand-written version 1
+  file so a rename in the app cannot silently change it.
+- Reading is strict and happens before anything is changed. `BackupException.NotABackup` (not JSON,
+  not ours, over 8 MB), `NewerVersion(found, supported)` (checked before the rest, so a newer
+  structure still gets this message) and `Damaged(detail)` (a missing or wrong value, an unknown
+  name, a duplicate year, date or special day, a value outside the rules). Nothing is skipped
+  silently. The screens in M3 pick the text from the class.
+- Import replaces everything: `UserDataRepository.replaceAll(data)` is one Room transaction (all or
+  nothing); `readAll()` gives the current data. `BackupData.summary()` and `isEmpty` give the
+  confirm dialog its numbers ("replaces 12 marked days and 2 years with ...") and tell it to skip
+  the dialog on a fresh install. No schema change, so no migration.
+- `:app` `BackupFileStore(contentResolver)` moves the bytes for a `Uri` from the system file picker
+  (`CreateDocument` / `OpenDocument`, `BackupFile.MIME_TYPE`, no storage permission). Opening for
+  write uses `"wt"` so a longer old file leaves no tail.
+- New library: `kotlinx-serialization-json` 1.12.0 (JetBrains, Apache-2.0), tree API only, no
+  compiler plugin. The about screen (M5) lists its licence.
+- Not built: the picker launchers and the confirm dialog (M3 screens), merging, cloud sync.
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
@@ -164,7 +189,7 @@ Known snags:
 
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
-- [ ] M2 Data and storage: Room (PR #10, merged 2026-10-25), school holiday file and loader (in review), backup
+- [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (in review)
 - [ ] M3 Screens
 - [ ] M4 Export and widget
 - [ ] M5 Release prep
