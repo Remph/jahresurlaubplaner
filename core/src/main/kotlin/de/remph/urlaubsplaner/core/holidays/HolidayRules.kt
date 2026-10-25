@@ -31,6 +31,7 @@ internal class HolidayRule(
  */
 internal object HolidayRules {
     private val ALL = Bundesland.entries.toSet()
+    private const val MV_FRAUENTAG_FIRST_YEAR = 2023
 
     val all: List<HolidayRule> =
         listOf(
@@ -40,9 +41,8 @@ internal object HolidayRules {
                 setOf(BADEN_WUERTTEMBERG, BAYERN, SACHSEN_ANHALT),
             ),
             HolidayRule(Holiday.INTERNATIONALER_FRAUENTAG, setOf(BERLIN)),
-            HolidayRule(Holiday.INTERNATIONALER_FRAUENTAG, setOf(MECKLENBURG_VORPOMMERN)) {
-                it >=
-                    2023
+            HolidayRule(Holiday.INTERNATIONALER_FRAUENTAG, setOf(MECKLENBURG_VORPOMMERN)) { year ->
+                year >= MV_FRAUENTAG_FIRST_YEAR
             },
             HolidayRule(Holiday.KARFREITAG, ALL),
             HolidayRule(Holiday.OSTERSONNTAG, setOf(BRANDENBURG)),

@@ -32,6 +32,7 @@ object PublicHolidays {
             .sortedBy { it.date }
     }
 
+    /** Whether [date] is a public holiday in [land]. Throws for years before [FIRST_SUPPORTED_YEAR]. */
     fun isHoliday(
         land: Bundesland,
         date: LocalDate,
