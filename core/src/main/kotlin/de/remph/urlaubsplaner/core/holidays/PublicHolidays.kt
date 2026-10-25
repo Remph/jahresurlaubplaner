@@ -12,19 +12,25 @@ object PublicHolidays {
     /** Earlier years differ (Reformationstag 2017, Weltkindertag and Frauentag came in 2019). */
     const val FIRST_SUPPORTED_YEAR = 2019
 
-    /** The public holidays of [land] in [year], sorted by date. */
+    /**
+     * The public holidays of [land] in [year], sorted by date. [extras] add holidays that only
+     * some communities have; [optOuts] remove statewide ones that some communities lack.
+     */
     fun of(
         land: Bundesland,
         year: Int,
         extras: Set<RegionalExtra> = emptySet(),
+        optOuts: Set<RegionalOptOut> = emptySet(),
     ): List<PublicHoliday> {
         require(year >= FIRST_SUPPORTED_YEAR) {
             "Public holidays are supported from $FIRST_SUPPORTED_YEAR, got $year"
         }
+        val optedOut = optOuts.filter { land in it.lands }.map { it.holiday }.toSet()
         val statewide =
             HolidayRules.all
                 .filter { land in it.lands && it.appliesInYear(year) }
                 .map { it.holiday }
+                .filter { it !in optedOut }
         val regional = extras.filter { land in it.lands }.map { it.holiday }
         return (statewide + regional)
             .distinct()
@@ -37,5 +43,6 @@ object PublicHolidays {
         land: Bundesland,
         date: LocalDate,
         extras: Set<RegionalExtra> = emptySet(),
-    ): Boolean = of(land, date.year, extras).any { it.date == date }
+        optOuts: Set<RegionalOptOut> = emptySet(),
+    ): Boolean = of(land, date.year, extras, optOuts).any { it.date == date }
 }
