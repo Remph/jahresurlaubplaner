@@ -66,7 +66,9 @@ private fun parseSpecialDays(text: String): Map<MonthDay, VacationDays> =
     splitList(text)
         .mapNotNull { pair ->
             parseOrNull {
-                val (day, halves) = pair.split(':')
+                val parts = pair.split(':')
+                require(parts.size == 2)
+                val (day, halves) = parts
                 val value = VacationDays.ofHalves(halves.toInt())
                 // WorkSchedule rejects anything outside this range, which must not crash a read.
                 if (value < VacationDays.ZERO ||

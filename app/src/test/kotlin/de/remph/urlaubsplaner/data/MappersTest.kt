@@ -70,7 +70,8 @@ class MappersTest {
                 optOuts = "FROM_THE_FUTURE",
                 workingDays = "MONDAY,FUNDAY",
                 // Fine, three halves (more than a day), not a date, not a number.
-                specialDays = "--12-24:1,--12-31:3,12-25:1,--01-01:x",
+                // Also no colon, an empty half count, and a third part.
+                specialDays = "--12-24:1,--12-31:3,12-25:1,--01-01:x,--12-26,--12-27:,--12-28:1:1",
             )
 
         val settings = entity.toUserSettings()
