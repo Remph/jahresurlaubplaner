@@ -130,13 +130,33 @@ Storage (M2, first piece): Room in `:app`, package `de.remph.urlaubsplaner.data`
   downloads its Android image from Maven Central, which answers 429 there.
 - The schema directory is a `debug` asset directory because Robolectric reads assets from the
   debug build; the release APK does not contain the schemas.
-- Not built: school holiday file, backup, screens, a place that creates the database
+- Not built: backup, screens, a place that creates the database
   (`UrlaubsplanerDatabase.create(context)` exists; M3 calls it from an `Application`).
+
+School holidays (M2, second piece): design approved by Nick on 2026-10-25.
+
+- The file is `data/school-holidays/school-holidays.txt` (plain text, one line per holiday:
+  `land;from;to;name_de;name_en`), 2026 to 2029, all 16 Länder, exported from OpenHolidays and
+  cross-checked with KMK on 2026-10-25. It sits with its ODbL text and a README (provenance, what
+  was left out, yearly update steps, cross-check log) in `data/school-holidays/`, outside `app/`
+  so `:core`'s tests read the same file the app ships. `tools/update-school-holidays.py` rebuilds
+  it. No new library.
+- Left out: Schleswig-Holstein's island dates, Mecklenburg-Vorpommern's vocational schools (the
+  general schools are used).
+- `:core.schoolholidays`: `SchoolHolidayData.parse(text)` (strict; a damaged line throws with the
+  line number), `on(land, date)`, `between(land, start, end)`, `covers(...)`, `coverage`,
+  `version` and `CREDIT` (the line for the about screen and the ICS export). Outside `coverage`
+  the answer is "unknown", so screens check `covers` before they show "no school holidays".
+- `:app` only reads the asset: `SchoolHolidayAsset.load(context)`. The whole `data/school-holidays`
+  directory is an asset directory of `main`, so the licence text goes into the APK. M3 loads it
+  once and keeps it, and shows the credit; M4 adds the credit to the ICS export.
+- Not built: showing the holidays, the credit in the about screen or the ICS, the yearly renewal
+  of the file (next due before 2027 ends; `covers` says when the file runs out).
 
 Known snags:
 
-- School holiday data (M2): the cloud cannot reach openholidaysapi.org unless Nick adds it to the
-  trusted sites; otherwise Nick exports the JSON once on his PC.
+- School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
+  2026-10-25 (Nick added them); the Länder ministry sites are not (probe before relying on it).
 - Instrumented tests and the widget (M3, M4) need an emulator or Nick's phone.
 - M5: the app has no launcher icon yet (lint `MissingApplicationIcon`).
 
@@ -144,7 +164,7 @@ Known snags:
 
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
-- [ ] M2 Data and storage: Room (in review), school holiday file, backup
+- [ ] M2 Data and storage: Room (PR #10, merged 2026-10-25), school holiday file and loader (in review), backup
 - [ ] M3 Screens
 - [ ] M4 Export and widget
 - [ ] M5 Release prep

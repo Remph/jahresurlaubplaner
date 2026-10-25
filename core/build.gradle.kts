@@ -14,6 +14,13 @@ kotlin {
     }
 }
 
+// The tests read the real school holiday file; the app bundles the same directory as assets.
+sourceSets {
+    test {
+        resources.srcDir(rootProject.file("data/school-holidays"))
+    }
+}
+
 dependencies {
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)

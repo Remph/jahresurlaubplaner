@@ -23,6 +23,9 @@ android {
     }
 
     sourceSets {
+        // The school holiday file with its ODbL text and README (not in app/, shared with :core's
+        // tests). Everything in that directory ends up in the APK, so the licence travels with it.
+        getByName("main").assets.directories.add("../data/school-holidays")
         // The migration tests read the committed schemas as assets. Robolectric takes its assets
         // from the debug build, not from the test source set; the release build stays without them.
         getByName("debug").assets.directories.add("schemas")
