@@ -180,7 +180,7 @@
         <item quantity="one">%1$d Tag frei</item>
         <item quantity="other">%1$d Tage frei</item>
     </plurals>
-    <string name="bridge_sheet_title">Brücke eintragen</string>
+    <string name="bridge_sheet_title">Brückentage eintragen</string>
     <plurals name="bridge_stretch">
         <item quantity="one">%1$d Tag frei am Stück, %2$s</item>
         <item quantity="other">%1$d Tage frei am Stück, %2$s</item>

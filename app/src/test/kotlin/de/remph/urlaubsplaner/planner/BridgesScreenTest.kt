@@ -121,7 +121,7 @@ class BridgesScreenTest {
         showOverview("danach: Fr nehmen")
 
         line("danach: Fr nehmen, 4 Tage frei").performScrollTo().performClick()
-        waitForText("Brücke eintragen")
+        waitForText("Brückentage eintragen")
         compose.onNodeWithText("Fr 07.05.").assertIsDisplayed()
         compose
             .onNodeWithText(
@@ -150,11 +150,11 @@ class BridgesScreenTest {
         showOverview("danach: Fr nehmen")
 
         line("danach: Fr nehmen, 4 Tage frei").performScrollTo().performClick()
-        waitForText("Brücke eintragen")
+        waitForText("Brückentage eintragen")
         compose.onNodeWithText("Abbrechen").performClick()
 
         compose.waitUntil(5_000) {
-            compose.onAllNodesWithText("Brücke eintragen").fetchSemanticsNodes().isEmpty()
+            compose.onAllNodesWithText("Brückentage eintragen").fetchSemanticsNodes().isEmpty()
         }
         assertTrue(fixture.date("2027-05-07") !in marks())
     }
@@ -165,7 +165,7 @@ class BridgesScreenTest {
         showOverview("after: take Fri")
 
         line("after: take Fri, 4 days off").performScrollTo().performClick()
-        waitForText("Add bridge")
+        waitForText("Add bridge days")
         compose.onNodeWithText("Fri, May 7").assertIsDisplayed()
         compose.onNodeWithText("4 days off in a row, ", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Cancel").assertIsDisplayed()

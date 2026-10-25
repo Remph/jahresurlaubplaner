@@ -181,7 +181,7 @@
         <item quantity="one">%1$d day off</item>
         <item quantity="other">%1$d days off</item>
     </plurals>
-    <string name="bridge_sheet_title">Add bridge</string>
+    <string name="bridge_sheet_title">Add bridge days</string>
     <plurals name="bridge_stretch">
         <item quantity="one">%1$d day off in a row, %2$s</item>
         <item quantity="other">%1$d days off in a row, %2$s</item>
