@@ -47,6 +47,18 @@ data class VacationBalance(
 }
 
 /**
+ * Marked days in a row, from the first to the last marked day, and what they cost together.
+ * Free days between them (a weekend) are inside, free days around them are not.
+ */
+data class Trip(
+    val start: LocalDate,
+    val end: LocalDate,
+    val cost: VacationDays,
+) {
+    operator fun contains(date: LocalDate): Boolean = !date.isBefore(start) && !date.isAfter(end)
+}
+
+/**
  * Works out what marked days cost and the balance of a year.
  *
  * A marked day costs vacation only on a working day that is not a public holiday, so weekends
@@ -73,6 +85,60 @@ class VacationCalculator(
         if (isPublicHoliday(date)) return VacationDays.ZERO
         return minOf(mark.value, schedule.workingValue(date))
     }
+
+    /**
+     * The days from [from] to [to] (both included) that cost vacation when marked: working days
+     * that are not public holidays. Marking a range skips the rest (weekends, holidays, days
+     * off), which costs nothing and would only clutter the list of marked days.
+     */
+    fun costlyDays(
+        from: LocalDate,
+        to: LocalDate,
+    ): List<LocalDate> {
+        require(!to.isBefore(from)) { "Range ends before it starts: $from..$to" }
+        return generateSequence(from) { it.plusDays(1) }
+            .takeWhile { !it.isAfter(to) }
+            .filter { cost(it) > VacationDays.ZERO }
+            .toList()
+    }
+
+    /**
+     * Groups the marked days into trips. Marked days belong to one trip when only days that cost
+     * nothing (weekend, holiday, day off) lie between them, so a Monday to Friday week with a
+     * weekend and a second week is one trip. Marks that cost nothing are not part of a trip.
+     * The trips are sorted by start.
+     */
+    fun trips(marks: Map<LocalDate, DayMark>): List<Trip> {
+        val costly =
+            marks
+                .map { (date, mark) -> date to cost(date, mark) }
+                .filter { it.second > VacationDays.ZERO }
+                .sortedBy { it.first }
+        val trips = mutableListOf<Trip>()
+        var start: LocalDate? = null
+        var end: LocalDate? = null
+        var cost = VacationDays.ZERO
+        for ((date, dayCost) in costly) {
+            if (end != null && !onlyFreeDaysBetween(end, date)) {
+                trips += Trip(start!!, end, cost)
+                start = null
+                cost = VacationDays.ZERO
+            }
+            if (start == null) start = date
+            end = date
+            cost += dayCost
+        }
+        if (start != null && end != null) trips += Trip(start, end, cost)
+        return trips
+    }
+
+    private fun onlyFreeDaysBetween(
+        first: LocalDate,
+        second: LocalDate,
+    ): Boolean =
+        generateSequence(first.plusDays(1)) { it.plusDays(1) }
+            .takeWhile { it.isBefore(second) }
+            .all { cost(it) == VacationDays.ZERO }
 
     /** The balance of [entitlement]'s year. Marks from other years are ignored. */
     fun balance(

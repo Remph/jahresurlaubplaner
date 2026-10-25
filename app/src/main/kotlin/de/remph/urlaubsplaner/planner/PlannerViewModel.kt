@@ -1,0 +1,145 @@
+package de.remph.urlaubsplaner.planner
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.VacationCalculator
+import de.remph.urlaubsplaner.core.holidays.PublicHolidays
+import de.remph.urlaubsplaner.core.schoolholidays.SchoolHolidayData
+import de.remph.urlaubsplaner.data.UserDataRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.time.Clock
+import java.time.LocalDate
+import java.time.YearMonth
+
+enum class CalendarMode { MONTH, YEAR }
+
+/**
+ * The overview (always the current year) and the calendar (the year the user steps to), and the
+ * actions on marked days. Both are a [YearView]; null until the stored data has been read, so a
+ * screen does not flash "nothing entered" first.
+ *
+ * [schoolHolidays] is the bundled file, read once and only when the first view is built, off the
+ * main thread.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+class PlannerViewModel(
+    private val repository: UserDataRepository,
+    private val schoolHolidays: Lazy<SchoolHolidayData>,
+    private val clock: Clock,
+) : ViewModel() {
+    val currentYear = LocalDate.now(clock).year
+    val firstYear = PublicHolidays.FIRST_SUPPORTED_YEAR
+    val lastYear = currentYear + 1
+
+    private val firstMonth = YearMonth.of(firstYear, 1)
+    private val lastMonth = YearMonth.of(lastYear, 12)
+
+    private val shownMonth = MutableStateFlow(YearMonth.now(clock))
+    private val shownMode = MutableStateFlow(CalendarMode.MONTH)
+
+    val overview: StateFlow<YearView?> = yearView(MutableStateFlow(currentYear))
+
+    val calendar: StateFlow<YearView?> =
+        yearView(shownMonth.map { it.year }.distinctUntilChanged())
+
+    /** The month the calendar shows, also while it shows the whole year. */
+    val calendarMonth: StateFlow<YearMonth> = shownMonth
+
+    val calendarMode: StateFlow<CalendarMode> = shownMode
+
+    /** The calendar never goes below 2019 (the first year with holiday rules) or past next year. */
+    fun showMonth(month: YearMonth) {
+        shownMonth.value = month.coerceIn(firstMonth, lastMonth)
+    }
+
+    fun showMode(mode: CalendarMode) {
+        shownMode.value = mode
+    }
+
+    /** One month in month mode, one year in year mode; [steps] is -1 or 1. */
+    fun step(steps: Long) {
+        val month = shownMonth.value
+        showMonth(
+            if (shownMode.value ==
+                CalendarMode.MONTH
+            ) {
+                month.plusMonths(steps)
+            } else {
+                month.plusYears(steps)
+            },
+        )
+    }
+
+    fun canStep(steps: Long): Boolean {
+        val month = shownMonth.value
+        val target =
+            if (shownMode.value ==
+                CalendarMode.MONTH
+            ) {
+                month.plusMonths(steps)
+            } else {
+                month.plusYears(steps)
+            }
+        return target in firstMonth..lastMonth
+    }
+
+    /** Marks every day in [dates]; a range is turned into its costly days by the caller. */
+    fun mark(
+        dates: Collection<LocalDate>,
+        mark: DayMark,
+    ) {
+        if (dates.isEmpty()) return
+        viewModelScope.launch { repository.markAll(dates, mark) }
+    }
+
+    fun unmark(dates: Collection<LocalDate>) {
+        if (dates.isEmpty()) return
+        viewModelScope.launch { repository.unmarkAll(dates) }
+    }
+
+    private fun yearView(years: Flow<Int>): StateFlow<YearView?> =
+        years
+            .flatMapLatest { year ->
+                combine(
+                    repository.observeSettings(),
+                    repository.observeEntitlement(year),
+                    repository.observeMarks(
+                        LocalDate.of(year - 1, 12, 1).coerceAtLeast(LocalDate.of(firstYear, 1, 1)),
+                        LocalDate.of(year + 1, 12, 31),
+                    ),
+                ) { settings, entitlement, marks ->
+                    val check = settings.publicHolidayCheck()
+                    YearView(
+                        year = year,
+                        today = LocalDate.now(clock),
+                        settings = settings,
+                        entitlement = entitlement,
+                        marks = marks,
+                        calculator =
+                            check?.let {
+                                VacationCalculator(
+                                    clock,
+                                    settings.schedule,
+                                    it,
+                                )
+                            },
+                        schoolData = schoolHolidays.value,
+                    )
+                }
+            }.flowOn(Dispatchers.Default)
+            .map<YearView, YearView?> { it }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+}

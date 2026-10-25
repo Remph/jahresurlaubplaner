@@ -40,6 +40,7 @@
     <string name="error_expiry">Bitte einen echten Tag eingeben, zum Beispiel 31.03.</string>
     <string name="suggestion_from_year">Vorschlag aus %1$d. Noch nicht gespeichert.</string>
     <string name="suggestion_from_year_with_carry_over">Vorschlag aus %1$d, mit den übrigen Tagen als Resturlaub (Stand heute). Noch nicht gespeichert.</string>
+    <string name="suggestion_year_running">Das Jahr %1$d läuft noch. Gerechnet ist der Stand von heute.</string>
     <string name="save">Speichern</string>
     <string name="suggest_carry_over">Übrige Tage als Resturlaub vorschlagen</string>
     <string name="suggest_carry_over_support">Gilt für ein neues Jahr: Was im Vorjahr übrig bleibt, wird als Resturlaub vorgeschlagen. Du kannst es ändern, gespeichert wird erst mit „Speichern“.</string>
@@ -100,8 +101,6 @@
     <string name="nav_overview">Übersicht</string>
     <string name="nav_calendar">Kalender</string>
     <string name="back">Zurück</string>
-    <string name="overview_placeholder">Die Übersicht kommt als Nächstes.</string>
-    <string name="calendar_placeholder">Der Kalender kommt als Nächstes.</string>
 
     <!-- Einstellungsliste -->
     <string name="settings_vacation_title">Urlaub %1$d</string>
@@ -127,4 +126,86 @@
     <string name="theme_oled_support">Im dunklen Modus ein schwarzer Hintergrund. Das spart Strom bei OLED-Bildschirmen.</string>
     <string name="system_colors">Farben vom System</string>
     <string name="system_colors_support">Die Farben kommen vom Hintergrundbild (ab Android 12). Aus: die Farben der App.</string>
+
+    <!-- Übersicht und Kalender -->
+    <string name="go_to_settings">Einstellungen öffnen</string>
+    <string name="enter_vacation_days">Urlaubstage eintragen</string>
+    <string name="overview_no_land">Wähle zuerst dein Bundesland. Danach zeigt die App die Feiertage und deinen Urlaub.</string>
+    <string name="overview_no_entitlement">Für %1$d sind noch keine Urlaubstage eingetragen.</string>
+    <string name="days_left_label">Tage übrig %1$d</string>
+    <string name="overbooked">Mehr Urlaub eingetragen, als dir zusteht.</string>
+    <string name="taken">Genommen</string>
+    <string name="planned">Geplant</string>
+    <string name="of_total">Anspruch</string>
+    <string name="carry_over_warning">%1$s Tage Resturlaub verfallen am %2$s. Plane sie noch ein.</string>
+    <string name="next_trip">Nächster Urlaub</string>
+    <string name="no_trip">Noch kein Urlaub geplant</string>
+    <string name="trip_now">Du bist gerade im Urlaub.</string>
+    <string name="date_range">%1$s bis %2$s</string>
+    <string name="next_holiday">Nächster Feiertag</string>
+    <string name="holiday_today">Heute</string>
+    <plurals name="trip_costs">
+        <item quantity="one">kostet %1$s Urlaubstag</item>
+        <item quantity="other">kostet %1$s Urlaubstage</item>
+    </plurals>
+    <plurals name="holiday_in_days">
+        <item quantity="one">%1$s, in %2$d Tag</item>
+        <item quantity="other">%1$s, in %2$d Tagen</item>
+    </plurals>
+    <string name="year_grid_description">Jahresübersicht %1$d. Tippe auf einen Monat, um ihn zu öffnen.</string>
+
+    <string name="mode_month">Monat</string>
+    <string name="mode_year">Jahr</string>
+    <string name="month_previous">Vorheriger Monat</string>
+    <string name="month_next">Nächster Monat</string>
+    <string name="school_holidays_unknown">Für diese Zeit hat die App noch keine Schulferien.</string>
+    <string name="legend_holiday">Feiertag</string>
+    <string name="legend_school">Schulferien</string>
+    <string name="legend_taken">Genommen</string>
+    <string name="legend_planned">Geplant</string>
+    <string name="day_holiday">Feiertag: %1$s</string>
+    <string name="day_school_holiday">Schulferien</string>
+    <string name="day_taken">Urlaub genommen</string>
+    <string name="day_taken_half">Halber Urlaubstag genommen</string>
+    <string name="day_planned">Urlaub geplant</string>
+    <string name="day_planned_half">Halber Urlaubstag geplant</string>
+    <string name="day_today">heute</string>
+
+    <!-- Tagesblatt -->
+    <string name="mark_full">Ganzer Tag</string>
+    <string name="mark_half">Halber Tag</string>
+    <string name="until">Bis: %1$s</string>
+    <string name="mark_save">Eintragen</string>
+    <string name="mark_change">Ändern</string>
+    <string name="mark_remove">Entfernen</string>
+    <string name="costs_nothing">An diesem Tag arbeitest du nicht oder es ist ein Feiertag. Er kostet keinen Urlaub.</string>
+    <plurals name="sheet_costs">
+        <item quantity="one">Kostet %1$s Urlaubstag</item>
+        <item quantity="other">Kostet %1$s Urlaubstage</item>
+    </plurals>
+    <string name="sheet_costs_and_left">%1$s, danach noch %2$s übrig</string>
+
+    <!-- Feiertage -->
+    <string name="holiday_neujahr">Neujahr</string>
+    <string name="holiday_heilige_drei_koenige">Heilige Drei Könige</string>
+    <string name="holiday_frauentag">Internationaler Frauentag</string>
+    <string name="holiday_karfreitag">Karfreitag</string>
+    <string name="holiday_ostersonntag">Ostersonntag</string>
+    <string name="holiday_ostermontag">Ostermontag</string>
+    <string name="holiday_tag_der_arbeit">Tag der Arbeit</string>
+    <string name="holiday_tag_der_befreiung">Tag der Befreiung</string>
+    <string name="holiday_17_juni">Gedenktag 17. Juni 1953</string>
+    <string name="holiday_christi_himmelfahrt">Christi Himmelfahrt</string>
+    <string name="holiday_pfingstsonntag">Pfingstsonntag</string>
+    <string name="holiday_pfingstmontag">Pfingstmontag</string>
+    <string name="holiday_fronleichnam">Fronleichnam</string>
+    <string name="holiday_friedensfest">Augsburger Friedensfest</string>
+    <string name="holiday_mariae_himmelfahrt">Mariä Himmelfahrt</string>
+    <string name="holiday_weltkindertag">Weltkindertag</string>
+    <string name="holiday_deutsche_einheit">Tag der Deutschen Einheit</string>
+    <string name="holiday_reformationstag">Reformationstag</string>
+    <string name="holiday_allerheiligen">Allerheiligen</string>
+    <string name="holiday_buss_und_bettag">Buß- und Bettag</string>
+    <string name="holiday_weihnachtstag_1">1. Weihnachtstag</string>
+    <string name="holiday_weihnachtstag_2">2. Weihnachtstag</string>
 </resources>

@@ -4,7 +4,9 @@ import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.holidays.PublicHolidays
 import de.remph.urlaubsplaner.core.holidays.RegionalExtra
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
@@ -324,5 +326,115 @@ class VacationCalculatorTest {
     fun `the entitlement and the Resturlaub cannot be negative`() {
         assertThrows(IllegalArgumentException::class.java) { year2026(days = -1) }
         assertThrows(IllegalArgumentException::class.java) { year2026(carryOver = -1) }
+    }
+
+    // --- marking a range ---
+
+    @Test
+    fun `a range lists the working days and skips the weekend`() {
+        assertEquals(
+            listOf(d(6, 15), d(6, 16), d(6, 17), d(6, 18), d(6, 19)),
+            calculator().costlyDays(d(6, 15), d(6, 21)),
+        )
+    }
+
+    @Test
+    fun `a range skips a public holiday`() {
+        val days = calculator(holidays = setOf(d(6, 17))).costlyDays(d(6, 15), d(6, 19))
+
+        assertEquals(listOf(d(6, 15), d(6, 16), d(6, 18), d(6, 19)), days)
+    }
+
+    @Test
+    fun `a range keeps a half working day and skips a day off`() {
+        val schedule =
+            WorkSchedule(
+                specialDays =
+                    mapOf(
+                        MonthDay.of(6, 16) to VacationDays.HALF,
+                        MonthDay.of(6, 17) to VacationDays.ZERO,
+                    ),
+            )
+
+        val days = calculator(schedule = schedule).costlyDays(d(6, 15), d(6, 18))
+
+        assertEquals(listOf(d(6, 15), d(6, 16), d(6, 18)), days)
+    }
+
+    @Test
+    fun `a range of one working day is that day and one weekend day is nothing`() {
+        assertEquals(listOf(d(6, 15)), calculator().costlyDays(d(6, 15), d(6, 15)))
+        assertEquals(emptyList<LocalDate>(), calculator().costlyDays(d(6, 20), d(6, 20)))
+    }
+
+    @Test
+    fun `a range cannot end before it starts`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            calculator().costlyDays(d(6, 16), d(6, 15))
+        }
+    }
+
+    // --- trips ---
+
+    private val week1 = (15..19).map { d(6, it) }
+    private val week2 = (22..26).map { d(6, it) }
+
+    @Test
+    fun `two weeks with a weekend between are one trip`() {
+        val trips = calculator().trips(full(*(week1 + week2).toTypedArray()))
+
+        assertEquals(listOf(Trip(d(6, 15), d(6, 26), VacationDays.of(10))), trips)
+    }
+
+    @Test
+    fun `a working day between two marked days makes two trips`() {
+        val trips = calculator().trips(full(d(6, 15), d(6, 17)))
+
+        assertEquals(
+            listOf(
+                Trip(d(6, 15), d(6, 15), VacationDays.ONE),
+                Trip(d(6, 17), d(6, 17), VacationDays.ONE),
+            ),
+            trips,
+        )
+    }
+
+    @Test
+    fun `a public holiday between two marked days keeps them in one trip`() {
+        val trips = calculator(holidays = setOf(d(6, 18))).trips(full(d(6, 17), d(6, 19)))
+
+        assertEquals(listOf(Trip(d(6, 17), d(6, 19), VacationDays.of(2))), trips)
+    }
+
+    @Test
+    fun `a trip adds half days and ignores marks that cost nothing`() {
+        val marks =
+            mapOf(
+                d(6, 15) to DayMark.HALF,
+                d(6, 16) to DayMark.FULL,
+                d(6, 20) to DayMark.FULL,
+            )
+
+        val trips = calculator().trips(marks)
+
+        assertEquals(listOf(Trip(d(6, 15), d(6, 16), VacationDays.of(1.5))), trips)
+    }
+
+    @Test
+    fun `trips come out sorted and no marks give no trips`() {
+        assertEquals(emptyList<Trip>(), calculator().trips(emptyMap()))
+
+        val trips = calculator().trips(full(d(9, 14), d(6, 15)))
+
+        assertEquals(listOf(d(6, 15), d(9, 14)), trips.map { it.start })
+    }
+
+    @Test
+    fun `a trip knows which days it contains`() {
+        val trip = Trip(d(6, 15), d(6, 19), VacationDays.of(5))
+
+        assertTrue(d(6, 15) in trip)
+        assertTrue(d(6, 19) in trip)
+        assertFalse(d(6, 20) in trip)
     }
 }

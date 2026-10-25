@@ -53,6 +53,9 @@ interface MarkedDayDao {
     @Query("DELETE FROM marked_day WHERE date = :date")
     suspend fun delete(date: String)
 
+    @Query("DELETE FROM marked_day WHERE date IN (:dates)")
+    suspend fun deleteDates(dates: List<String>)
+
     @Query("SELECT * FROM marked_day ORDER BY date")
     suspend fun getAll(): List<MarkedDayEntity>
 

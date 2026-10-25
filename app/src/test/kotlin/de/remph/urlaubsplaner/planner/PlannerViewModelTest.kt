@@ -1,0 +1,137 @@
+package de.remph.urlaubsplaner.planner
+
+import androidx.lifecycle.ViewModelStore
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.VacationDays
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.time.YearMonth
+
+@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
+class PlannerViewModelTest {
+    private var fixture = PlannerFixture()
+    private val viewModels = ViewModelStore()
+
+    // Cleared first: that cancels the ViewModel's coroutines before the database closes.
+    @After
+    fun close() {
+        viewModels.clear()
+        fixture.close()
+    }
+
+    private fun viewModel(): PlannerViewModel {
+        val model = fixture.viewModel()
+        viewModels.put("planner", model)
+        return model
+    }
+
+    /** Room reports from its own threads, so a value arrives a moment after the change. */
+    private fun <T : Any> await(
+        flow: kotlinx.coroutines.flow.Flow<T?>,
+        until: (T) -> Boolean = { true },
+    ): T = runBlocking { withTimeout(5_000) { flow.filterNotNull().first(until) } }
+
+    @Test
+    fun `the overview shows the current year with its balance and marks`() {
+        fixture.fill()
+
+        val view = await(viewModel().overview) { it.balance != null && it.marks.isNotEmpty() }
+
+        assertEquals(2027, view.year)
+        // 30 + 10 carried over, 2 days taken, 5 planned.
+        assertEquals(VacationDays.of(33), view.balance?.remaining)
+        assertEquals(fixture.date("2027-03-15"), view.nextTrip?.start)
+    }
+
+    @Test
+    fun `a fresh start has no Land and no balance`() {
+        val view = await(viewModel().overview)
+
+        assertFalse(view.hasLand)
+        assertNull(view.balance)
+    }
+
+    @Test
+    fun `marking days stores them and unmarking removes them`() {
+        val model = viewModel()
+        fixture.fill()
+        val days = listOf(fixture.date("2027-03-22"), fixture.date("2027-03-23"))
+
+        model.mark(days, DayMark.HALF)
+        val marked = await(model.overview) { days.all { day -> it.markOn(day) == DayMark.HALF } }
+        assertEquals(DayMark.HALF, marked.markOn(days[0]))
+
+        model.unmark(days)
+        val cleared = await(model.overview) { days.none { day -> it.markOn(day) != null } }
+        assertNull(cleared.markOn(days[1]))
+    }
+
+    @Test
+    fun `the calendar starts on this month in month mode`() {
+        val model = viewModel()
+
+        assertEquals(YearMonth.of(2027, 3), model.calendarMonth.value)
+        assertEquals(CalendarMode.MONTH, model.calendarMode.value)
+    }
+
+    @Test
+    fun `stepping moves a month in month mode and a year in year mode`() {
+        val model = viewModel()
+
+        model.step(1)
+        assertEquals(YearMonth.of(2027, 4), model.calendarMonth.value)
+        model.step(-1)
+        model.step(-1)
+        assertEquals(YearMonth.of(2027, 2), model.calendarMonth.value)
+
+        model.showMode(CalendarMode.YEAR)
+        model.step(1)
+        assertEquals(YearMonth.of(2028, 2), model.calendarMonth.value)
+    }
+
+    @Test
+    fun `the calendar loads the year of the month it shows`() {
+        fixture.fill()
+        val model = viewModel()
+        await(model.calendar) { it.year == 2027 && it.balance != null }
+
+        model.showMonth(YearMonth.of(2028, 1))
+        val next = await(model.calendar) { it.year == 2028 }
+
+        assertEquals(2028, next.year)
+        assertNull(next.balance)
+    }
+
+    @Test
+    fun `the calendar never goes before 2019 or past next year`() {
+        fixture.close()
+        fixture = PlannerFixture(today = "2019-02-10")
+        val model = viewModel()
+
+        assertTrue(model.canStep(-1))
+        model.step(-1)
+        assertEquals(YearMonth.of(2019, 1), model.calendarMonth.value)
+        assertFalse(model.canStep(-1))
+        model.showMonth(YearMonth.of(2010, 5))
+        assertEquals(YearMonth.of(2019, 1), model.calendarMonth.value)
+
+        model.showMonth(YearMonth.of(2030, 5))
+        assertEquals(YearMonth.of(2020, 12), model.calendarMonth.value)
+        assertFalse(model.canStep(1))
+        // The first year loads without asking the rules for 2018.
+        model.showMonth(YearMonth.of(2019, 1))
+        assertEquals(2019, await(model.calendar) { it.year == 2019 }.year)
+    }
+}

@@ -241,6 +241,40 @@ and PR C (Brückentage).
   `ThemeTest` (colour choice, pure black), `SummariesTest`. Screenshots of the real screens in
   light, dark and pure black are in `/mnt/project-files/design/pr-a/` (not in the repo).
 
+Übersicht and Kalender (M3, third piece, "PR B"): designed with Nick in the mockup session,
+2026-10-25 (`/mnt/project-files/design/mockups-r1/`). Built on top of PR A.
+
+- `planner/PlannerViewModel` gives two `YearView`s: `overview` (always this year) and `calendar`
+  (the year of the shown month). A `YearView` is everything one year shows, worked out once:
+  public holidays by date, school holidays, marks, balance, trips, and what a change would
+  leave (`remainingAfter`). The month and the Monat/Jahr mode live in the ViewModel, so they
+  survive a tab change and rotation. The calendar stops at 2019 (first year with holiday rules)
+  and next year.
+- Rules in `:core`: `VacationCalculator.costlyDays(from, to)` (what a range marks: working days
+  that are not holidays), `VacationCalculator.trips(marks)` (marked days joined when only free
+  days lie between them) and `UserSettings.publicHolidays/nextPublicHoliday`. One holiday
+  function (`publicHolidayCheck`) is still behind all of it.
+- Übersicht: "Tage übrig" first, then taken, planned and entitlement (including Resturlaub), a
+  warning card while Resturlaub is open before its Verfall day (`carryOverOpen`), next trip,
+  next public holiday, and the year grid (12 rows, 31 columns; a tap opens that month).
+  Without a Land or without the year's numbers it points to the settings instead of zeros.
+- Kalender: month grid (Monday first) or the year grid. Gold = Feiertag, solid teal = taken,
+  outlined teal = planned, light blue band = school holidays; half days carry a "½". Holiday and
+  school colours are fixed (not from the wallpaper), taken follows the theme. Under the month the
+  holidays and school holidays are listed by name, and a month outside the school holiday
+  file says "noch keine Schulferien".
+- Day sheet: whole or half day, "Bis" (a date picker, same year, range marks only days that cost
+  vacation, so the weekend inside stays free), cost and days left afterwards before anything is
+  stored, "Eintragen" or "Ändern", "Entfernen". Weekends and holidays only show what they are.
+  Option C (tap start day then end day) is not built; Nick tries the debug APK first.
+- School holiday file: `UrlaubsplanerApp.schoolHolidays` is read once (off the main thread, on
+  the first view); `covers()` decides between "no school holidays" and "unknown".
+- Settings: a suggestion made from the year that is still running now says so.
+- Tests: `:core` unit tests for the new rules; `:app` `YearViewTest`, `PlannerViewModelTest`
+  (Robolectric, in-memory Room), `OverviewScreenTest` and `CalendarScreenTest` (German and
+  English, compose the real screens). Not covered: the date picker, TalkBack, real wallpaper
+  colours. Not built: Brückentage on the screens (PR C).
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
@@ -253,6 +287,6 @@ Known snags:
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
 - [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (PR #12, merged 2026-10-25)
-- [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR A, in review); home status, year/month view, marking (PR B); Brückentage (PR C)
+- [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B, in review); Brückentage (PR C)
 - [ ] M4 Export and widget
 - [ ] M5 Release prep

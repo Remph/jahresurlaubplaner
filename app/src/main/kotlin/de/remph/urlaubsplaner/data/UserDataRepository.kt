@@ -53,6 +53,15 @@ class UserDataRepository(
 
     suspend fun unmark(date: LocalDate) = markedDayDao.delete(date.toString())
 
+    /** Marks all [dates] in one go (a range). Days that are already marked are replaced. */
+    suspend fun markAll(
+        dates: Collection<LocalDate>,
+        mark: DayMark,
+    ) = markedDayDao.upsertAll(dates.map { markedDayEntity(it, mark) })
+
+    suspend fun unmarkAll(dates: Collection<LocalDate>) =
+        markedDayDao.deleteDates(dates.map { it.toString() })
+
     /**
      * Everything the user has entered, for the backup file. A row that cannot be read (a damaged
      * value) is left out here as it is everywhere else in the app.

@@ -71,6 +71,14 @@ fun VacationPage(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            // The year before is not over yet, so "left over" is only what is left today.
+            if (from == viewModel.currentYear) {
+                Text(
+                    text = stringResource(R.string.suggestion_year_running, from),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         AmountField(
             label = stringResource(R.string.field_days),

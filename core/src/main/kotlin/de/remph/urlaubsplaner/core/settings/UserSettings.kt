@@ -2,6 +2,7 @@ package de.remph.urlaubsplaner.core.settings
 
 import de.remph.urlaubsplaner.core.balance.WorkSchedule
 import de.remph.urlaubsplaner.core.holidays.Bundesland
+import de.remph.urlaubsplaner.core.holidays.PublicHoliday
 import de.remph.urlaubsplaner.core.holidays.PublicHolidays
 import de.remph.urlaubsplaner.core.holidays.RegionalExtra
 import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
@@ -26,6 +27,14 @@ data class UserSettings(
      */
     val suggestCarryOver: Boolean = false,
 ) {
+    /** The public holidays of [year] for this user; none while no Land is chosen. */
+    fun publicHolidays(year: Int): List<PublicHoliday> =
+        land?.let { PublicHolidays.of(it, year, extras, optOuts) }.orEmpty()
+
+    /** The first public holiday on or after [from], looking into the next year too. */
+    fun nextPublicHoliday(from: LocalDate): PublicHoliday? =
+        (publicHolidays(from.year) + publicHolidays(from.year + 1)).firstOrNull { it.date >= from }
+
     /**
      * Whether a date is a public holiday for this user, or null while no Land is chosen. One
      * function for marked days, the balance and Brückentage, so they never disagree. Throws for
