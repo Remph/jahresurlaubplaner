@@ -248,6 +248,26 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `the carry-over option is saved at once, can be switched off again, and stores no year`() {
+        fillYear2026WithFourMarkedDays()
+        val vm = viewModel()
+        vm.land()
+
+        vm.setSuggestCarryOver(true)
+        vm.await { it.settings.suggestCarryOver && it.form.suggestedFrom != null }
+
+        // The suggestion with Resturlaub is shown, but nothing is stored for the new year yet.
+        assertTrue(runBlocking { repository.observeSettings().first() }.suggestCarryOver)
+        assertNull(runBlocking { repository.observeEntitlement(2027).first() })
+
+        vm.setSuggestCarryOver(false)
+        val form = vm.await { !it.settings.suggestCarryOver && it.form.suggestedFrom != null }.form
+
+        assertFalse(runBlocking { repository.observeSettings().first() }.suggestCarryOver)
+        assertEquals(VacationDays.ZERO, form.base?.carryOver)
+    }
+
+    @Test
     fun `a stored year is shown as it is, not replaced by a suggestion`() {
         fillYear2026WithFourMarkedDays()
         runBlocking {

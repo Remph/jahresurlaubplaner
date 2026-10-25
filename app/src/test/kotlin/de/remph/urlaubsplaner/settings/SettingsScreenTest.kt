@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -169,5 +170,31 @@ class SettingsScreenTest {
         compose.onNodeWithText("Urlaubstage im Jahr").performTextClearance()
         compose.onNodeWithText("Urlaubstage im Jahr").performTextInput("12,5")
         compose.onNodeWithText("Speichern").assertIsEnabled()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the carry-over option shows in German and is off by default`() {
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+
+        compose
+            .onNodeWithText("Übrige Tage als Resturlaub vorschlagen")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertIsOff()
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the carry-over option shows in English and is off by default`() {
+        show("Settings")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "North Rhine-Westphalia")
+
+        compose
+            .onNodeWithText("Suggest unused days as carried-over days")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertIsOff()
     }
 }
