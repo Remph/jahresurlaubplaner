@@ -43,11 +43,19 @@ Rules:
 | M0 | Skeleton | `LICENSE`, Gradle setup, `:core` with a smoke test, `:app` with an empty screen in German and English, Spotless, README, this plan | 1 |
 | M1 | Rules in `:core` | Public holidays for all 16 Länder (Easter rule plus tables, regional cases noted); vacation balance (entitlement, Resturlaub expiry, half days); Brückentage | 3 |
 | M2 | Data and storage | Room (settings, marked days, entitlement); school holiday file and loader (ODbL); backup export/import | 3 |
-| M3 | Screens | Status home (remaining days, next trip), year and month view, marking single and half days, Bundesland setting, Brückentage in the view | 2 to 3 |
-| M4 | Export and widget | ICS export (with the ODbL credit), home screen widget | 2 |
+| M3 | Screens | Status home (remaining days, next trip), year and month view, marking single and half days, settings (Bundesland, language), Brückentage in the view | 2 to 3 |
+| M4 | Export and widget | ICS export (with the ODbL credit), home screen widget; both follow the chosen app language | 2 |
 | M5 | Release prep | About screen with credits, icon, F-Droid metadata, signing; the Google Play decision comes up here | 1 to 2 |
 
 M1 comes first after M0 because it is testable in the cloud and everything else depends on it.
+
+Language (Nick, 2026-10-25): the app language is a setting, not only the system language: System
+(default), Deutsch, English. If the system language is neither, German applies (the default
+resources). Plan: `androidx.appcompat` `AppCompatDelegate.setApplicationLocales()` (works back to
+Android 11), `autoStoreLocales` so it is remembered below Android 13, and a `localeConfig` so
+Android 13+ lists the app in the system's per-app language settings. To check when building:
+whether the activity must extend `AppCompatActivity`, and how the widget and ICS export get the
+chosen language below Android 13 (they do not run inside the activity).
 
 Known snags:
 
@@ -58,7 +66,7 @@ Known snags:
 
 ## Status
 
-- [x] M0 Skeleton (this PR)
+- [x] M0 Skeleton (PR #3, merged 2026-10-25)
 - [ ] M1 Rules in `:core`
 - [ ] M2 Data and storage
 - [ ] M3 Screens
