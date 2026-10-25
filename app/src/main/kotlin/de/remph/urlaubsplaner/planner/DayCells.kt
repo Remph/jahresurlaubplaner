@@ -127,7 +127,8 @@ private fun DayCell(
     val colors = dayColors()
     val look = view.look(date)
     val description = dayDescription(view, date, look, locale)
-    val shape = RoundedCornerShape(10.dp)
+    // The theme's large step, the same as the cards (design review, Nick, 2026-10-25).
+    val shape = MaterialTheme.shapes.large
     val planned = look.mark != null && !look.taken
     // Every day is a tile of its own, so the days stand out from the background (Nick,
     // 2026-10-25). The tile's colour is the strongest thing the day is; a school holiday under a
@@ -244,22 +245,30 @@ fun dayDescription(
 fun Legend(
     modifier: Modifier = Modifier,
     showBridge: Boolean = false,
+    compact: Boolean = false,
 ) {
     val colors = dayColors()
-    val shape = RoundedCornerShape(5.dp)
+    val shape = MaterialTheme.shapes.extraSmall
+    val size = if (compact) 12.dp else 16.dp
     FlowRow(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 12.dp else 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        LegendItem(R.string.legend_holiday) { Modifier.background(colors.holiday, shape) }
-        LegendItem(R.string.legend_school) { Modifier.background(colors.school, shape) }
-        LegendItem(R.string.legend_taken) { Modifier.background(colors.taken, shape) }
-        LegendItem(R.string.legend_planned) {
+        LegendItem(R.string.legend_holiday, size, compact) {
+            Modifier.background(colors.holiday, shape)
+        }
+        LegendItem(R.string.legend_school, size, compact) {
+            Modifier.background(colors.school, shape)
+        }
+        LegendItem(R.string.legend_taken, size, compact) {
+            Modifier.background(colors.taken, shape)
+        }
+        LegendItem(R.string.legend_planned, size, compact) {
             Modifier.border(BorderStroke(2.dp, colors.planned), shape)
         }
         if (showBridge) {
-            LegendItem(R.string.legend_bridge) {
+            LegendItem(R.string.legend_bridge, size, compact) {
                 Modifier.dashedBorder(colors.planned, shape, dash = 4.dp, gap = 3.dp)
             }
         }
@@ -308,14 +317,17 @@ fun SchoolHolidaysUnknownNote(
 @Composable
 private fun LegendItem(
     label: Int,
+    size: Dp,
+    compact: Boolean,
     swatch: @Composable () -> Modifier,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(16.dp).then(swatch()))
+        Box(Modifier.size(size).then(swatch()))
         Text(
             text = stringResource(label),
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(start = 6.dp),
+            style =
+                with(MaterialTheme.typography) { if (compact) labelSmall else bodySmall },
+            modifier = Modifier.padding(start = if (compact) 4.dp else 6.dp),
         )
     }
 }

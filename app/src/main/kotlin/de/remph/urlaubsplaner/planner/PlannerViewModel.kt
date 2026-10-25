@@ -65,6 +65,15 @@ class PlannerViewModel(
 
     val calendarMode: StateFlow<CalendarMode> = shownMode
 
+    private val yearRowsExpanded = MutableStateFlow(false)
+
+    /** Whether the year grid shows tall rows (48 dp) instead of the compact ones (28 dp). */
+    val calendarYearRowsExpanded: StateFlow<Boolean> = yearRowsExpanded
+
+    fun expandYearRows(expanded: Boolean) {
+        yearRowsExpanded.value = expanded
+    }
+
     /** Reads the date again, so the status is right after midnight or a new year. */
     fun refreshToday() {
         today.value = LocalDate.now(clock)

@@ -202,7 +202,7 @@ private fun Fact(
     text: String,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(16.dp).background(swatch, RoundedCornerShape(5.dp)))
+        Box(Modifier.size(16.dp).background(swatch, MaterialTheme.shapes.extraSmall))
         Text(
             text,
             style = MaterialTheme.typography.bodyLarge,

@@ -1,26 +1,36 @@
 package de.remph.urlaubsplaner.planner
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import de.remph.urlaubsplaner.R
@@ -42,6 +52,7 @@ fun YearGrid(
     val locale = currentLocale()
     val ink = MaterialTheme.colorScheme.onSurface
     val faint = ink.copy(alpha = 0.07f)
+    val smallCorner = MaterialTheme.shapes.extraSmall.topStart
     val looks =
         remember(view) {
             (1..12).map { month ->
@@ -97,11 +108,12 @@ fun YearGrid(
             val column = size.width / 31f
             val row = size.height / 12f
             val gap = 1.dp.toPx()
-            val corner = CornerRadius(2.dp.toPx())
+            // Tiles are about 11 dp wide; the theme's smallest step keeps them tiles, not pills.
             looks.forEachIndexed { monthIndex, days ->
                 days.forEachIndexed { dayIndex, look ->
                     val topLeft = Offset(dayIndex * column + gap / 2, monthIndex * row + gap / 2)
                     val cell = Size(column - gap, row - gap)
+                    val corner = CornerRadius(smallCorner.toPx(cell, this))
                     val fill =
                         when {
                             look.taken -> colors.taken
@@ -126,5 +138,66 @@ fun YearGrid(
                 }
             }
         }
+    }
+}
+
+/** The row height of the year grid when it is compact and when it is expanded. */
+val YearRowsCompact = 28.dp
+val YearRowsExpanded = 48.dp
+
+/**
+ * Swipe down on the grid to expand its rows, swipe up to make them compact again, like the
+ * Samsung calendar. The swipe is only watched, never consumed, so the page still scrolls: when
+ * the rows are expanded and the page can scroll, a swipe up scrolls it first, and only a swipe
+ * that starts with the page at its end makes the rows compact. [pageAtEnd] says that.
+ */
+fun Modifier.expandBySwipe(
+    expanded: Boolean,
+    pageAtEnd: () -> Boolean,
+    onChange: (Boolean) -> Unit,
+): Modifier =
+    pointerInput(expanded) {
+        val threshold = 48.dp.toPx()
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            val canCollapse = pageAtEnd()
+            var moved = 0f
+            do {
+                val event = awaitPointerEvent()
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                moved += change.positionChange().y
+            } while (change.pressed)
+            if (moved > threshold && !expanded) {
+                onChange(true)
+            } else if (moved < -threshold && expanded && canCollapse) {
+                onChange(false)
+            }
+        }
+    }
+
+/** A grab handle under the grid: the same as the swipe, for a tap and for TalkBack. */
+@Composable
+fun YearRowsHandle(
+    expanded: Boolean,
+    onToggle: () -> Unit,
+) {
+    val label =
+        stringResource(if (expanded) R.string.year_rows_collapse else R.string.year_rows_expand)
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clickable(onClick = onToggle)
+            .semantics {
+                contentDescription = label
+                role = Role.Button
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier
+                .size(width = 36.dp, height = 4.dp)
+                .background(MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraSmall),
+        )
     }
 }

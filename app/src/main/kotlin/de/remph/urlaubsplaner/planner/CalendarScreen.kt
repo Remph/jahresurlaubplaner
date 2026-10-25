@@ -1,5 +1,6 @@
 package de.remph.urlaubsplaner.planner
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,10 +10,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
@@ -35,6 +38,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
+import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.settings.daysWithUnit
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -54,11 +59,17 @@ fun CalendarScreen(
     val view by viewModel.calendar.collectAsStateWithLifecycle()
     val month by viewModel.calendarMonth.collectAsStateWithLifecycle()
     val mode by viewModel.calendarMode.collectAsStateWithLifecycle()
+    val rowsExpanded by viewModel.calendarYearRowsExpanded.collectAsStateWithLifecycle()
+    val scroll = rememberScrollState()
+    val rowHeight by animateDpAsState(
+        if (rowsExpanded) YearRowsExpanded else YearRowsCompact,
+        label = "yearRowHeight",
+    )
     var sheetDate by rememberSaveable { mutableStateOf<LocalDate?>(null) }
     val shown = view ?: return
     val locale = currentLocale()
 
-    ScreenFrame(outerPadding) {
+    ScreenFrame(outerPadding, scroll) {
         if (!shown.hasLand) {
             EmptyState(
                 stringResource(R.string.overview_no_land),
@@ -71,14 +82,25 @@ fun CalendarScreen(
         if (shown.year == month.year) {
             if (mode == CalendarMode.MONTH) {
                 MonthGrid(shown, month) { sheetDate = it }
-                Legend(showBridge = shown.bridgeDays.any { YearMonth.from(it) == month })
-                MonthNotes(shown, month, locale)
-            } else {
-                YearGrid(
-                    shown,
-                    { viewModel.showMonth(it).also { viewModel.showMode(CalendarMode.MONTH) } },
-                    rowHeight = 28.dp,
+                MonthCard(shown, month, locale)
+                Legend(
+                    showBridge = shown.bridgeDays.any { YearMonth.from(it) == month },
+                    compact = true,
                 )
+            } else {
+                Column {
+                    YearGrid(
+                        shown,
+                        { viewModel.showMonth(it).also { viewModel.showMode(CalendarMode.MONTH) } },
+                        Modifier.expandBySwipe(
+                            rowsExpanded,
+                            pageAtEnd = { scroll.value >= scroll.maxValue },
+                            onChange = viewModel::expandYearRows,
+                        ),
+                        rowHeight = rowHeight,
+                    )
+                    YearRowsHandle(rowsExpanded) { viewModel.expandYearRows(!rowsExpanded) }
+                }
                 Legend()
                 SchoolHolidaysUnknownNote(
                     shown,
@@ -178,9 +200,12 @@ private fun Header(
     }
 }
 
-/** Under the month: its holidays and school holidays by name, since colours alone say little. */
+/**
+ * Under the month: the vacation days of the month, then its holidays and school holidays by
+ * name, since colours alone say little (design review, Nick, 2026-10-25).
+ */
 @Composable
-private fun MonthNotes(
+private fun MonthCard(
     view: YearView,
     month: YearMonth,
     locale: Locale,
@@ -190,18 +215,59 @@ private fun MonthNotes(
     val holidays = view.holidays.filterKeys { it.year == month.year && it.month == month.month }
     val school = view.schoolHolidaysBetween(first, last)
     val colors = dayColors()
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        for ((date, holiday) in holidays.toSortedMap()) {
-            NoteRow(colors.holiday, date.mediumText(locale), stringResource(holiday.labelRes()))
+    val vacation = view.vacationIn(month)
+    val resources = LocalResources.current
+
+    fun amount(days: VacationDays) =
+        daysWithUnit(
+            days,
+            locale,
+            one = { resources.getString(R.string.days_one, it) },
+            other = { resources.getString(R.string.days_other, it) },
+        )
+    Card {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            AmountRow(stringResource(R.string.legend_taken), amount(vacation.taken))
+            AmountRow(stringResource(R.string.legend_planned), amount(vacation.planned))
         }
-        for (entry in school) {
-            NoteRow(
-                colors.school,
-                rangeText(entry.from, entry.to, locale),
-                entry.nameIn(locale),
-            )
+        if (holidays.isNotEmpty() || school.isNotEmpty()) {
+            HorizontalDivider()
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                for ((date, holiday) in holidays.toSortedMap()) {
+                    NoteRow(
+                        colors.holiday,
+                        date.mediumText(locale),
+                        stringResource(holiday.labelRes()),
+                    )
+                }
+                for (entry in school) {
+                    NoteRow(
+                        colors.school,
+                        rangeText(entry.from, entry.to, locale),
+                        entry.nameIn(locale),
+                    )
+                }
+            }
         }
-        SchoolHolidaysUnknownNote(view, first, last)
+    }
+    SchoolHolidaysUnknownNote(view, first, last)
+}
+
+@Composable
+private fun AmountRow(
+    label: String,
+    amount: String,
+) {
+    Row(
+        Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            amount,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -212,7 +278,7 @@ private fun NoteRow(
     name: String,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(16.dp).background(swatch, RoundedCornerShape(5.dp)))
+        Box(Modifier.size(16.dp).background(swatch, MaterialTheme.shapes.extraSmall))
         Column(Modifier.padding(start = 12.dp)) {
             Text(name, style = MaterialTheme.typography.bodyMedium)
             Text(

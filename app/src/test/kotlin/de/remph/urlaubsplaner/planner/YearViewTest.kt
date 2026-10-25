@@ -18,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.time.LocalDate
+import java.time.YearMonth
 
 /** What the screens read from a year: the day looks, the balance, the preview and the trips. */
 @RunWith(AndroidJUnit4::class)
@@ -142,6 +143,29 @@ class YearViewTest {
         val planned = view.look(fixture.date("2027-03-15"))
         assertEquals(DayMark.HALF, planned.mark)
         assertFalse(planned.taken)
+    }
+
+    @Test
+    fun `a month adds up its taken days up to today and its planned days after`() {
+        val view =
+            view(
+                marks =
+                    mapOf(
+                        fixture.date("2027-03-08") to DayMark.FULL,
+                        fixture.date("2027-03-10") to DayMark.HALF,
+                        fixture.date("2027-03-15") to DayMark.FULL,
+                        fixture.date("2027-03-16") to DayMark.HALF,
+                        fixture.date("2027-03-13") to DayMark.FULL,
+                        fixture.date("2027-04-01") to DayMark.FULL,
+                    ),
+            )
+
+        val march = view.vacationIn(YearMonth.of(2027, 3))
+
+        // Today (the 10th) counts as taken; the Saturday costs nothing; April is not March.
+        assertEquals(VacationDays.of(1.5), march.taken)
+        assertEquals(VacationDays.of(1.5), march.planned)
+        assertEquals(VacationDays.ZERO, view.vacationIn(YearMonth.of(2027, 5)).planned)
     }
 
     @Test

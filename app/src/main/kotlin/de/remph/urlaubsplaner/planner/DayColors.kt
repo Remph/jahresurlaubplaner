@@ -27,14 +27,43 @@ class DayColors(
 fun dayColors(): DayColors {
     val scheme = MaterialTheme.colorScheme
     val dark = scheme.background.luminance() < 0.5f
+    val school = if (dark) Color(0xFF244A68) else Color(0xFFD3E8F8)
     return DayColors(
         holiday = if (dark) Color(0xFF6B5320) else Color(0xFFF7E3B5),
         onHoliday = if (dark) Color(0xFFF3D9A0) else Color(0xFF5A3C0A),
-        school = if (dark) Color(0xFF244A68) else Color(0xFFD3E8F8),
+        school = school,
         schoolBar = if (dark) Color(0xFF8CC4F0) else Color(0xFF2A78B0),
         taken = scheme.primary,
         onTaken = scheme.onPrimary,
         planned = scheme.primary,
-        weekend = scheme.onSurfaceVariant,
+        weekend =
+            weekendTextColor(
+                scheme.onSurfaceVariant,
+                listOf(scheme.surfaceContainerLow, school),
+                if (dark) Color(0xFFB9C5CF) else Color(0xFF44525E),
+            ),
     )
+}
+
+/** The least contrast (WCAG AA) text needs against its background. */
+internal const val MIN_TEXT_CONTRAST = 4.5f
+
+/**
+ * The colour of a weekend's day number: the theme's soft grey while it can be read on every tile
+ * the number can sit on, else [fallback]. On the school holiday tile the soft grey had 3.7:1 in
+ * the dark theme and 4.4:1 in the light one (design review, Nick, 2026-10-25).
+ */
+internal fun weekendTextColor(
+    soft: Color,
+    backgrounds: List<Color>,
+    fallback: Color,
+): Color = if (backgrounds.all { contrastRatio(soft, it) >= MIN_TEXT_CONTRAST }) soft else fallback
+
+/** WCAG contrast ratio of two opaque colours, 1 to 21. */
+internal fun contrastRatio(
+    a: Color,
+    b: Color,
+): Float {
+    val (lighter, darker) = listOf(a.luminance(), b.luminance()).sortedDescending()
+    return (lighter + 0.05f) / (darker + 0.05f)
 }
