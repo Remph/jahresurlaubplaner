@@ -33,7 +33,8 @@ import java.time.format.DateTimeParseException
  * ```
  * { "app": "urlaubsplaner", "formatVersion": 1, "exportedOn": "2026-10-25",
  *   "settings": { "land": "BY" or null, "regionalExtras": [...], "regionalOptOuts": [...],
- *                 "workingDays": ["MONDAY", ...], "specialDays": [{"day": "--12-24", "halfDays": 1}] },
+ *                 "workingDays": ["MONDAY", ...], "specialDays": [{"day": "--12-24", "halfDays": 1}],
+ *                 "suggestCarryOver": false },
  *   "entitlements": [{"year": 2026, "halfDays": 60, "carryOverHalfDays": 10, "carryOverExpiry": "--03-31"}],
  *   "markedDays": [{"date": "2026-07-01", "mark": "full"}] }
  * ```
@@ -42,6 +43,9 @@ import java.time.format.DateTimeParseException
  * file (a `when` per enum, so a new enum value does not compile until it has one), which means
  * renaming something in the app cannot break old backups. A change that an older app would lose
  * data on needs a new [VERSION].
+ *
+ * `suggestCarryOver` was added before the first release and is the one optional key: a file
+ * without it reads as off, so files written before it still restore. Everything else is required.
  *
  * Reading is strict: a newer version, or one value that is missing or not understood, refuses the
  * whole file with a [BackupException] before anything is changed. Dropping part of someone's
@@ -196,6 +200,7 @@ object BackupFile {
                     },
                 ),
             )
+            put("suggestCarryOver", settings.suggestCarryOver)
         }
 
     private fun decodeSettings(settings: JsonObject): UserSettings {
@@ -237,6 +242,7 @@ object BackupFile {
                         },
                     specialDays = specialDays.toMap(),
                 ),
+            suggestCarryOver = settings.optionalBoolean("suggestCarryOver", "settings"),
         )
     }
 
@@ -331,6 +337,20 @@ object BackupFile {
             damaged("$path.$key must be a number")
         }
         return primitive.content.toIntOrNull() ?: damaged("$path.$key must be a whole number")
+    }
+
+    /** False when the key is missing; a value that is not true or false is damaged. */
+    private fun JsonObject.optionalBoolean(
+        key: String,
+        path: String,
+    ): Boolean {
+        val element = this[key] ?: return false
+        val primitive = element as? JsonPrimitive
+        if (primitive == null || primitive is JsonNull || primitive.isString) {
+            damaged("$path.$key must be true or false")
+        }
+        return primitive.content.toBooleanStrictOrNull()
+            ?: damaged("$path.$key must be true or false")
     }
 
     private fun JsonObject.obj(

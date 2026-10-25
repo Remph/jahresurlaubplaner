@@ -2,8 +2,11 @@ package de.remph.urlaubsplaner.core.settings
 
 import de.remph.urlaubsplaner.core.balance.WorkSchedule
 import de.remph.urlaubsplaner.core.holidays.Bundesland
+import de.remph.urlaubsplaner.core.holidays.PublicHolidays
 import de.remph.urlaubsplaner.core.holidays.RegionalExtra
 import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
+import java.time.LocalDate
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Everything the rules need to know about the user, apart from the vacation itself. It lives in
@@ -17,4 +20,25 @@ data class UserSettings(
     val extras: Set<RegionalExtra> = emptySet(),
     val optOuts: Set<RegionalOptOut> = emptySet(),
     val schedule: WorkSchedule = WorkSchedule(),
-)
+    /**
+     * Off by default (Nick, 2026-10-25): when on, a new year's form suggests the days left over
+     * from the year before as Resturlaub. Only a suggestion, the employer's figure still wins.
+     */
+    val suggestCarryOver: Boolean = false,
+) {
+    /**
+     * Whether a date is a public holiday for this user, or null while no Land is chosen. One
+     * function for marked days, the balance and Brückentage, so they never disagree. Throws for
+     * dates before 2019 (see `PublicHolidays`).
+     */
+    fun publicHolidayCheck(): ((LocalDate) -> Boolean)? {
+        val land = land ?: return null
+        val years = ConcurrentHashMap<Int, Set<LocalDate>>()
+        return { date ->
+            date in
+                years.getOrPut(date.year) {
+                    PublicHolidays.of(land, date.year, extras, optOuts).map { it.date }.toSet()
+                }
+        }
+    }
+}
