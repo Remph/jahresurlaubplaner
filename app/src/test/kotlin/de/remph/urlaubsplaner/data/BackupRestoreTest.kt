@@ -123,6 +123,29 @@ class BackupRestoreTest {
         }
 
     @Test
+    fun `a replace that fails halfway leaves the old data as it was`() =
+        runBlocking {
+            repository.replaceAll(data)
+            // Fails on the first marked day, after settings and years were already replaced and the
+            // old marks deleted: only a rolled-back transaction brings all of that back.
+            database.openHelper.writableDatabase.execSQL(
+                "CREATE TRIGGER fail_mark BEFORE INSERT ON marked_day " +
+                    "BEGIN SELECT RAISE(ABORT, 'test failure'); END",
+            )
+            val other =
+                BackupData(
+                    settings = UserSettings(land = Bundesland.HAMBURG),
+                    entitlements = listOf(YearEntitlement(2031, VacationDays.of(25))),
+                    marks = mapOf(LocalDate.of(2026, 8, 3) to DayMark.HALF),
+                )
+
+            assertThrows(Exception::class.java) { runBlocking { repository.replaceAll(other) } }
+            database.openHelper.writableDatabase.execSQL("DROP TRIGGER fail_mark")
+
+            assertEquals(data, repository.readAll())
+        }
+
+    @Test
     fun `export to a file and import it into a fresh database gives the same data`() =
         runBlocking {
             repository.replaceAll(data)

@@ -258,6 +258,15 @@ class BackupFileTest {
     }
 
     @Test
+    fun `a deeply nested file is refused instead of crashing the app`() {
+        // Within the size limit, but a recursive parser would overflow the stack.
+        val nested = "[".repeat(1_000_000)
+
+        refused<BackupException.NotABackup>(nested)
+        refused<BackupException.NotABackup>("{\"a\":".repeat(500_000))
+    }
+
+    @Test
     fun `JSON that is not an object, or not ours, is not a backup`() {
         refused<BackupException.NotABackup>("[1, 2]")
         refused<BackupException.NotABackup>("{}")
