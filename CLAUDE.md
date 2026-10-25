@@ -29,8 +29,9 @@ Local-first, no backend for the MVP. The repo is new and still empty: no code, n
   Google's rules and fee on their own pages first.
 
 ## Open decisions (ask Nick, don't assume)
-- Before the first school holiday data file is bundled: confirm the OpenHolidays data licence on
-  the official site (`docs/data-sources.md`) and add the credit to the app's about screen.
+- OpenHolidays licence is confirmed (ODbL, 2026-10-25). When the first school holiday data file is
+  bundled: keep it under ODbL in its own directory with the licence text, and add the credit to
+  the about screen and the ICS export (`docs/data-sources.md`).
 - Before the first release: Google Play account (see above) and the F-Droid metadata.
 
 ## What to read
