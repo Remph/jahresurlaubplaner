@@ -1,6 +1,7 @@
 package de.remph.urlaubsplaner.appearance
 
 import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -37,6 +38,21 @@ class AppearanceStoreTest {
         preferences.edit().putString("theme_mode", "SEPIA").commit()
 
         assertEquals(ThemeMode.SYSTEM, state().mode)
+    }
+
+    @Test
+    fun `the light and dark choice is handed to AppCompat`() {
+        val store = AppearanceStore(preferences)
+
+        store.update { it.copy(mode = ThemeMode.DARK) }
+        assertEquals(AppCompatDelegate.MODE_NIGHT_YES, AppCompatDelegate.getDefaultNightMode())
+        store.update { it.copy(mode = ThemeMode.LIGHT) }
+        assertEquals(AppCompatDelegate.MODE_NIGHT_NO, AppCompatDelegate.getDefaultNightMode())
+        store.update { it.copy(mode = ThemeMode.SYSTEM) }
+        assertEquals(
+            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
+            AppCompatDelegate.getDefaultNightMode(),
+        )
     }
 
     private fun state() = AppearanceStore(preferences).state.value

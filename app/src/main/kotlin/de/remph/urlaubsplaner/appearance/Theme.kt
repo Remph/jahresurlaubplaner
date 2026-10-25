@@ -1,5 +1,9 @@
 package de.remph.urlaubsplaner.appearance
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
@@ -9,8 +13,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 
 /**
@@ -38,8 +44,22 @@ fun UrlaubsplanerTheme(
                 }
             appColorScheme(dark, appearance, system)
         }
+    // The window behind Compose follows the XML theme (dark grey in the dark theme); without this
+    // it shows through as a grey flash while the activity restarts, also in pure black.
+    SideEffect {
+        context.findActivity()?.window?.setBackgroundDrawable(
+            ColorDrawable(colors.background.toArgb()),
+        )
+    }
     MaterialTheme(colorScheme = colors, content = content)
 }
+
+private tailrec fun Context.findActivity(): Activity? =
+    when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
 
 /**
  * [system] is the scheme from the wallpaper, or null where there is none (Android 11). It is used

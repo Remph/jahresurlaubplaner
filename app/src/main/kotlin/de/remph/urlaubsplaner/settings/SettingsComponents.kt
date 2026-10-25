@@ -118,7 +118,7 @@ fun SettingsRow(
                 Modifier
                     .fillMaxWidth()
                     .heightIn(min = 64.dp)
-                    .clickable(onClick = onClick)
+                    .clickable(role = Role.Button, onClick = onClick)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

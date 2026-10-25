@@ -1,6 +1,7 @@
 package de.remph.urlaubsplaner.settings
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -128,7 +129,7 @@ internal fun LanguageDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.section_language)) },
         text = {
-            androidx.compose.foundation.layout.Column {
+            Column {
                 for (option in LanguageChoice.entries) {
                     ChoiceRow(stringResource(option.labelRes()), option == selected) {
                         onSelect(option)
