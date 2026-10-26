@@ -69,7 +69,7 @@ fun CalendarScreen(
     val shown = view ?: return
     val locale = currentLocale()
 
-    ScreenFrame(outerPadding, scroll) {
+    ScreenFrame(outerPadding, scroll, Modifier.swipeToStep(viewModel::step)) {
         if (!shown.hasLand) {
             EmptyState(
                 stringResource(R.string.overview_no_land),
