@@ -332,6 +332,35 @@ clickable mock-up are in the project folder `design/review-m3/` and `design/revi
   holiday tile, else a fixed stronger grey (dark 5.3:1, light 6.4:1 on school tiles).
   `weekendTextColor` and `contrastRatio` are unit-tested.
 
+### ICS export (M4, first piece)
+
+Designed with Nick on 2026-10-26 (card taps, one question at a time).
+
+- Content: only the vacation (Nick: "Vacation only"). No public or school holidays, so the file
+  needs no ODbL credit; the credit still goes into the M5 about screen. One all-day event per
+  trip (`VacationCalculator.trips`: a weekend between two marked weeks stays inside it), taken and
+  planned days alike. Summary "Urlaub" / "Vacation", notes "4,5 Urlaubstage, davon 1 halber Tag"
+  / "4.5 vacation days, 1 of them a half day". All trips of all years; no year choice.
+- `:core.ics`: `IcsExport(clock, calculator).encode(marks, language)` (RFC 5545: CRLF, lines folded
+  at 75 octets without cutting a character, values escaped), `tripCount`, `fileName`,
+  `MIME_TYPE`; `IcsLanguage.of(locale)` is English for an English locale and German for every
+  other (the app's own rule). The UID is `urlaubsplaner-<first day>@de.remph.urlaubsplaner`, so
+  importing a newer file again updates the event in most calendar apps. DTSTAMP comes from the
+  clock. The end date is exclusive, as RFC 5545 wants for all-day events.
+- `:app`: page "Kalender-Export" in Einstellungen (only with a Land chosen; without a Land what a
+  marked day costs is not known). It says how many vacations the file holds and has two buttons,
+  "In Kalender öffnen" (`ACTION_VIEW`, `text/calendar`, a cache file read through a
+  `FileProvider`, only the newest export is kept) and "Als Datei speichern" (`CreateDocument`, no
+  storage permission, like the backup). Both are off with no vacation. The file's language is the
+  first one in the system list that the app has texts for (`IcsLanguage.of(List<Locale>)`).
+- No share sheet (Nick, 2026-10-26): Samsung Calendar is not offered there, it only takes a
+  `.ics` file through "open". The first version had "Senden oder in Kalender öffnen" with
+  `ACTION_SEND`; Nick tried it and chose to turn it into "open".
+- Marks from before 2019 (only from a hand-made backup) are left out: the holiday rules start
+  in 2019, so what they cost is not known.
+- Tried by Nick on a Samsung phone: saving the file and opening it works. Not run: the new
+  "In Kalender öffnen" button on a phone, and Google Calendar.
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
@@ -345,5 +374,5 @@ Known snags:
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
 - [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (PR #12, merged 2026-10-25)
 - [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B); Brückentage (PR C, PR #18); design review changes (shapes, month card, year rows, weekend contrast)
-- [ ] M4 Export and widget
+- [ ] M4 Export and widget: ICS export (PR 1, in review); widget (PR 2)
 - [ ] M5 Release prep

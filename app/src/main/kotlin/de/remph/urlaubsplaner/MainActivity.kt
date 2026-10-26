@@ -28,7 +28,14 @@ class MainActivity : AppCompatActivity() {
             UrlaubsplanerTheme(appearance) {
                 AppRoot(
                     settingsViewModel =
-                        viewModel { SettingsViewModel(app.repository, app.backupStore, app.clock) },
+                        viewModel {
+                            SettingsViewModel(
+                                app.repository,
+                                app.backupStore,
+                                app.calendarExporter,
+                                app.clock,
+                            )
+                        },
                     plannerViewModel =
                         viewModel {
                             PlannerViewModel(

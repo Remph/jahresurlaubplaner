@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only the calendar file that is being shared; see CalendarFileStore. -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- FileProvider reads these two attributes without the android: prefix. -->
+    <cache-path
+        name="calendar"
+        path="calendar/" />
+</paths>

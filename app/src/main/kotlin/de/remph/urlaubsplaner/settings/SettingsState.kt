@@ -62,6 +62,8 @@ sealed interface Notice {
 
     data object Exported : Notice
 
+    data object CalendarSaved : Notice
+
     data object Imported : Notice
 
     data object ExportFailed : Notice

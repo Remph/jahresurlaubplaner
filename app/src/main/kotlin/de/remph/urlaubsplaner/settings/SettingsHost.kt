@@ -22,7 +22,7 @@ import de.remph.urlaubsplaner.appearance.AppearanceStore
 import de.remph.urlaubsplaner.core.holidays.Bundesland
 
 /** The settings list and the small page behind each row. */
-enum class SettingsPage { LIST, VACATION, WORK_DAYS, REGIONAL, APPEARANCE, BACKUP }
+enum class SettingsPage { LIST, VACATION, WORK_DAYS, REGIONAL, APPEARANCE, CALENDAR_EXPORT, BACKUP }
 
 /**
  * Shows the settings list or one of its pages, and the messages and questions that can come up
@@ -78,6 +78,10 @@ fun SettingsHost(
 
         SettingsPage.APPEARANCE -> {
             AppearancePage(appearanceStore, outerPadding, leave)
+        }
+
+        SettingsPage.CALENDAR_EXPORT -> {
+            CalendarExportPage(viewModel, outerPadding, leave)
         }
 
         SettingsPage.BACKUP -> {
@@ -163,6 +167,10 @@ private fun noticeText(notice: Notice): String =
 
         Notice.Exported -> {
             stringResource(R.string.notice_exported)
+        }
+
+        Notice.CalendarSaved -> {
+            stringResource(R.string.notice_calendar_saved)
         }
 
         Notice.Imported -> {
