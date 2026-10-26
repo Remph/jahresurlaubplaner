@@ -46,7 +46,8 @@ Rules:
 | M2 | Data and storage | Room (settings, marked days, entitlement); school holiday file and loader (ODbL); backup export/import | 3 |
 | M3 | Screens | Status home (remaining days, next trip), year and month view, marking single and half days, settings (Bundesland, language, regional holiday opt-ins and the Mariä Himmelfahrt opt-out for Bayern), Brückentage in the view | 2 to 3 |
 | M4 | Export and widget | ICS export (with the ODbL credit), home screen widget; both follow the chosen app language | 2 |
-| M5 | Release prep | About screen with credits, icon, F-Droid metadata, signing; the Google Play decision comes up here | 1 to 2 |
+| M5 | Polish | Animations, a final UI review of all screens and the widget, a tech debt review (Nick, 2026-10-26) | 2 to 3 |
+| M6 | Release prep | About screen with credits, icon, F-Droid metadata, signing; the Google Play decision comes up here | 1 to 2 |
 
 M1 comes first after M0 because it is testable in the cloud and everything else depends on it.
 
@@ -176,7 +177,7 @@ everything".
   (`CreateDocument` / `OpenDocument`, `BackupFile.MIME_TYPE`, no storage permission). Opening for
   write uses `"wt"` so a longer old file leaves no tail.
 - New library: `kotlinx-serialization-json` 1.12.0 (JetBrains, Apache-2.0), tree API only, no
-  compiler plugin. The about screen (M5) lists its licence.
+  compiler plugin. The about screen (M6) lists its licence.
 - Not built: the picker launchers and the confirm dialog (M3 screens), merging, cloud sync.
 
 Settings page (M3, first piece): design approved by Nick on 2026-10-25. M3 is three PRs: this one
@@ -217,7 +218,7 @@ Brückentage in both.
   tests that compose the real page in German and English on the JVM. Not covered: the two file
   pickers, the keyboard, TalkBack and the language switch on a real phone.
 - Not built: home status, year and month view, marking days, Brückentage, school holidays on a
-  screen (the next PRs); an about screen with credits (M5).
+  screen (the next PRs); an about screen with credits (M6).
 
 Navigation and appearance (M3, second piece, "PR A"): Nick's changes after trying the settings
 page, 2026-10-25. M3 is now PR 1 (merged as #13), PR A (this), PR B (Übersicht, Kalender, marking)
@@ -347,7 +348,7 @@ folder); the logic is `:core.widget.WidgetStatus` (unit-tested), the rest is `:a
 - Not tried on a launcher (the cloud has none): placing, the setup screen, transparency, light and
   dark, the language switch, the tap targets, the redraw after marking a day, whether Android
   delivers the date broadcasts, how the small layout fits a 2x1 cell on a real phone. No preview
-  image for the widget picker yet (M5, with the launcher icon).
+  image for the widget picker yet (M6, with the launcher icon).
 
 ### Design review of the screens (after M3, 2026-10-25)
 
@@ -373,7 +374,7 @@ clickable mock-up are in the project folder `design/review-m3/` and `design/revi
 Designed with Nick on 2026-10-26 (card taps, one question at a time).
 
 - Content: only the vacation (Nick: "Vacation only"). No public or school holidays, so the file
-  needs no ODbL credit; the credit still goes into the M5 about screen. One all-day event per
+  needs no ODbL credit; the credit still goes into the M6 about screen. One all-day event per
   trip (`VacationCalculator.trips`: a weekend between two marked weeks stays inside it), taken and
   planned days alike. Summary "Urlaub" / "Vacation", notes "4,5 Urlaubstage, davon 1 halber Tag"
   / "4.5 vacation days, 1 of them a half day". All trips of all years; no year choice.
@@ -402,7 +403,7 @@ Known snags:
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
   2026-10-25 (Nick added them); the Länder ministry sites are not (probe before relying on it).
 - Instrumented tests and the widget on a launcher (M3, M4) need an emulator or Nick's phone.
-- M5: the app has no launcher icon yet (lint `MissingApplicationIcon`).
+- M6: the app has no launcher icon yet (lint `MissingApplicationIcon`).
 
 ## Status
 
@@ -410,5 +411,6 @@ Known snags:
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
 - [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (PR #12, merged 2026-10-25)
 - [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B); Brückentage (PR C, PR #18); design review changes (shapes, month card, year rows, weekend contrast)
-- [ ] M4 Export and widget: ICS export (PR #20, merged 2026-10-26); widget (PR #21, in review)
-- [ ] M5 Release prep
+- [x] M4 Export and widget: ICS export (PR #20, merged 2026-10-26); widget (PR #21, merged 2026-10-26)
+- [ ] M5 Polish (animations, final UI review, tech debt review)
+- [ ] M6 Release prep
