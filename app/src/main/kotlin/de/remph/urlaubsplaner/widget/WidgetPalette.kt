@@ -42,7 +42,7 @@ class WidgetSwatch(
  * The widget's colours for light and dark, each as a [ColorProvider] that carries both, so the
  * launcher switches between them with the phone. "Light" and "Dark" give the same colours for
  * both. Like the phone means the wallpaper colours on Android 12 and up and the app's own teal
- * scheme on Android 11, the same as the app, but never the app's own Darstellung setting (Nick).
+ * scheme on Android 11, the same as the app, but never the app's own Darstellung setting (the maintainer).
  */
 class WidgetPalette(
     private val light: WidgetSwatch,

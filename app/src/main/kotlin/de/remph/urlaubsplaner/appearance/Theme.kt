@@ -81,7 +81,7 @@ fun appColorScheme(
 }
 
 /**
- * Some phones (Samsung, seen 2026-10-25) hand out a wallpaper palette whose dark background is
+ * Some phones (seen 2026-10-25) hand out a wallpaper palette whose dark background is
  * already almost black, so "Dunkel" would look like pure black and the pure black switch would do
  * nothing. A background that dark is moved halfway towards the card colour: a soft dark grey,
  * with the pure black choice still a step darker. Palettes with a normal dark grey stay as is.

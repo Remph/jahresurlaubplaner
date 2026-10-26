@@ -4,7 +4,7 @@ Checked 2026-10-25 by web search only. The cloud container could not open openho
 date.nager.at or feiertage-api.de (network policy), so the notes on Nager.Date and
 feiertage-api.de come from secondary sources and are **not confirmed**.
 
-OpenHolidays is confirmed (2026-10-25): Nick sent the ODbL 1.0 text and the FAQ answer: "the
+OpenHolidays is confirmed (2026-10-25): the maintainer sent the ODbL 1.0 text and the FAQ answer: "the
 OpenHolidays API project is open data, its use is free of charge and also permitted in commercial
 projects. All data comes from public sources ... The processed data is licensed under the ODC Open
 Database Licence (ODbL)."

@@ -1,7 +1,7 @@
 # Urlaubsplaner (repo: urlaubsplaner): notes for Claude
 
 Personal, non-profit Android app for planning the year's vacation in Germany: holidays, school
-holidays, vacation balance and bridge days, status first. Nick's own phone, used on the go.
+holidays, vacation balance and bridge days, status first. The maintainer's own phone, used on the go.
 Local-first, no backend for the MVP. Gradle with `:core` and `:app`; the MVP features are built
 (M0 to M4), M5 is polish, M6 release prep. The plan and milestones are in `docs/plan.md`.
 
@@ -15,7 +15,7 @@ Local-first, no backend for the MVP. Gradle with `:core` and `:app`; the MVP fea
   Resturlaub with a configurable expiry date, days taken and planned, half days); marking single
   days and showing Brückentage; year/month view with status first (remaining days, next trip);
   ICS export; backup export/import; home screen widget (next vacation day, remaining days).
-- Not MVP, only when Nick asks: categories and trips, AT/CH, multi-person overlap, cloud sync.
+- Not MVP, only when the maintainer asks: categories and trips, AT/CH, multi-person overlap, cloud sync.
 
 ## Decided (design decisions, 2026-10-25)
 - Stack: Kotlin, Jetpack Compose with Material 3, Room.
@@ -30,7 +30,7 @@ Local-first, no backend for the MVP. Gradle with `:core` and `:app`; the MVP fea
 - Google Play: no developer account for now. Decide before a public release and re-check
   Google's rules and fee on their own pages first.
 
-## Open decisions (ask Nick, don't assume)
+## Open decisions (ask the maintainer, don't assume)
 - OpenHolidays licence is confirmed (ODbL, 2026-10-25). When the first school holiday data file is
   bundled: keep it under ODbL in its own directory with the licence text, and add the credit to
   the about screen and the ICS export (`docs/data-sources.md`).
@@ -51,12 +51,12 @@ in the cloud container on 2026-10-25, except the instrumented tests:
 - `./gradlew spotlessApply`: fix formatting (ktlint through Spotless).
 - In the cloud add `-ProbolectricRepoUrl=https://maven-central.storage-download.googleapis.com/maven2`
   to any command that runs `:app` tests (`test`, `:app:testDebugUnitTest`): Robolectric downloads
-  its Android image from Maven Central, which answers 429 there. Not needed on Nick's PC.
+  its Android image from Maven Central, which answers 429 there. Not needed on the maintainer's PC.
 - `./gradlew :core:test --tests '*SomeTest'`: one class while working. Name the module: plain
   `test --tests` fails in a module that has no matching test.
 - `./gradlew -PcoreOnly :core:test`: only the rules module, no Android SDK needed.
 - `./gradlew connectedDebugAndroidTest`: instrumented tests, need an emulator or device. Not
-  possible in the cloud container: say "not run" in the PR and ask Nick to run it on his PC.
+  possible in the cloud container: say "not run" in the PR and ask the maintainer to run it on their PC.
 - On Windows one `:app` unit test is skipped (`assumeUnixPaths()` in `CalendarExporterTest`):
   androidx.core's `FileProvider` compares paths after a hard-coded '/'. It runs in the cloud.
 
@@ -66,26 +66,26 @@ environment's setup script `/mnt/project-files/ops/cloud-setup-script.sh` instal
 (platform 37.0, build-tools 37.0.0) into `/opt/android-sdk`; in a resumed thread without
 `$ANDROID_HOME` run it once by hand and `export ANDROID_HOME=/opt/android-sdk`. If
 `$ANDROID_HOME/platforms` stays empty, `dl.google.com` is missing from the network policy; tell
-Nick (Project settings > Cloud environment > Network access) instead of working around it.
+the maintainer (Project settings > Cloud environment > Network access) instead of working around it.
 
 - Keep the app's rules (holidays, vacation balance, bridge days, ICS export, backup format) in
   the plain Kotlin/JVM module `:core` with no Android imports; it also builds without the SDK.
 - `settings.gradle.kts` skips `:app` with `-PcoreOnly`. Do not apply Android plugins in the root
   build file, or `-PcoreOnly` cannot skip them.
 - Versions live in `gradle/libs.versions.toml`; the plan and milestones in `docs/plan.md`.
-- openholidaysapi.org and similar sites are blocked unless Nick adds them to the trusted sites.
+- openholidaysapi.org and similar sites are blocked unless the maintainer adds them to the trusted sites.
 
 ## Git
-- Every change on its own `feature/<topic>` branch with a PR into `main`; Nick reviews and
+- Every change on its own `feature/<topic>` branch with a PR into `main`; the maintainer reviews and
   merges. Never commit or push to `main`, never force-push, never rebase (merge `main` in).
   `git fetch origin main` before branching: a fresh clone's `origin/main` can be stale.
 - After a merge, new work goes on a NEW branch and PR; never reuse a merged branch. If a PR was
   merged before its review finished, the fixes go on a new branch and PR.
 - One thread pushes to a branch at a time: the review thread during the review, the building
   thread again afterwards.
-- Never add two files whose names differ only in case (Nick builds on Windows).
+- Never add two files whose names differ only in case (the maintainer builds on Windows).
 - Never commit keystores, `local.properties`, tokens or Google service files.
-- No tags or releases unless Nick asks. The repo has no deploy.
+- No tags or releases unless the maintainer asks. The repo has no deploy.
 
 ## Checks (no CI on pull requests)
 GitHub does not check pull requests (the free Actions minutes are used up). Before reporting
@@ -94,18 +94,18 @@ PR description (`.github/pull_request_template.md`); say plainly which checks co
 why. A review runs them again. A docs-only PR says "no code, no checks".
 
 ## Reviews
-- Every code feature or fix gets an independent review in a new thread before Nick merges
+- Every code feature or fix gets an independent review in a new thread before the maintainer merges
   (docs-only, text-only and ops changes don't). A thread never reviews its own work: it reports
   "ready for review" and the coordinator starts the review thread on the same branch.
-- The review fixes what it judges worth fixing on that branch without asking and asks Nick only
+- The review fixes what it judges worth fixing on that branch without asking and asks the maintainer only
   about design choices, one question at a time.
 - A small fix round (several small items) is one build thread, one branch, one PR and one review
   thread. Bigger features get a thread each.
 
 ## Code rules
-- Design first and Nick's OK before building; no features beyond the agreed scope.
+- Design first and the maintainer's OK before building; no features beyond the agreed scope.
 - Minimal UI, phone and touch first, nothing hover-only, touch targets of at least 48dp,
-  TalkBack labels. A competing app felt cluttered to Nick: status first, few controls.
+  TalkBack labels. A competing app felt cluttered to the maintainer: status first, few controls.
 - German is the first language of the app and its texts, English second: every visible text is a
   string resource in both. Use everyday German words; ask when unsure.
 - Every rule of the app (holiday dates, balance and carry-over expiry, half days, bridge days)
@@ -120,6 +120,6 @@ why. A review runs them again. A docs-only PR says "no code, no checks".
 
 ## Dependencies
 Well-known, maintained libraries may be added when they make development easier (name them in the
-PR; ask Nick first only when unsure). No paid services, no premium features, nothing from Palantir
+PR; ask the maintainer first only when unsure). No paid services, no premium features, nothing from Palantir
 or tied in a major positive way to Peter Thiel. For F-Droid: no proprietary dependencies (no
 Google Play Services, no tracking).

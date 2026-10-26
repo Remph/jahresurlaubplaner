@@ -17,7 +17,7 @@ class WidgetLanguage(
          * The widget lives outside any activity, so the language the user chose in the app is not
          * applied to its context; this builds one. With the system language it is the first
          * German or English one in the phone's list, and German when there is none, the same rule
-         * as in the app (Nick, 2026-10-26).
+         * as in the app (the maintainer, 2026-10-26).
          */
         fun of(context: Context): WidgetLanguage = of(context, LanguageChoice.stored(context))
 

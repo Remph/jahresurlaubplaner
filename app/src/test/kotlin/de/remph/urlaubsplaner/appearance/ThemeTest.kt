@@ -56,7 +56,7 @@ class ThemeTest {
         assertEquals(FixedLight.background, colors.background)
     }
 
-    // Seen on a Samsung phone, 2026-10-25: the wallpaper palette's dark background is nearly black.
+    // Seen on a phone, 2026-10-25: the wallpaper palette's dark background is nearly black.
     private val nearBlack =
         darkColorScheme(
             background = Color(0xFF010102),

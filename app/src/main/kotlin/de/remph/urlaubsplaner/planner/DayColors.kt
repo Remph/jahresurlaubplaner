@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.luminance
 
 /**
  * The colours of the calendar. A holiday is always gold and school holidays always light blue,
- * also with system colours (Nick, 2026-10-25): the meaning must not change with the wallpaper.
+ * also with system colours (the maintainer, 2026-10-25): the meaning must not change with the wallpaper.
  * Taken days use the theme's primary colour, so they follow the wallpaper.
  */
 @Immutable
@@ -51,7 +51,7 @@ internal const val MIN_TEXT_CONTRAST = 4.5f
 /**
  * The colour of a weekend's day number: the theme's soft grey while it can be read on every tile
  * the number can sit on, else [fallback]. On the school holiday tile the soft grey had 3.7:1 in
- * the dark theme and 4.4:1 in the light one (design review, Nick, 2026-10-25).
+ * the dark theme and 4.4:1 in the light one (design review, the maintainer, 2026-10-25).
  */
 internal fun weekendTextColor(
     soft: Color,

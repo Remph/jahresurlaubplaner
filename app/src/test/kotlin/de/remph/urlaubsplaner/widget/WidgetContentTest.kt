@@ -16,7 +16,7 @@ import de.remph.urlaubsplaner.ui.TabRequest
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** The layouts as Glance builds them; how they look on a launcher is for Nick's phone. */
+/** The layouts as Glance builds them; how they look on a launcher is for the maintainer's phone. */
 @RunWith(AndroidJUnit4::class)
 class WidgetContentTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
@@ -130,7 +130,7 @@ class WidgetContentTest {
         emittable is EmittableText && emittable.text == text && emittable.maxLines == lines
     }
 
-    // Nick, 2026-10-26: "Noch kein Urlaub geplant" was cut to "Noch kein Urla..." on his phone.
+    // The maintainer, 2026-10-26: "Noch kein Urlaub geplant" was cut to "Noch kein Urla..." on their phone.
     @Test
     fun `the trip texts of the wide widget may wrap to two lines`() =
         runGlanceAppWidgetUnitTest {
