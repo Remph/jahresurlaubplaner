@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.ui.rememberAnimationsRemoved
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
@@ -211,7 +212,19 @@ private fun Status(
  */
 @Composable
 private fun rememberIntroProgress(viewModel: PlannerViewModel): Float {
-    val progress = remember { Animatable(if (viewModel.takeIntro()) 0f else 1f) }
+    val animationsRemoved = rememberAnimationsRemoved()
+    val progress =
+        remember {
+            Animatable(
+                if (viewModel.takeIntro() &&
+                    !animationsRemoved
+                ) {
+                    0f
+                } else {
+                    1f
+                },
+            )
+        }
     LaunchedEffect(Unit) {
         if (progress.value < 1f) progress.animateTo(1f, tween(COUNT_UP_MILLIS, easing = Decelerate))
     }
