@@ -2,6 +2,7 @@ package de.remph.urlaubsplaner.planner
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -10,6 +11,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
+import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -86,6 +90,16 @@ class CalendarScreenTest {
         compose.onNodeWithText("Karfreitag").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Ostermontag").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Osterferien").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the month card adds up the days taken and planned in the month`() {
+        show()
+        waitForText("Karfreitag")
+
+        compose.onNodeWithText("2 Tage").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("5 Tage").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -243,5 +257,69 @@ class CalendarScreenTest {
         day("Friday, March 26, 2027, Public holiday: Good Friday").assertExists()
         day("Monday, March 8, 2027, Vacation taken").assertExists()
         compose.onNodeWithText("Easter holidays").performScrollTo().assertIsDisplayed()
+    }
+
+    private fun yearGrid() =
+        compose.onNode(hasContentDescription("Jahresübersicht 2027", substring = true))
+
+    private fun showYear() {
+        show()
+        compose.onNodeWithText("Jahr").performClick()
+        waitForText("Jan")
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the year grid starts compact and the handle expands and collapses it`() {
+        showYear()
+        yearGrid().assertHeightIsEqualTo(YearRowsCompact * 12)
+
+        compose
+            .onNodeWithContentDescription("Jahresübersicht größer anzeigen")
+            .performScrollTo()
+            .performClick()
+        compose.mainClock.advanceTimeBy(ANIMATION_MILLIS)
+        yearGrid().assertHeightIsEqualTo(YearRowsExpanded * 12)
+
+        compose
+            .onNodeWithContentDescription("Jahresübersicht kleiner anzeigen")
+            .performScrollTo()
+            .performClick()
+        compose.mainClock.advanceTimeBy(ANIMATION_MILLIS)
+        yearGrid().assertHeightIsEqualTo(YearRowsCompact * 12)
+    }
+
+    @Test
+    @Config(qualifiers = "de-w411dp-h1250dp")
+    fun `swiping down expands the year grid and swiping up makes it compact again`() {
+        showYear()
+
+        yearGrid().performTouchInput { swipeDown() }
+        compose.waitForIdle()
+        yearGrid().assertHeightIsEqualTo(YearRowsExpanded * 12)
+
+        yearGrid().performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        yearGrid().assertHeightIsEqualTo(YearRowsCompact * 12)
+    }
+
+    @Test
+    @Config(qualifiers = "de-w411dp-h500dp")
+    fun `on a short screen a swipe up scrolls the expanded grid before it makes it compact`() {
+        showYear()
+        compose
+            .onNodeWithContentDescription("Jahresübersicht größer anzeigen")
+            .performScrollTo()
+            .performClick()
+        compose.waitForIdle()
+
+        yearGrid().performTouchInput { swipeUp() }
+        compose.waitForIdle()
+
+        yearGrid().assertHeightIsEqualTo(YearRowsExpanded * 12)
+    }
+
+    private companion object {
+        const val ANIMATION_MILLIS = 1_000L
     }
 }

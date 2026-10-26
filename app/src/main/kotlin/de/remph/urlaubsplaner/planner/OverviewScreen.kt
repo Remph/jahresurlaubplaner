@@ -1,5 +1,6 @@
 package de.remph.urlaubsplaner.planner
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -78,6 +79,7 @@ fun OverviewScreen(
 @Composable
 fun ScreenFrame(
     outerPadding: PaddingValues,
+    scrollState: ScrollState = rememberScrollState(),
     content: @Composable () -> Unit,
 ) {
     Column(
@@ -86,7 +88,7 @@ fun ScreenFrame(
                 .fillMaxSize()
                 .padding(outerPadding)
                 .consumeWindowInsets(outerPadding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {

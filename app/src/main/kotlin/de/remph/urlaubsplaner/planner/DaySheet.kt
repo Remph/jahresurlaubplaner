@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -202,7 +201,7 @@ private fun Fact(
     text: String,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(16.dp).background(swatch, RoundedCornerShape(5.dp)))
+        Box(Modifier.size(16.dp).background(swatch, MaterialTheme.shapes.extraSmall))
         Text(
             text,
             style = MaterialTheme.typography.bodyLarge,

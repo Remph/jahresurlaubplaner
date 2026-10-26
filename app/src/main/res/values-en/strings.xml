@@ -160,6 +160,8 @@
     <string name="month_previous">Previous month</string>
     <string name="month_next">Next month</string>
     <string name="school_holidays_unknown">The app has no school holidays for this time yet.</string>
+    <string name="year_rows_expand">Show the year larger</string>
+    <string name="year_rows_collapse">Show the year smaller</string>
     <string name="legend_holiday">Public holiday</string>
     <string name="legend_school">School holidays</string>
     <string name="legend_taken">Taken</string>

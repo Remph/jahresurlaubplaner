@@ -160,6 +160,8 @@
     <string name="month_previous">Vorheriger Monat</string>
     <string name="month_next">Nächster Monat</string>
     <string name="school_holidays_unknown">Für diese Zeit hat die App noch keine Schulferien.</string>
+    <string name="year_rows_expand">Jahresübersicht größer anzeigen</string>
+    <string name="year_rows_collapse">Jahresübersicht kleiner anzeigen</string>
     <string name="legend_holiday">Feiertag</string>
     <string name="legend_school">Schulferien</string>
     <string name="legend_taken">Genommen</string>

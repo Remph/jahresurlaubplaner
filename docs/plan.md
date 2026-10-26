@@ -313,6 +313,25 @@ and PR C (Brückentage).
   screens show no bridges.
 - Not built: bridges that combine two gaps, bridges in the widget or the ICS export (M4).
 
+### Design review of the screens (after M3, 2026-10-25)
+
+Nick answered each question in the thread; research (Material 3, One UI, Apple), screenshots and a
+clickable mock-up are in the project folder `design/review-m3/` and `design/review-m3-mockup/`.
+
+- Shapes: three steps from the Material 3 scale, read from `MaterialTheme.shapes`, no own radii:
+  `large` 16 dp for cards, fields and the month's day cells; `extraSmall` 4 dp for legend and list
+  swatches and the year grid's tiles; pills (full) for buttons and chips. The 2 dp "today" bar
+  and school holiday bar inside a cell stay as they are.
+- Month view: under the grid a card with the days taken (up to today) and planned (after it) in
+  that month, then the month's holidays and school holidays; the legend is one small row.
+- Year grid: 28 dp rows; swipe down expands them to 48 dp, swipe up makes them compact (like the
+  Samsung calendar). A handle under the grid does the same by tap and for TalkBack. The swipe is
+  only watched, so the page still scrolls: on a short screen a swipe up scrolls first and makes the
+  rows compact only when the page is already at its end. The state lives in `PlannerViewModel`.
+- Weekend numbers: the theme's soft grey is kept where it has 4.5:1 on the normal and the school
+  holiday tile, else a fixed stronger grey (dark 5.3:1, light 6.4:1 on school tiles).
+  `weekendTextColor` and `contrastRatio` are unit-tested.
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
@@ -325,6 +344,6 @@ Known snags:
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
 - [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (PR #12, merged 2026-10-25)
-- [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B, in review); Brückentage (PR C)
+- [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B); Brückentage (PR C, PR #18); design review changes (shapes, month card, year rows, weekend contrast)
 - [ ] M4 Export and widget
 - [ ] M5 Release prep

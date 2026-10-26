@@ -16,6 +16,7 @@ import de.remph.urlaubsplaner.core.schoolholidays.SchoolHoliday
 import de.remph.urlaubsplaner.core.schoolholidays.SchoolHolidayData
 import de.remph.urlaubsplaner.core.settings.UserSettings
 import java.time.LocalDate
+import java.time.YearMonth
 
 /**
  * Everything the overview and the calendar show about one year, worked out once: what each day
@@ -101,6 +102,22 @@ class YearView(
 
     fun markOn(date: LocalDate): DayMark? = marks[date]
 
+    /**
+     * The vacation days marked in [month], split at today: up to and including today they are
+     * taken, after it planned. Like [look], a mark that costs nothing does not count.
+     */
+    fun vacationIn(month: YearMonth): MonthVacation {
+        var taken = VacationDays.ZERO
+        var planned = VacationDays.ZERO
+        for (day in 1..month.lengthOfMonth()) {
+            val date = month.atDay(day)
+            val mark = markOn(date) ?: continue
+            val cost = cost(date, mark)
+            if (date.isAfter(today)) planned += cost else taken += cost
+        }
+        return MonthVacation(taken, planned)
+    }
+
     /** Whether marking [date] would cost anything: a working day that is not a holiday. */
     fun canMark(date: LocalDate): Boolean =
         calculator != null && calculator.cost(date) > VacationDays.ZERO
@@ -135,5 +152,11 @@ class YearView(
     /** The trip that includes [today] or the first one after it. */
     val nextTrip: Trip? get() = trips.firstOrNull { !it.end.isBefore(today) }
 }
+
+/** The days of a month that are taken (until today) and planned (after it). */
+class MonthVacation(
+    val taken: VacationDays,
+    val planned: VacationDays,
+)
 
 private const val BEST_BRIDGES = 3
