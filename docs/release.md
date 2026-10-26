@@ -39,7 +39,11 @@ can update; the only way out is a new package name.** So:
    keytool -list -v -keystore urlaubsplaner-release.jks -alias urlaubsplaner
    ```
 
-   SHA-256 fingerprint of the release key: _to be added here once Nick has made the key_.
+   SHA-256 fingerprint of the release key (made 2026-10-26, alias `urlaubsplaner`):
+
+   ```
+   03:6E:CB:17:E5:38:A1:CA:BF:12:91:39:6E:75:7D:F1:47:6B:8C:44:0D:87:29:28:E2:B6:E7:AB:D2:03:F1:68
+   ```
 
 ## Building the signed APK (on the PC)
 
