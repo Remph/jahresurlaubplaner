@@ -1,0 +1,1 @@
+The year view now shows bridge days too: a dashed outline marks the days you can take for a bridge day.

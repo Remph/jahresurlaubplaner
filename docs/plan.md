@@ -27,7 +27,13 @@ Rules:
 ## Build settings
 
 - minSdk 30 (the maintainer, 2026-10-25), compileSdk 37 and targetSdk 37. compileSdk 37 is not a choice:
-  the current AndroidX releases require it.
+  the current AndroidX releases require it. `minSdk` is set once, in `gradle/libs.versions.toml`.
+- API level guard (0.9.1): `:core` is plain JVM, so lint's NewApi does not cover it, and two calls
+  newer than Android 11 (`LocalDate.datesUntil`, `ByteArrayOutputStream.toString(Charset)`) only
+  crashed on an emulator. `ApiLevelGuardTest` in `:core` disassembles the compiled classes with
+  `javap` and checks every `java.*`, `javax.*` and `android.*` reference against the SDK's
+  `api-versions.xml`; it runs with `test`. Its own tests compile a call to each of the two methods
+  and expect the scan to flag it.
 - Bytecode level 17, so any JDK from 17 up builds it. The cloud container has JDK 21. JDK 25 is
   not used: no statement found that the Android Gradle Plugin supports it (2026-10-25).
 - Versions (latest stable on 2026-10-25): Gradle 9.8.2, AGP 9.4.1, Kotlin 2.4.21, Compose BOM

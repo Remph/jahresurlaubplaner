@@ -1,4 +1,6 @@
 [versions]
+# The lowest Android version the app runs on (API level); the app and the API level check read it.
+minSdk = "30"
 # Latest stable on 2026-10-25.
 agp = "9.4.1"
 kotlin = "2.4.21"

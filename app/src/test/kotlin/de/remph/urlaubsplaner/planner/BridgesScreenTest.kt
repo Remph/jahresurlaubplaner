@@ -27,7 +27,7 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import java.time.YearMonth
 
-/** The Brückentage card and sheet on the overview and the dashed days in the calendar. */
+/** The Brückentage card and sheet on the overview, the dashed days and the year view's legend. */
 @RunWith(AndroidJUnit4::class)
 class BridgesScreenTest {
     @get:Rule
@@ -201,5 +201,19 @@ class BridgesScreenTest {
         waitForText("März 2027")
 
         compose.onNodeWithText("Brückentag").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the year view names the Brückentag in its legend`() {
+        val viewModel = fixture.viewModel()
+        viewModel.showMonth(YearMonth.of(2027, 5))
+        viewModel.showMode(CalendarMode.YEAR)
+        compose.setContent {
+            CalendarScreen(viewModel, PaddingValues(), onOpenSettings = {})
+        }
+        waitForText("2027")
+
+        compose.onNodeWithText("Brückentag").performScrollTo().assertIsDisplayed()
     }
 }

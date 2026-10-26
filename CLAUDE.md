@@ -47,7 +47,10 @@ Run from the repo root (JDK 17 or newer; the Gradle wrapper is committed). All o
 in the cloud container on 2026-10-25, except the instrumented tests:
 
 - `./gradlew lint test assembleDebug spotlessCheck`: lint, unit tests, debug APK, format check.
-  The standard check.
+  The standard check. `:core:test` includes `ApiLevelGuardTest`: it fails when `:core` calls a
+  `java.*` method that Android at minSdk (30) lacks (`LocalDate.datesUntil`, `ByteArrayOutputStream.toString(Charset)`:
+  `:core` is plain JVM, so lint does not see these). It reads `api-versions.xml` from the Android SDK
+  (`ANDROID_HOME` or `sdk.dir`) and is skipped with `-PcoreOnly`; prefer Kotlin stdlib over newer `java.*` calls.
 - `./gradlew spotlessApply`: fix formatting (ktlint through Spotless).
 - In the cloud add `-ProbolectricRepoUrl=https://maven-central.storage-download.googleapis.com/maven2`
   to any command that runs `:app` tests (`test`, `:app:testDebugUnitTest`): Robolectric downloads

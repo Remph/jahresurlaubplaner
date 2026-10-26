@@ -197,7 +197,7 @@ private fun Status(
             modifier = Modifier.semantics { heading() },
         )
         YearGrid(view, { onOpenMonth(it) })
-        Legend()
+        Legend(showBridge = view.bridgeDays.isNotEmpty())
         SchoolHolidaysUnknownNote(
             view,
             LocalDate.of(view.year, 1, 1),

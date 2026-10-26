@@ -101,7 +101,7 @@ fun CalendarScreen(
                     )
                     YearRowsHandle(rowsExpanded) { viewModel.expandYearRows(!rowsExpanded) }
                 }
-                Legend()
+                Legend(showBridge = shown.bridgeDays.isNotEmpty())
                 SchoolHolidaysUnknownNote(
                     shown,
                     LocalDate.of(shown.year, 1, 1),

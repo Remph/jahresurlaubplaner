@@ -119,7 +119,7 @@ Quick Start Guide). `f-droid.org` itself is not reachable from the cloud, `gitla
 
 **What is ready in this repo** (`fastlane/metadata/android/`): `de-DE` and `en-US` with `title.txt`,
 `short_description.txt` (under 80 characters, no trailing dot), `full_description.txt`,
-`changelogs/900.txt`, `images/icon.png` (512 px) and four screenshots in `images/phoneScreenshots/`.
+`changelogs/<versionCode>.txt` (900, 901), `images/icon.png` (512 px) and four screenshots in `images/phoneScreenshots/`.
 F-Droid requires `en-US`; `de-DE` is extra. Descriptions use only the HTML tags F-Droid allows.
 
 **What F-Droid checks**: free licence (GPL-3.0), only free dependencies and tools (no Google Play
@@ -161,17 +161,17 @@ RepoType: git
 Repo: https://github.com/Remph/urlaubsplaner.git
 
 Builds:
-  - versionName: 0.9.0
-    versionCode: 900
-    commit: v0.9.0
+  - versionName: 0.9.1
+    versionCode: 901
+    commit: v0.9.1
     subdir: app
     gradle:
       - yes
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 0.9.0
-CurrentVersionCode: 900
+CurrentVersion: 0.9.1
+CurrentVersionCode: 901
 ```
 
 `AuthorName` is public: the maintainer chose the GitHub name Remph (2026-10-26). `License` is
