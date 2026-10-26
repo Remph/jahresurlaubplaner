@@ -414,7 +414,8 @@ Designed with Nick on 2026-10-26 (card taps, one question at a time).
 
 Last row of Einstellungen ("Über die App" / "About"), one page: app name and version (from the
 manifest), one sentence that the data stays on the phone (the app declares no INTERNET
-permission), a link to the source (`SOURCE_URL`, opens the browser), the GPL-3.0 licence, the
+permission), "© 2026 Remph" with the no-warranty sentence the GPL asks for, links to the source
+(`SOURCE_URL`) and to Nick's website (`WEBSITE_URL`, both open the browser), the GPL-3.0 licence, the
 OpenHolidays credit (`SchoolHolidayData.CREDIT`, English as the licence asks), a line on the
 libraries and three licence texts shown in a dialog. The texts live in `app/src/main/assets/licenses/`
 (GPL-3.0, Apache-2.0, BSD-3-Clause for the Protocol Buffers copy inside Glance), so they travel

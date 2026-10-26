@@ -46,6 +46,7 @@ class AboutPageTest {
 
         compose.onNodeWithText("Version ", substring = true).assertIsDisplayed()
         compose.onNodeWithText("no internet access", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("© 2026 Remph", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Libraries").performScrollTo().assertIsDisplayed()
     }
 
@@ -79,5 +80,20 @@ class AboutPageTest {
             ).nextStartedActivity
         assertEquals(Intent.ACTION_VIEW, started.action)
         assertEquals(SOURCE_URL, started.dataString)
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the website row opens the author's site in a browser`() {
+        show()
+
+        compose.onNodeWithText("Website").performScrollTo().performClick()
+
+        val started =
+            shadowOf(
+                ApplicationProvider.getApplicationContext<Application>(),
+            ).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, started.action)
+        assertEquals(WEBSITE_URL, started.dataString)
     }
 }

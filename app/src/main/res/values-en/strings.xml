@@ -281,6 +281,8 @@
     <string name="about_row_value">Version %1$s, source code and licences</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_privacy">Your data stays on the phone. The app has no internet access and sends nothing.</string>
+    <string name="about_copyright">© 2026 Remph. The app comes with absolutely no warranty.</string>
+    <string name="about_website">Website</string>
     <string name="about_source">Source code</string>
     <string name="about_licence">Licence of the app</string>
     <string name="about_licence_value">GPL-3.0, free software</string>

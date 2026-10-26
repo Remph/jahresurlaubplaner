@@ -38,6 +38,9 @@ internal enum class LicenceText(
     BSD("BSD-3-Clause-protobuf.txt", R.string.about_text_bsd),
 }
 
+/** The author's website, linked from the about page. */
+internal const val WEBSITE_URL = "https://remph.de"
+
 /** The version name from the manifest, e.g. "0.1.0". */
 fun appVersion(context: Context): String =
     context.packageManager
@@ -72,11 +75,21 @@ fun AboutPage(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Text(
+            stringResource(R.string.about_copyright),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         SettingsGroup {
             SettingsRow(
                 title = stringResource(R.string.about_source),
                 value = SOURCE_URL.removePrefix("https://"),
                 onClick = { openLink(context, SOURCE_URL, noBrowser) },
+            )
+            SettingsRow(
+                title = stringResource(R.string.about_website),
+                value = WEBSITE_URL.removePrefix("https://"),
+                onClick = { openLink(context, WEBSITE_URL, noBrowser) },
             )
             SettingsRow(
                 title = stringResource(R.string.about_licence),
