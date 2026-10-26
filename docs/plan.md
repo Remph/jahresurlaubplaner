@@ -377,6 +377,10 @@ clickable mock-up are in the project folder `design/review-m3/` and `design/revi
   Samsung calendar). A handle under the grid does the same by tap and for TalkBack. The swipe is
   only watched, so the page still scrolls: on a short screen a swipe up scrolls first and makes the
   rows compact only when the page is already at its end. The state lives in `PlannerViewModel`.
+- Swipe sideways in the calendar (Nick, 2026-10-26): left shows the next month (month view) or
+  year (year view), right the previous one; 64 dp or more counts (`Modifier.swipeToStep`). It does
+  not switch between month and year view (the segmented button does that). The arrow buttons stay
+  for TalkBack. No slide animation yet; the title just changes like with the arrows.
 - Weekend numbers: the theme's soft grey is kept where it has 4.5:1 on the normal and the school
   holiday tile, else a fixed stronger grey (dark 5.3:1, light 6.4:1 on school tiles).
   `weekendTextColor` and `contrastRatio` are unit-tested.

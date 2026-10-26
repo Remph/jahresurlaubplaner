@@ -94,11 +94,12 @@ fun OverviewScreen(
 fun ScreenFrame(
     outerPadding: PaddingValues,
     scrollState: ScrollState = rememberScrollState(),
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
     Column(
         modifier =
-            Modifier
+            modifier
                 .fillMaxSize()
                 .padding(outerPadding)
                 .consumeWindowInsets(outerPadding)

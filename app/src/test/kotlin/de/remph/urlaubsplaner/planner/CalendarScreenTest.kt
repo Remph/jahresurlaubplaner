@@ -1,6 +1,8 @@
 package de.remph.urlaubsplaner.planner
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
@@ -9,11 +11,15 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -111,6 +117,97 @@ class CalendarScreenTest {
 
         waitForText("April 2027")
         compose.onNodeWithText("Osterferien").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `swiping left shows the next month and swiping right the previous one`() {
+        show()
+
+        compose.onRoot().performTouchInput { swipeLeft() }
+        waitForText("April 2027")
+
+        compose.onRoot().performTouchInput { swipeRight() }
+        waitForText("März 2027")
+        compose.onRoot().performTouchInput { swipeRight() }
+        waitForText("Februar 2027")
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a swipe that starts on a day steps the month and does not open the sheet`() {
+        show()
+        waitForText("Karfreitag")
+
+        day("Donnerstag, 25. März 2027").performTouchInput {
+            swipeLeft(startX = centerX, endX = centerX - 200f)
+        }
+
+        waitForText("April 2027")
+        compose.onNodeWithText("Ganzer Tag").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a short drag does not change the month`() {
+        show()
+
+        compose.onRoot().performTouchInput { swipeLeft(startX = centerX, endX = centerX - 20f) }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("März 2027").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `in the year mode a swipe steps a whole year`() {
+        showYear()
+
+        compose.onRoot().performTouchInput { swipeLeft() }
+        waitForText("2028")
+        compose.onRoot().performTouchInput { swipeRight() }
+        compose.onRoot().performTouchInput { swipeRight() }
+        waitForText("2026")
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `swiping at the end of the calendar stays on the last month`() {
+        show()
+        repeat(10) { compose.onNodeWithContentDescription("Nächster Monat").performClick() }
+        waitForText("Januar 2028")
+        repeat(11) { compose.onNodeWithContentDescription("Nächster Monat").performClick() }
+        waitForText("Dezember 2028")
+
+        compose.onRoot().performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Dezember 2028").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `in a right to left layout the swipe directions are mirrored`() {
+        compose.setContent {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                CalendarScreen(fixture.viewModel(), PaddingValues(), onOpenSettings = {})
+            }
+        }
+        waitForText("März 2027")
+
+        compose.onRoot().performTouchInput { swipeRight() }
+
+        waitForText("April 2027")
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the English calendar swipes too`() {
+        show("March 2027")
+
+        compose.onRoot().performTouchInput { swipeLeft() }
+
+        waitForText("April 2027")
     }
 
     @Test
