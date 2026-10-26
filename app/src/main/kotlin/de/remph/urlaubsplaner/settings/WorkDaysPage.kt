@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.WorkSchedule
+import de.remph.urlaubsplaner.planner.shortText
 import java.time.DayOfWeek
 import java.time.MonthDay
 import java.time.format.TextStyle
@@ -43,7 +44,7 @@ fun WorkDaysPage(
                 FilterChip(
                     selected = works,
                     onClick = { viewModel.setWorkingDay(day, !works) },
-                    label = { Text(day.getDisplayName(TextStyle.SHORT, locale)) },
+                    label = { Text(day.shortText(locale)) },
                     modifier =
                         Modifier
                             .heightIn(min = 48.dp)

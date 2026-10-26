@@ -320,7 +320,7 @@ Designed with Nick on 2026-10-26 (clickable mock-up `design/m4-widget-mockup/` i
 folder); the logic is `:core.widget.WidgetStatus` (unit-tested), the rest is `:app` package `widget`.
 
 - One resizable widget (`SizeMode.Responsive`): small (2x1 and up) shows the days left and one line
-  ("Nächster Urlaub 14.04."); from 250 x 110 dp (4x2) the wide layout adds the next trip as a
+  ("Nächster Urlaub 14.04."); from 280 x 120 dp (4x2) the wide layout adds the next trip as a
   range with its cost and "Genommen, Geplant, Anspruch" (Anspruch = entitlement plus Resturlaub),
   which the warning "3 Tage Resturlaub verfallen am 31.03." replaces while Resturlaub is about to
   expire (same rule as the overview card). Overbooked shows a negative number in the error colour.
