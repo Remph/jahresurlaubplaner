@@ -1,8 +1,35 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
+}
+
+// The release key stays out of git and out of the cloud. It comes from environment variables or
+// from an untracked keystore.properties in the repo root (both listed in docs/release.md). With
+// neither, the release build is simply unsigned: F-Droid signs its own build, and the cloud has
+// no key.
+val signingKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+val releaseSigning: Map<String, String> =
+    run {
+        val file = rootProject.file("keystore.properties")
+        val fromFile =
+            if (file.exists()) {
+                Properties().also { props -> file.inputStream().use { props.load(it) } }
+            } else {
+                Properties()
+            }
+        signingKeys
+            .mapNotNull { key ->
+                val env = "URLAUBSPLANER_" + key.replace(Regex("([A-Z])"), "_$1").uppercase()
+                (System.getenv(env) ?: fromFile.getProperty(key))?.let { key to it }
+            }.toMap()
+    }
+// Half a key is a mistake, not "unsigned": better to stop than to ship an APK nobody can update.
+check(releaseSigning.isEmpty() || releaseSigning.keys.containsAll(signingKeys)) {
+    "Release signing is incomplete, missing: ${signingKeys - releaseSigning.keys}. See docs/release.md."
 }
 
 android {
@@ -14,8 +41,37 @@ android {
         applicationId = "de.remph.urlaubsplaner"
         minSdk = 30
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        // versionCode = major * 10000 + minor * 100 + patch (0.9.0 is 900, 1.0.0 is 10000). F-Droid
+        // names the changelog after it: fastlane/metadata/android/*/changelogs/<versionCode>.txt.
+        versionCode = 900
+        versionName = "0.9.0"
+    }
+
+    signingConfigs {
+        if (releaseSigning.isNotEmpty()) {
+            create("release") {
+                storeFile = rootProject.file(releaseSigning.getValue("storeFile"))
+                storePassword = releaseSigning.getValue("storePassword")
+                keyAlias = releaseSigning.getValue("keyAlias")
+                keyPassword = releaseSigning.getValue("keyPassword")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.findByName("release")
+            // R8 stays off for 0.9.0: Room, Glance, WorkManager and kotlinx-serialization reach
+            // classes by reflection, and there is no emulator in the cloud to test a shrunk APK.
+            // docs/release.md has the numbers and what to test before turning it on.
+            isMinifyEnabled = false
+        }
+    }
+
+    // F-Droid does not want the signing-blob dependency metadata (it is encrypted to Google).
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 
     buildFeatures {
