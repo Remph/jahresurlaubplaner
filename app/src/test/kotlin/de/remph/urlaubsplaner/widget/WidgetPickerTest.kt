@@ -8,7 +8,9 @@ import android.content.pm.PackageManager
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.R
+import de.remph.urlaubsplaner.UrlaubsplanerApp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -64,5 +66,26 @@ class WidgetPickerTest {
             ),
             labels,
         )
+    }
+
+    private val refresher get() = (context as UrlaubsplanerApp).widgetRefresher
+
+    @Test
+    fun `the refresher knows no widgets until one is placed`() {
+        assertFalse(refresher.hasWidgets())
+    }
+
+    @Test
+    fun `a placed big widget alone keeps the refresher watching`() {
+        place(21, UrlaubsplanerBigWidgetReceiver::class.java)
+
+        assertTrue(refresher.hasWidgets())
+    }
+
+    @Test
+    fun `a placed small widget keeps the refresher watching`() {
+        place(22, UrlaubsplanerWidgetReceiver::class.java)
+
+        assertTrue(refresher.hasWidgets())
     }
 }
