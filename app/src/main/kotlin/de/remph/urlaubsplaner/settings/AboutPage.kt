@@ -26,7 +26,7 @@ import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.schoolholidays.SchoolHolidayData
 
 /** Where the source lives; the F-Droid metadata and the README point to the same place. */
-internal const val SOURCE_URL = "https://github.com/Remph/jahresurlaubplaner"
+internal const val SOURCE_URL = "https://github.com/Remph/urlaubsplaner"
 
 /** The licence texts the app carries (`assets/licenses/`), so they travel with the APK. */
 internal enum class LicenceText(

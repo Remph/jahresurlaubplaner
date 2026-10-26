@@ -12,7 +12,7 @@ releases only when Nick asks (`CLAUDE.md`).
 - The GitHub APK is signed with Nick's **own release key**, made on his PC. F-Droid signs its own
   build with its own key, so the two sources cannot update each other: whoever switches from one to
   the other uninstalls first (back up through Einstellungen > Datensicherung before).
-- No contact e-mail anywhere; **GitHub issues** are the contact: <https://github.com/Remph/jahresurlaubplaner/issues>.
+- No contact e-mail anywhere; **GitHub issues** are the contact: <https://github.com/Remph/urlaubsplaner/issues>.
   A private, non-profit app without a website probably needs no Impressum, but that is not legal advice.
 
 ## The release key (Nick's step, on his PC)
@@ -147,11 +147,11 @@ Categories:
   - Calendar & Agenda
 License: GPL-3.0-only
 AuthorName: Nick
-SourceCode: https://github.com/Remph/jahresurlaubplaner
-IssueTracker: https://github.com/Remph/jahresurlaubplaner/issues
+SourceCode: https://github.com/Remph/urlaubsplaner
+IssueTracker: https://github.com/Remph/urlaubsplaner/issues
 
 RepoType: git
-Repo: https://github.com/Remph/jahresurlaubplaner.git
+Repo: https://github.com/Remph/urlaubsplaner.git
 
 Builds:
   - versionName: 0.9.0
