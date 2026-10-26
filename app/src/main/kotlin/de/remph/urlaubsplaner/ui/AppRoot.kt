@@ -2,6 +2,7 @@ package de.remph.urlaubsplaner.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
@@ -24,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import de.remph.urlaubsplaner.R
@@ -87,7 +89,9 @@ fun AppRoot(
                         selected = tab == entry,
                         onClick = { tab = entry },
                         icon = { Icon(entry.icon, contentDescription = null) },
-                        label = { Text(label) },
+                        // One line, shrunk when it does not fit: at a large system font
+                        // "Einstellungen" broke in the middle of the word.
+                        label = { Text(label, maxLines = 1, autoSize = LabelAutoSize) },
                     )
                 }
             }
@@ -133,6 +137,8 @@ fun AppRoot(
         }
     }
 }
+
+private val LabelAutoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = 12.sp)
 
 private fun stateKey(
     tab: Tab,

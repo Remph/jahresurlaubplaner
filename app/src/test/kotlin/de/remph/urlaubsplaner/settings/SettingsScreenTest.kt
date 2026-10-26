@@ -205,6 +205,19 @@ class SettingsScreenTest {
 
     @Test
     @Config(qualifiers = "de")
+    fun `the work day chips use the short weekday names without a full stop`() {
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+
+        openRow("Arbeitstage")
+
+        // Android's own short German names are "Mi." and "Do.".
+        compose.onNodeWithText("Mi").assertIsDisplayed()
+        compose.onNodeWithText("Mi.").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
     fun `typing days enables Speichern and a wrong amount shows the error`() {
         show("Einstellungen")
         chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")

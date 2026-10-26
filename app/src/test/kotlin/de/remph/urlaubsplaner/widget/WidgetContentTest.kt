@@ -2,6 +2,7 @@ package de.remph.urlaubsplaner.widget
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.testing.unit.hasStartActivityClickAction
 import androidx.glance.appwidget.testing.unit.runGlanceAppWidgetUnitTest
@@ -81,6 +82,18 @@ class WidgetContentTest {
             onNode(hasText("Nächster Urlaub 14.04.")).assertExists()
             onNode(hasText("14.–16. April")).assertDoesNotExist()
             onNode(hasText("Genommen 8")).assertDoesNotExist()
+        }
+
+    @Test
+    fun `a widget of 260 x 115 dp still gets the small layout`() =
+        runGlanceAppWidgetUnitTest {
+            setContext(context)
+            // At 250 x 110 dp the trip date wrapped and the last row was cut off (M5 UI review).
+            setAppWidgetSize(DpSize(260.dp, 115.dp))
+            provideComposable { WidgetContent(status, WidgetStyle()) }
+
+            onNode(hasText("Nächster Urlaub 14.04.")).assertExists()
+            onNode(hasText("14.–16. April")).assertDoesNotExist()
         }
 
     @Test

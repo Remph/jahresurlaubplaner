@@ -36,9 +36,13 @@ import de.remph.urlaubsplaner.MainActivity
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.ui.TabRequest
 
-/** The two layouts, as the smallest size each is made for; the launcher picks by widget size. */
+/**
+ * The two layouts, as the smallest size each is made for; the launcher picks by widget size. The
+ * wide one needs 280 x 120 dp: at 250 x 110 the trip date wrapped and the figures and the
+ * warning were cut off (rendered in the M5 review, 2026-10-26).
+ */
 internal val SMALL_SIZE = DpSize(110.dp, 40.dp)
-internal val WIDE_SIZE = DpSize(250.dp, 110.dp)
+internal val WIDE_SIZE = DpSize(280.dp, 120.dp)
 
 /** The widget as the launcher shows it: the background, the tap, and the layout for its size. */
 @Composable
