@@ -35,11 +35,15 @@ class WidgetRefresher(
     val revision: StateFlow<Int> = _revision
 
     /** Whether the user has put the widget on a home screen. */
-    fun hasWidgets(): Boolean =
-        AppWidgetManager
-            .getInstance(context)
-            .getAppWidgetIds(ComponentName(context, UrlaubsplanerWidgetReceiver::class.java))
-            .isNotEmpty()
+    fun hasWidgets(): Boolean {
+        val manager = AppWidgetManager.getInstance(context)
+        return WIDGET_RECEIVERS.any {
+            manager
+                .getAppWidgetIds(
+                    ComponentName(context, it),
+                ).isNotEmpty()
+        }
+    }
 
     /** Starts watching the data; calling it again does nothing. */
     fun start() {
@@ -67,6 +71,7 @@ class WidgetRefresher(
     private suspend fun redraw() {
         invalidate()
         UrlaubsplanerWidget().updateAll(context)
+        UrlaubsplanerBigWidget().updateAll(context)
     }
 
     private companion object {

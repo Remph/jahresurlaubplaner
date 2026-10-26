@@ -320,11 +320,23 @@ and PR C (Brückentage).
 Designed with Nick on 2026-10-26 (clickable mock-up `design/m4-widget-mockup/` in the project
 folder); the logic is `:core.widget.WidgetStatus` (unit-tested), the rest is `:app` package `widget`.
 
-- One resizable widget (`SizeMode.Responsive`): small (2x1 and up) shows the days left and one line
-  ("Nächster Urlaub 14.04."); from 280 x 120 dp (4x2) the wide layout adds the next trip as a
-  range with its cost and "Genommen, Geplant, Anspruch" (Anspruch = entitlement plus Resturlaub),
-  which the warning "3 Tage Resturlaub verfallen am 31.03." replaces while Resturlaub is about to
-  expire (same rule as the overview card). Overbooked shows a negative number in the error colour.
+- Two widgets in the launcher's picker (Nick, 2026-10-26, after the first build had one resizable
+  widget with two layouts): "Urlaubsplaner (klein)" (2x1) and "Urlaubsplaner (groß)" (4x2 at least;
+  both can be resized, the big one not below 4x2). Each draws its own layout (`WidgetLayout`, `SizeMode.Single`), so
+  the text never overflows. Small shows the days left and one line ("Nächster Urlaub 14.04."); big adds
+  the next trip as a range with its cost and "Genommen, Geplant, Anspruch" (Anspruch = entitlement
+  plus Resturlaub), which the warning "3 Tage Resturlaub verfallen am 31.03." replaces while
+  Resturlaub is about to expire (same rule as the overview card). Overbooked shows a negative
+  number in the error colour. Receivers: `UrlaubsplanerWidgetReceiver` (small; the name stays, so
+  a widget placed before the split keeps working and shows the small layout) and
+  `UrlaubsplanerBigWidgetReceiver`; both share one setup screen, which finds the kind of widget by
+  its provider (`widgetFor`). The big layout was found to need about 280 x 120 dp (M5 UI review);
+  the big widget declares 250 x 110 dp (4 x 2 cells before Android 12) and draws the big layout
+  whatever the cell gives, so a launcher with a smaller 4x2 cell would clip it; Nick's phone fits.
+  Picker previews (`widget_preview_small/big.png` in `res/drawable-nodpi`, English in
+  `drawable-en-nodpi`) are renders of the real layouts with sample data (17 days left, light, the
+  app's own colours), made with a throwaway Robolectric harness that is not in the repo; redo them
+  when a layout changes. A launcher without `previewImage` support shows the app icon.
 - A missing Bundesland or missing days for this year show a prompt instead of numbers; a tap
   opens the Einstellungen tab, every other tap the Übersicht. `MainActivity` is `singleTask` and
   takes the tab as the intent action (`TabRequest`), at a real start and in `onNewIntent`.
@@ -347,8 +359,8 @@ folder); the logic is `:core.widget.WidgetStatus` (unit-tested), the rest is `:a
   `updatePeriodMillis` 30 minutes as the safety net.
 - Not tried on a launcher (the cloud has none): placing, the setup screen, transparency, light and
   dark, the language switch, the tap targets, the redraw after marking a day, whether Android
-  delivers the date broadcasts, how the small layout fits a 2x1 cell on a real phone. No preview
-  image for the widget picker yet (M6, with the launcher icon).
+  delivers the date broadcasts, how the small layout fits a 2x1 cell on a real phone. The picker preview
+  images are renders, not a look at a real launcher.
 
 ### Design review of the screens (after M3, 2026-10-25)
 
@@ -403,7 +415,7 @@ Known snags:
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
   2026-10-25 (Nick added them); the Länder ministry sites are not (probe before relying on it).
 - Instrumented tests and the widget on a launcher (M3, M4) need an emulator or Nick's phone.
-- The launcher icon exists since M5 (sun over day tiles, adaptive with a themed monochrome layer; mock-ups in the project folder `design/icon/`). The widget picker still has no preview image.
+- The launcher icon exists since M5 (sun over day tiles, adaptive with a themed monochrome layer; mock-ups in the project folder `design/icon/`).
 - M6: the app has no launcher icon yet (lint `MissingApplicationIcon`).
 
 ## Status
@@ -412,6 +424,6 @@ Known snags:
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
 - [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (PR #12, merged 2026-10-25)
 - [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B); Brückentage (PR C, PR #18); design review changes (shapes, month card, year rows, weekend contrast)
-- [x] M4 Export and widget: ICS export (PR #20, merged 2026-10-26); widget (PR #21, merged 2026-10-26)
+- [x] M4 Export and widget: ICS export (PR #20, merged 2026-10-26); widget (PR #21, merged 2026-10-26; split into a small and a big widget, PR in review)
 - [ ] M5 Polish (animations, final UI review, tech debt review)
 - [ ] M6 Release prep

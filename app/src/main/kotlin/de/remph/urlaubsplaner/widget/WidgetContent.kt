@@ -4,14 +4,12 @@ import android.content.Context
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceModifier
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
-import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.action.actionStartActivity
@@ -36,26 +34,19 @@ import de.remph.urlaubsplaner.MainActivity
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.ui.TabRequest
 
-/**
- * The two layouts, as the smallest size each is made for; the launcher picks by widget size. The
- * wide one needs 280 x 120 dp: at 250 x 110 the trip date wrapped and the figures and the
- * warning were cut off (rendered in the M5 review, 2026-10-26).
- */
-internal val SMALL_SIZE = DpSize(110.dp, 40.dp)
-internal val WIDE_SIZE = DpSize(280.dp, 120.dp)
+/** The two widgets in the picker, and with them the two layouts. */
+enum class WidgetLayout { SMALL, BIG }
 
 /** The widget as the launcher shows it: the background, the tap, and the layout for its size. */
 @Composable
 fun WidgetContent(
     model: WidgetModel,
     style: WidgetStyle,
+    layout: WidgetLayout,
 ) {
     val context = LocalContext.current
     val palette = remember(style.colors) { WidgetPalette.of(context, style.colors) }
-    val wide =
-        LocalSize.current.let {
-            it.width >= WIDE_SIZE.width && it.height >= WIDE_SIZE.height
-        }
+    val wide = layout == WidgetLayout.BIG
     Box(
         modifier =
             GlanceModifier

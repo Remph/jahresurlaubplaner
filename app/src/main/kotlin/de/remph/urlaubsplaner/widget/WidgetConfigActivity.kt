@@ -46,11 +46,12 @@ class WidgetConfigActivity : AppCompatActivity() {
         }
         val app = application as UrlaubsplanerApp
         val glanceId = GlanceAppWidgetManager(this).getGlanceIdBy(appWidgetId)
+        val widget = widgetFor(this, appWidgetId)
         if (savedInstanceState == null) {
             // Setting up again shows what the widget has now, not the defaults.
             lifecycleScope.launch {
                 val saved =
-                    UrlaubsplanerWidget().getAppWidgetState<Preferences>(
+                    widget.getAppWidgetState<Preferences>(
                         this@WidgetConfigActivity,
                         glanceId,
                     )
@@ -69,7 +70,7 @@ class WidgetConfigActivity : AppCompatActivity() {
                                 this@WidgetConfigActivity,
                                 glanceId,
                             ) { style.writeTo(it) }
-                            UrlaubsplanerWidget().update(this@WidgetConfigActivity, glanceId)
+                            widget.update(this@WidgetConfigActivity, glanceId)
                             app.widgetRefresher.start()
                             setResult(
                                 RESULT_OK,
