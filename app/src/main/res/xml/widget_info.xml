@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The small widget: 2x1 (the target cells count from Android 12, before that the minimum size
-     does), the small layout at any size. The big one is widget_info_big.xml. Set up when placed,
-     and again by long press from Android 12. No preview image yet (M5, with the launcher icon). -->
+     does), the small layout at any size, so it can be made wider and taller. The big one is
+     widget_info_big.xml. Set up when placed, and again by long press from Android 12. The preview
+     is a render of the real widget with sample data (German and English, drawable-en-nodpi). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="UnusedAttribute"
     android:description="@string/widget_description_small"
     android:configure="de.remph.urlaubsplaner.widget.WidgetConfigActivity"
     android:initialLayout="@layout/glance_default_loading_layout"
+    android:previewImage="@drawable/widget_preview_small"
     android:minWidth="110dp"
     android:minHeight="40dp"
     android:minResizeWidth="110dp"
