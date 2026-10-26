@@ -4,15 +4,17 @@ import android.app.Application
 import android.content.res.Configuration
 import de.remph.urlaubsplaner.appearance.AppearanceStore
 import de.remph.urlaubsplaner.data.BackupFileStore
+import de.remph.urlaubsplaner.data.CalendarFileStore
 import de.remph.urlaubsplaner.data.SchoolHolidayAsset
 import de.remph.urlaubsplaner.data.UrlaubsplanerDatabase
 import de.remph.urlaubsplaner.data.UserDataRepository
+import de.remph.urlaubsplaner.settings.CalendarExporter
 import de.remph.urlaubsplaner.widget.WidgetRefresher
 import java.time.Clock
 
 /**
  * Holds the one database and what is built on it. Screens and the ViewModels get their parts from
- * here; there is no dependency injection library because there are only seven parts.
+ * here; there is no dependency injection library because there are only a few parts.
  */
 class UrlaubsplanerApp : Application() {
     /** The only place that asks for "now", so every screen shares one clock. */
@@ -23,6 +25,8 @@ class UrlaubsplanerApp : Application() {
     val repository by lazy { UserDataRepository(database) }
 
     val backupStore by lazy { BackupFileStore(contentResolver) }
+
+    val calendarExporter by lazy { CalendarExporter(repository, CalendarFileStore(this), clock) }
 
     /** The bundled school holiday file, read once the first time a screen needs it. */
     val schoolHolidays = lazy { SchoolHolidayAsset.load(this) }

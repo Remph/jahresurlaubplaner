@@ -88,6 +88,13 @@ fun SettingsListScreen(
                     onClick = { open(SettingsPage.APPEARANCE) },
                 )
             }
+            if (land != null) {
+                SettingsRow(
+                    title = stringResource(R.string.section_calendar_export),
+                    value = stringResource(R.string.calendar_export_row_value),
+                    onClick = { open(SettingsPage.CALENDAR_EXPORT) },
+                )
+            }
             SettingsRow(
                 title = stringResource(R.string.section_language),
                 value = stringResource(LanguageChoice.current().labelRes()),
