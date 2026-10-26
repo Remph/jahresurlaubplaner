@@ -7,9 +7,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 
 /**
- * The colours of the calendar. A holiday is always gold and school holidays always light blue,
+ * The colours of the calendar. A holiday is always gold and school holidays always lilac,
  * also with system colours (the maintainer, 2026-10-25): the meaning must not change with the wallpaper.
- * Taken days use the theme's primary colour, so they follow the wallpaper.
+ * Taken days use the theme's primary colour, so they follow the wallpaper. School holidays were
+ * light blue until 0.9.1; with a blue wallpaper they looked like taken and planned days, so the
+ * maintainer chose lilac over green, a thin stripe and a fixed taken colour (2026-10-26).
  */
 @Immutable
 class DayColors(
@@ -27,12 +29,12 @@ class DayColors(
 fun dayColors(): DayColors {
     val scheme = MaterialTheme.colorScheme
     val dark = scheme.background.luminance() < 0.5f
-    val school = if (dark) Color(0xFF244A68) else Color(0xFFD3E8F8)
+    val school = if (dark) Color(0xFF3D3560) else Color(0xFFE6DFF7)
     return DayColors(
         holiday = if (dark) Color(0xFF6B5320) else Color(0xFFF7E3B5),
         onHoliday = if (dark) Color(0xFFF3D9A0) else Color(0xFF5A3C0A),
         school = school,
-        schoolBar = if (dark) Color(0xFF8CC4F0) else Color(0xFF2A78B0),
+        schoolBar = if (dark) Color(0xFFBBA8F0) else Color(0xFF6B50B5),
         taken = scheme.primary,
         onTaken = scheme.onPrimary,
         planned = scheme.primary,

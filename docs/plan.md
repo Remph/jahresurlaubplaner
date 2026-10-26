@@ -282,7 +282,7 @@ and PR C (Brückentage).
   next public holiday, and the year grid (12 rows, 31 columns; a tap opens that month).
   Without a Land or without the year's numbers it points to the settings instead of zeros.
 - Kalender: month grid (Monday first) or the year grid. Gold = Feiertag, solid teal = taken,
-  outlined teal = planned, light blue band = school holidays; half days carry a "½". Holiday and
+  outlined teal = planned, lilac band = school holidays; half days carry a "½". Holiday and
   school colours are fixed (not from the wallpaper), taken follows the theme. Under the month the
   holidays and school holidays are listed by name, and a month outside the school holiday
   file says "noch keine Schulferien".

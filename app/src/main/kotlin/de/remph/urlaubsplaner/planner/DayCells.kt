@@ -143,7 +143,7 @@ private fun DayCell(
     // Every day is a tile of its own, so the days stand out from the background (the maintainer,
     // 2026-10-25). The tile's colour is the strongest thing the day is; a school holiday under a
     // taken day or a holiday still shows as a bar along the bottom (in the text colour on a taken
-    // day, since the wallpaper's colour can be close to any fixed blue).
+    // day, since the wallpaper's colour can be close to the school holiday tile).
     val fillTarget =
         when {
             look.taken -> colors.taken
