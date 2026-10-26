@@ -276,6 +276,44 @@ class BackupFileTest {
     }
 
     @Test
+    fun `the size limit keeps the JSON tree well inside an app's memory`() {
+        // 8 MB of tiny elements took about 360 MB as a tree in a measurement on 2026-10-26.
+        assertTrue(BackupFile.MAX_BYTES <= 2 * 1024 * 1024)
+        // And a real backup is far below it: five years of marks every day, written by the app.
+        val days = generateSequence(LocalDate.of(2026, 1, 1)) { it.plusDays(1) }.take(5 * 366)
+        val busy = BackupData(marks = days.associateWith { DayMark.FULL })
+
+        assertTrue(BackupFile.encode(busy, exportedOn).length < BackupFile.MAX_BYTES / 2)
+    }
+
+    @Test
+    fun `years that are not four digits are damaged, not stored`() {
+        for (year in listOf("-1", "10000", "999999999", "2147483647")) {
+            refused<BackupException.Damaged>(withEdit("\"year\": 2026", "\"year\": $year"))
+        }
+        for (date in listOf(
+            "+999999999-12-31",
+            "-999999999-01-01",
+            "+10000-01-01",
+            "-0001-12-31",
+        )) {
+            refused<BackupException.Damaged>(withEdit("\"2026-07-01\"", "\"$date\""))
+        }
+        // The edges of the range are fine.
+        BackupFile.decode(withEdit("\"year\": 2026", "\"year\": 9999"))
+        BackupFile.decode(withEdit("\"2026-07-01\"", "\"9999-12-31\""))
+    }
+
+    @Test
+    fun `a message that quotes the file stays short enough for a dialog`() {
+        val land = "A".repeat(1_000_000)
+
+        val e = refused<BackupException.Damaged>(withEdit("\"BY\"", "\"$land\""))
+
+        assertTrue(e.message!!.length < 500, "the message has ${e.message!!.length} characters")
+    }
+
+    @Test
     fun `JSON that is not an object, or not ours, is not a backup`() {
         refused<BackupException.NotABackup>("[1, 2]")
         refused<BackupException.NotABackup>("{}")

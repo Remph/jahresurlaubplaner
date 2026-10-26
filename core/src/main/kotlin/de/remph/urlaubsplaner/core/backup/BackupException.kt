@@ -18,8 +18,15 @@ sealed class BackupException(
         val supported: Int,
     ) : BackupException("The backup has format version $found, this app reads up to $supported")
 
-    /** A backup of ours with a missing, wrong or unknown value. */
+    /**
+     * A backup of ours with a missing, wrong or unknown value. The detail can quote text from the
+     * file, which the screen shows in a dialog, so it is cut to [MAX_DETAIL] characters.
+     */
     class Damaged(
         detail: String,
-    ) : BackupException("The backup is damaged: $detail")
+    ) : BackupException("The backup is damaged: ${detail.take(MAX_DETAIL)}") {
+        companion object {
+            const val MAX_DETAIL = 300
+        }
+    }
 }

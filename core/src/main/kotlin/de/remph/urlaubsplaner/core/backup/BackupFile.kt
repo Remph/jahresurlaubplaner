@@ -56,8 +56,12 @@ object BackupFile {
     const val VERSION = 1
     const val MIME_TYPE = "application/json"
 
-    /** Ten years of marked days are well below 1 MB; this only stops reading a random huge file. */
-    const val MAX_BYTES = 8 * 1024 * 1024
+    /**
+     * Ten years of marked days are well below 1 MB. The limit is tight because the JSON tree takes
+     * far more memory than the text: a file of 8 MB made of tiny elements needs over 300 MB on a
+     * JVM, more than an Android app gets, and an OutOfMemoryError is not caught anywhere.
+     */
+    const val MAX_BYTES = 2 * 1024 * 1024
 
     private const val APP = "urlaubsplaner"
 
@@ -66,6 +70,11 @@ object BackupFile {
 
     // A year has at most 366 days; anything above is a typo, and a sum of such values must not overflow.
     private const val MAX_HALF_DAYS = 2 * 366
+
+    // Years with four digits, the form the database and the file write. Beyond them a date is not
+    // a vacation, and the year arithmetic of the Resturlaub expiry would overflow.
+    private const val MIN_YEAR = 0
+    private const val MAX_YEAR = 9999
 
     private val json = Json { prettyPrint = true }
 
@@ -254,7 +263,7 @@ object BackupFile {
                 val path = "entitlements[$index]"
                 val entry = element.obj(path)
                 YearEntitlement(
-                    year = entry.int("year", path),
+                    year = entry.year("year", path),
                     days = entry.halfDays("halfDays", path),
                     carryOver = entry.halfDays("carryOverHalfDays", path),
                     carryOverExpiry = entry.monthDay("carryOverExpiry", path),
@@ -375,6 +384,19 @@ object BackupFile {
         return VacationDays.ofHalves(halves)
     }
 
+    private fun JsonObject.year(
+        key: String,
+        path: String,
+    ): Int {
+        val year = int(key, path)
+        if (year !in
+            MIN_YEAR..MAX_YEAR
+        ) {
+            damaged("$path.$key must be between $MIN_YEAR and $MAX_YEAR")
+        }
+        return year
+    }
+
     /** 0 when the key is missing (files from before it existed); out of range is damaged. */
     private fun JsonObject.expiryYears(path: String): Int {
         if (this["carryOverExpiryYears"] == null) return 0
@@ -390,12 +412,18 @@ object BackupFile {
     private fun JsonObject.date(
         key: String,
         path: String,
-    ): LocalDate =
-        try {
-            LocalDate.parse(string(key, path))
-        } catch (_: DateTimeParseException) {
-            damaged("$path.$key is not a date like 2026-07-01")
+    ): LocalDate {
+        val date =
+            try {
+                LocalDate.parse(string(key, path))
+            } catch (_: DateTimeParseException) {
+                damaged("$path.$key is not a date like 2026-07-01")
+            }
+        if (date.year !in MIN_YEAR..MAX_YEAR) {
+            damaged("$path.$key must be in the years $MIN_YEAR to $MAX_YEAR")
         }
+        return date
+    }
 
     private fun JsonObject.monthDay(
         key: String,
