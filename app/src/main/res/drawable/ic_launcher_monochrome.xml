@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive icon layer, 108dp canvas. Everything stays inside the 66dp safe zone around the
+     centre (54,54), so no launcher mask cuts into it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Themed icon (Android 13+): one colour, the launcher tints it. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M45,46 A9,9 0 1 1 63,46 A9,9 0 1 1 45,46 Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M40.0,46.0 L34.5,46.0 M41.9,39.0 L37.1,36.2 M47.0,33.9 L44.2,29.1 M54.0,32.0 L54.0,26.5 M61.0,33.9 L63.8,29.1 M66.1,39.0 L70.9,36.2 M68.0,46.0 L73.5,46.0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.55"
+        android:pathData="M32.5,66 H36.5 A2.5,2.5 0 0 1 39,68.5 V72.5 A2.5,2.5 0 0 1 36.5,75 H32.5 A2.5,2.5 0 0 1 30,72.5 V68.5 A2.5,2.5 0 0 1 32.5,66 Z M58.5,66 H62.5 A2.5,2.5 0 0 1 65,68.5 V72.5 A2.5,2.5 0 0 1 62.5,75 H58.5 A2.5,2.5 0 0 1 56,72.5 V68.5 A2.5,2.5 0 0 1 58.5,66 Z M71.5,66 H75.5 A2.5,2.5 0 0 1 78,68.5 V72.5 A2.5,2.5 0 0 1 75.5,75 H71.5 A2.5,2.5 0 0 1 69,72.5 V68.5 A2.5,2.5 0 0 1 71.5,66 Z" />
+    <!-- No gold in a themed icon: the holiday tile stays solid, the others are dimmed. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M45.5,66 H49.5 A2.5,2.5 0 0 1 52,68.5 V72.5 A2.5,2.5 0 0 1 49.5,75 H45.5 A2.5,2.5 0 0 1 43,72.5 V68.5 A2.5,2.5 0 0 1 45.5,66 Z" />
+</vector>
