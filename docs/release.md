@@ -54,6 +54,9 @@ keyAlias=urlaubsplaner
 keyPassword=...
 ```
 
+Write the path with forward slashes, as above: in a `.properties` file a backslash is an escape
+character and `C:\Users\...` is silently mangled.
+
 The environment variables are `URLAUBSPLANER_STORE_FILE`, `URLAUBSPLANER_STORE_PASSWORD`,
 `URLAUBSPLANER_KEY_ALIAS` and `URLAUBSPLANER_KEY_PASSWORD`. A relative `storeFile` counts from the
 repo root. If only some of the four are given the build stops with a message; if none is given
@@ -171,7 +174,9 @@ CurrentVersionCode: 900
 `GPL-3.0-only` because the project says "GPL-3.0" and no source file carries an "or any later
 version" notice; if Nick means "or later", change it here and add the notice to the sources. Likely
 questions from the build: the JDK of F-Droid's build server against the one in `gradle/` (the project
-builds on JDK 17 and newer) and whether it can fetch the Gradle version of the wrapper. If the build
+builds on JDK 17 and newer), whether it can fetch the Gradle version of the wrapper, and whether its
+Android SDK has platform 37 (`compileSdk` and `targetSdk` are 37, very new, not checked against
+their build server). If the build
 fails, the pipeline log says why; fix it in the repo and move the tag, or add a `prebuild` line.
 
 ## Google developer verification (to do before 2027)

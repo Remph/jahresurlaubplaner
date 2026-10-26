@@ -5,8 +5,8 @@ school holidays, vacation balance and bridge days, status first. Local-first: th
 the phone. German first, English second.
 
 Status: the rules, storage, screens (Übersicht, Kalender, Einstellungen), ICS export, backup and the
-home screen widget are built; the first public release is 0.9.0 (release preparation is under way). The plan is in
-[docs/plan.md](docs/plan.md), the project rules in [CLAUDE.md](CLAUDE.md).
+home screen widget are built; the first public release is 0.9.0 (release preparation is under
+way). The plan is in [docs/plan.md](docs/plan.md), the project rules in [CLAUDE.md](CLAUDE.md).
 
 ## Build
 
