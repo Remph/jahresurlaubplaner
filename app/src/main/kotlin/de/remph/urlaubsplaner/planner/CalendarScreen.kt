@@ -202,7 +202,7 @@ private fun Header(
 
 /**
  * Under the month: the vacation days of the month, then its holidays and school holidays by
- * name, since colours alone say little (design review, Nick, 2026-10-25).
+ * name, since colours alone say little (design review, the maintainer, 2026-10-25).
  */
 @Composable
 private fun MonthCard(

@@ -137,10 +137,10 @@ private fun DayCell(
     val colors = dayColors()
     val look = view.look(date)
     val description = dayDescription(view, date, look, locale)
-    // The theme's large step, the same as the cards (design review, Nick, 2026-10-25).
+    // The theme's large step, the same as the cards (design review, the maintainer, 2026-10-25).
     val shape = MaterialTheme.shapes.large
     val planned = look.mark != null && !look.taken
-    // Every day is a tile of its own, so the days stand out from the background (Nick,
+    // Every day is a tile of its own, so the days stand out from the background (the maintainer,
     // 2026-10-25). The tile's colour is the strongest thing the day is; a school holiday under a
     // taken day or a holiday still shows as a bar along the bottom (in the text colour on a taken
     // day, since the wallpaper's colour can be close to any fixed blue).

@@ -1,6 +1,6 @@
 package de.remph.urlaubsplaner.appearance
 
-/** Hell, dunkel, or what the system says (Nick, 2026-10-25). */
+/** Hell, dunkel, or what the system says (the maintainer, 2026-10-25). */
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 /**

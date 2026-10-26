@@ -14,7 +14,7 @@ import java.util.Locale
 
 /**
  * The vacation as an iCalendar file (RFC 5545) for a calendar app or to send to someone. Decided
- * with Nick on 2026-10-26: only the vacation, no public or school holidays, so the file needs no
+ * with the maintainer on 2026-10-26: only the vacation, no public or school holidays, so the file needs no
  * ODbL credit; one all-day event per trip (the marked days of [VacationCalculator.trips], a
  * weekend between two weeks stays inside it), taken and planned days alike.
  *

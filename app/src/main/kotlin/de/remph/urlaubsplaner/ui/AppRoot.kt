@@ -37,7 +37,7 @@ import de.remph.urlaubsplaner.planner.PlannerViewModel
 import de.remph.urlaubsplaner.settings.SettingsHost
 import de.remph.urlaubsplaner.settings.SettingsViewModel
 
-/** The three tabs along the bottom (Nick, 2026-10-25). */
+/** The three tabs along the bottom (the maintainer, 2026-10-25). */
 enum class Tab(
     val label: Int,
     val icon: ImageVector,

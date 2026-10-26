@@ -9,7 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 enum class WidgetColors { PHONE, LIGHT, DARK }
 
 /**
- * What the user chose when setting up one widget (Nick, 2026-10-26): how see-through the
+ * What the user chose when setting up one widget (the maintainer, 2026-10-26): how see-through the
  * background is, and the colours, which keep the text readable on a see-through background.
  * Kept per widget in Glance's preferences; a new option is a new key with a default, so widgets
  * set up before it keep working.

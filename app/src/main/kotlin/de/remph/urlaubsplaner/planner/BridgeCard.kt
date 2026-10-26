@@ -34,7 +34,7 @@ import java.util.Locale
 
 /**
  * The best Brückentage of the year, each public holiday with what to take before and after it.
- * Tapping a line asks before anything is stored (Nick, 2026-10-25). Nothing is shown when there
+ * Tapping a line asks before anything is stored (the maintainer, 2026-10-25). Nothing is shown when there
  * is none left this year.
  */
 @Composable

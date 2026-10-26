@@ -10,7 +10,7 @@ import androidx.core.os.LocaleListCompat
 import de.remph.urlaubsplaner.R
 
 /**
- * The app language is a setting of its own, not only the system language (Nick, 2026-10-25).
+ * The app language is a setting of its own, not only the system language (the maintainer, 2026-10-25).
  * [AppCompatDelegate] keeps it, so it is not in the database or the backup file. With
  * [SYSTEM] the system language applies, and German when that is neither German nor English.
  */

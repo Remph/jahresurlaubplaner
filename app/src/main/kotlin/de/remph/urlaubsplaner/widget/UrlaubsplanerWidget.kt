@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 
 /**
- * The home screen widget. There are two in the launcher's picker (Nick, 2026-10-26): the small one
+ * The home screen widget. There are two in the launcher's picker (the maintainer, 2026-10-26): the small one
  * (2x1) and [UrlaubsplanerBigWidget] (4x2), each with its own layout, so the text always has the
  * room it was made for. Each placed widget keeps its own [WidgetStyle] in Glance's state.
  */

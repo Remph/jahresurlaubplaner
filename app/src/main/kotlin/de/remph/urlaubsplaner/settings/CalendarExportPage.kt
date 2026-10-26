@@ -80,7 +80,7 @@ fun CalendarExportPage(
 
 /**
  * The file shown in a calendar app, which may read only that file. It is "open", not "share":
- * Samsung Calendar takes .ics files that way and is not offered in the share sheet (Nick, 2026-10-26).
+ * Some phone makers' calendar apps take .ics files that way and are not offered in the share sheet (the maintainer, 2026-10-26).
  */
 private fun openIntent(
     file: Uri,
