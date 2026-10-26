@@ -114,10 +114,10 @@ class BridgeFinder(
             var end = day
             while (isFree(end.plusDays(1))) end = end.plusDays(1)
             val anchor =
-                start
-                    .datesUntil(end.plusDays(1))
+                // Not LocalDate.datesUntil: it is Java 9 and missing on Android 11 (minSdk 30).
+                generateSequence(start) { it.plusDays(1) }
+                    .takeWhile { it <= end }
                     .filter { losesWorkingDay(it) }
-                    .toList()
                     .minWithOrNull(compareBy({ distance(it, leave) }, { it }))
             if (anchor != null) bridges += Bridge(leave, cost, start, end, anchor)
             day = end.plusDays(1)
