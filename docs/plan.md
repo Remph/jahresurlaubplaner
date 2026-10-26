@@ -57,6 +57,10 @@ Rules:
 
 M1 comes first after M0 because it is testable in the cloud and everything else depends on it.
 
+After 0.9.x: the features of 0.10.0 (parked items 18 to 23) are built on the integration branch
+`release/0.10.0`; order, threads, the Room and backup version steps and the release steps are in
+`docs/milestone-0.10.0.md`.
+
 Language (the maintainer, 2026-10-25): the app language is a setting, not only the system language: System
 (default), Deutsch, English. If the system language is neither, German applies (the default
 resources). Plan: `androidx.appcompat` `AppCompatDelegate.setApplicationLocales()` (works back to
