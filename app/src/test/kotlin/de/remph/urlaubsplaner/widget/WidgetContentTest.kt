@@ -5,7 +5,10 @@ import android.content.Intent
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.testing.unit.hasStartActivityClickAction
 import androidx.glance.appwidget.testing.unit.runGlanceAppWidgetUnitTest
+import androidx.glance.testing.GlanceNodeMatcher
+import androidx.glance.testing.unit.MappedNode
 import androidx.glance.testing.unit.hasText
+import androidx.glance.text.EmittableText
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.MainActivity
@@ -131,5 +134,37 @@ class WidgetContentTest {
             provideComposable { WidgetContent(status, WidgetStyle()) }
 
             onNode(hasText("Nächster Urlaub 14.04.")).assertExists()
+        }
+
+    private fun hasMaxLines(
+        text: String,
+        lines: Int,
+    ) = GlanceNodeMatcher<MappedNode>("text \"$text\" with at most $lines lines") { node ->
+        val emittable = node.value.emittable
+        emittable is EmittableText && emittable.text == text && emittable.maxLines == lines
+    }
+
+    // Nick, 2026-10-26: "Noch kein Urlaub geplant" was cut to "Noch kein Urla..." on his phone.
+    @Test
+    fun `the trip texts of the wide widget may wrap to two lines`() =
+        runGlanceAppWidgetUnitTest {
+            setContext(context)
+            setAppWidgetSize(WIDE_SIZE)
+            val none = status.copy(tripWhen = "Noch kein Urlaub geplant", tripCost = null)
+            provideComposable { WidgetContent(none, WidgetStyle()) }
+
+            onNode(hasMaxLines("Noch kein Urlaub geplant", 2)).assertExists()
+            onNode(hasMaxLines("Nächster Urlaub", 2)).assertExists()
+        }
+
+    @Test
+    fun `the Resturlaub warning may wrap to two lines`() =
+        runGlanceAppWidgetUnitTest {
+            setContext(context)
+            setAppWidgetSize(WIDE_SIZE)
+            val warned = status.copy(warning = "3 Tage Resturlaub verfallen am 31.03.")
+            provideComposable { WidgetContent(warned, WidgetStyle()) }
+
+            onNode(hasMaxLines("3 Tage Resturlaub verfallen am 31.03.", 2)).assertExists()
         }
 }

@@ -63,7 +63,7 @@ fun WidgetContent(
                     24.dp,
                     R.drawable.widget_background,
                 ).clickable(openApp(context, model))
-                .padding(horizontal = 16.dp, vertical = if (wide) 12.dp else 6.dp),
+                .padding(horizontal = 16.dp, vertical = if (wide) 8.dp else 6.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         when {
@@ -145,26 +145,29 @@ private fun WideStatus(
                         .background(palette.provider(alpha = 0.3f) { it.muted }),
             ) {}
             Column(modifier = GlanceModifier.defaultWeight().padding(start = 16.dp)) {
-                Text(model.tripLabel, style = textStyle(palette, 11.sp) { it.muted }, maxLines = 1)
+                // Two lines each: "Noch kein Urlaub geplant" and "30. April – 2. Mai" do not fit one
+                // line next to the number (Nick, 2026-10-26, on a phone).
+                Text(model.tripLabel, style = textStyle(palette, 11.sp) { it.muted }, maxLines = 2)
                 Text(
                     model.tripWhen,
                     style = textStyle(palette, 17.sp, FontWeight.Bold) { it.ink },
-                    maxLines = 1,
+                    maxLines = 2,
                 )
-                // Always one line, so the widget does not jump between a trip and no trip.
-                Text(
-                    model.tripCost ?: " ",
-                    style = textStyle(palette, 12.sp) { it.muted },
-                    maxLines = 1,
-                )
+                if (model.tripCost != null) {
+                    Text(
+                        model.tripCost,
+                        style = textStyle(palette, 12.sp) { it.muted },
+                        maxLines = 1,
+                    )
+                }
             }
         }
-        Spacer(GlanceModifier.height(8.dp))
+        Spacer(GlanceModifier.height(6.dp))
         if (model.warning != null) {
             Text(
                 model.warning,
                 style = textStyle(palette, 12.sp) { it.onWarning },
-                maxLines = 1,
+                maxLines = 2,
                 modifier =
                     GlanceModifier
                         .fillMaxWidth()
