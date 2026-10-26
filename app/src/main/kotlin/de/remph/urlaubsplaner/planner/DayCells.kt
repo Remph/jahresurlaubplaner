@@ -163,7 +163,7 @@ private fun DayCell(
     val fill by animateColorAsState(fillTarget, DayFade, label = "dayFill")
     val textColor by animateColorAsState(textTarget, DayFade, label = "dayText")
     val outline by animateColorAsState(
-        if (planned) colors.planned else Color.Transparent,
+        if (planned) colors.planned else colors.planned.copy(alpha = 0f),
         DayFade,
         label = "dayOutline",
     )

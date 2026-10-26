@@ -137,10 +137,7 @@ fun AppRoot(
 private fun stateKey(
     tab: Tab,
     settingsGeneration: Int,
-) = if (tab ==
-    Tab.SETTINGS
-) {
-    "SETTINGS$settingsGeneration"
-} else {
-    tab.name
+): String {
+    val generation = if (tab == Tab.SETTINGS) settingsGeneration.toString() else ""
+    return tab.name + generation
 }

@@ -1,5 +1,7 @@
 package de.remph.urlaubsplaner.ui
 
+import android.content.ContentResolver
+import android.provider.Settings
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.CubicBezierEasing
@@ -10,6 +12,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
@@ -39,3 +43,16 @@ internal fun <S> rememberSharedAxis(): AnimatedContentTransitionScope<S>.(
         )
     }
 }
+
+/**
+ * True when Android's "Remove animations" is on. Compose then ends every animation in its first
+ * frame, but a number that starts at zero would still show that zero for that one frame.
+ */
+@Composable
+internal fun rememberAnimationsRemoved(): Boolean {
+    val resolver = LocalContext.current.contentResolver
+    return remember(resolver) { animationsRemoved(resolver) }
+}
+
+internal fun animationsRemoved(resolver: ContentResolver) =
+    Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f

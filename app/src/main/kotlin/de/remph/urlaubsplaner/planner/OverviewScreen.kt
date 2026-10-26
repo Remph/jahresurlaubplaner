@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.ui.rememberAnimationsRemoved
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
@@ -218,7 +219,20 @@ private fun Status(
  */
 @Composable
 private fun rememberIntro(viewModel: PlannerViewModel): Float {
-    val elapsed = remember { Animatable(if (viewModel.takeIntro()) 0f else INTRO_MILLIS) }
+    val animationsRemoved = rememberAnimationsRemoved()
+    // takeIntro() first: the start counts as played even when there is nothing to play.
+    val elapsed =
+        remember {
+            Animatable(
+                if (viewModel.takeIntro() &&
+                    !animationsRemoved
+                ) {
+                    0f
+                } else {
+                    INTRO_MILLIS
+                },
+            )
+        }
     LaunchedEffect(Unit) {
         if (elapsed.value < INTRO_MILLIS) {
             elapsed.animateTo(INTRO_MILLIS, tween(INTRO_MILLIS.toInt(), easing = LinearEasing))
