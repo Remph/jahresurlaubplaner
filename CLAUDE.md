@@ -38,7 +38,8 @@ Local-first, no backend for the MVP. Gradle with `:core` and `:app`; the MVP fea
 
 ## What to read
 - `README.md`: what the app does and how to build it.
-- `docs/`: `plan.md` (layout, build settings, milestones), `data-sources.md`.
+- `docs/`: `plan.md` (layout, build settings, milestones), `data-sources.md`, `milestone-0.10.0.md`
+  (the 0.10.0 integration branch `release/0.10.0`: PR base, order, syncing `main` into it).
 - Check facts that change over time (store rules, data sources, API terms, Google's developer
   verification) with search and write the date next to what you found.
 
