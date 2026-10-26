@@ -1,8 +1,16 @@
 package de.remph.urlaubsplaner.settings
 
+import android.app.LocaleManager
+import android.content.Context
+import android.os.LocaleList
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
 
+@RunWith(AndroidJUnit4::class)
 class LanguageChoiceTest {
     @Test
     fun `no stored language means the system language`() {
@@ -28,5 +36,31 @@ class LanguageChoiceTest {
         for (choice in LanguageChoice.entries) {
             assertEquals(choice, LanguageChoice.fromTags(choice.tag))
         }
+    }
+
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+
+    // Below Android 13 the widget has no other way to know the language chosen in the app.
+    @Test
+    @Config(sdk = [32])
+    fun `below Android 13 the stored choice is the one applied`() {
+        assertEquals(LanguageChoice.SYSTEM, LanguageChoice.stored(context))
+
+        LanguageChoice.apply(context, LanguageChoice.ENGLISH)
+        assertEquals(LanguageChoice.ENGLISH, LanguageChoice.stored(context))
+
+        LanguageChoice.apply(context, LanguageChoice.SYSTEM)
+        assertEquals(LanguageChoice.SYSTEM, LanguageChoice.stored(context))
+    }
+
+    // From Android 13 the system keeps it; the app may be asked outside any activity.
+    @Test
+    @Config(sdk = [34])
+    fun `from Android 13 the stored choice is read from the system`() {
+        // What AppCompatDelegate does in the app, minus the activity this test does not have.
+        val manager = context.getSystemService(LocaleManager::class.java)
+        manager.applicationLocales = LocaleList.forLanguageTags("de")
+
+        assertEquals(LanguageChoice.GERMAN, LanguageChoice.stored(context))
     }
 }

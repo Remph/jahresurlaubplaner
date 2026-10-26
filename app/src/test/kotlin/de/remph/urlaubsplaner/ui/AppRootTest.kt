@@ -1,6 +1,9 @@
 package de.remph.urlaubsplaner.ui
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -35,6 +38,9 @@ class AppRootTest {
 
     private lateinit var fixture: PlannerFixture
 
+    // What the widget asks for through MainActivity.
+    private var request by mutableStateOf<TabRequest?>(null)
+
     @Before
     fun open() {
         fixture = PlannerFixture()
@@ -47,7 +53,7 @@ class AppRootTest {
                 fixture.clock,
             )
         val appearance = AppearanceStore(context.getSharedPreferences("app-root-test", 0))
-        compose.setContent { AppRoot(settings, fixture.viewModel(), appearance) }
+        compose.setContent { AppRoot(settings, fixture.viewModel(), appearance, request) }
     }
 
     @After
@@ -91,5 +97,43 @@ class AppRootTest {
 
         compose.onNode(tab("Kalender")).assertIsSelected()
         waitForText("Einstellungen öffnen")
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a request from the widget opens its tab`() {
+        waitForText("Einstellungen öffnen")
+
+        request = TabRequest(Tab.SETTINGS)
+
+        compose.waitForIdle()
+        compose.onNode(tab("Einstellungen")).assertIsSelected()
+        waitForText("Bundesland wählen")
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a second tap on the widget opens the tab again after the user has left it`() {
+        request = TabRequest(Tab.SETTINGS)
+        compose.waitForIdle()
+        compose.onNode(tab("Übersicht")).performClick()
+        compose.onNode(tab("Übersicht")).assertIsSelected()
+
+        request = TabRequest(Tab.SETTINGS)
+
+        compose.waitForIdle()
+        compose.onNode(tab("Einstellungen")).assertIsSelected()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `an old request does not pull the user back after a rotation or a tab change`() {
+        request = TabRequest(Tab.SETTINGS)
+        compose.waitForIdle()
+        compose.onNode(tab("Kalender")).performClick()
+
+        compose.waitForIdle()
+
+        compose.onNode(tab("Kalender")).assertIsSelected()
     }
 }

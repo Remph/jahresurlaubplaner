@@ -244,4 +244,32 @@
     <string name="holiday_buss_und_bettag">Day of Repentance and Prayer</string>
     <string name="holiday_weihnachtstag_1">Christmas Day</string>
     <string name="holiday_weihnachtstag_2">Boxing Day</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Shows your days left and your next vacation.</string>
+    <string name="widget_days_left">days left</string>
+    <string name="widget_days_left_year">days left %1$d</string>
+    <string name="widget_overbooked">overbooked</string>
+    <string name="widget_summary_next_trip">Next vacation %1$s</string>
+    <string name="widget_summary_on_trip">On vacation until %1$s</string>
+    <string name="widget_summary_no_trip">No vacation planned</string>
+    <string name="widget_on_trip">You are on vacation now</string>
+    <string name="widget_until">until %1$s</string>
+    <string name="widget_day_pattern">d</string>
+    <plurals name="widget_trip_cost">
+        <item quantity="one">%1$s vacation day</item>
+        <item quantity="other">%1$s vacation days</item>
+    </plurals>
+    <plurals name="widget_carry_over_warning">
+        <item quantity="one">%1$s day of carry-over expires on %2$s</item>
+        <item quantity="other">%1$s days of carry-over expire on %2$s</item>
+    </plurals>
+    <string name="widget_no_land_hint">Then the widget shows your vacation.</string>
+    <string name="widget_no_entitlement_hint">They are still missing for %1$d.</string>
+    <string name="widget_setup_title">Set up widget</string>
+    <string name="widget_transparency">Background transparency</string>
+    <string name="widget_percent">%1$d %%</string>
+    <string name="widget_colors">Widget colours</string>
+    <string name="widget_colors_phone">Like the phone</string>
+    <string name="widget_setup_done">Done</string>
 </resources>

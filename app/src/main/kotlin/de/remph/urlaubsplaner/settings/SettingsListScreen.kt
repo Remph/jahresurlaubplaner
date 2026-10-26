@@ -9,10 +9,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
+import de.remph.urlaubsplaner.UrlaubsplanerApp
 import de.remph.urlaubsplaner.appearance.AppearanceStore
 import de.remph.urlaubsplaner.appearance.ThemeMode
 import de.remph.urlaubsplaner.core.balance.AmountText
@@ -35,6 +37,7 @@ fun SettingsListScreen(
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val resources = LocalResources.current
+    val context = LocalContext.current
     val appearance by appearanceStore.state.collectAsStateWithLifecycle()
     val settings = ui.settings
     val land = settings.land
@@ -122,7 +125,8 @@ fun SettingsListScreen(
             onSelect = {
                 languageDialog = false
                 // Restarts the activity in the new language.
-                LanguageChoice.apply(it)
+                LanguageChoice.apply(context, it)
+                (context.applicationContext as UrlaubsplanerApp).widgetRefresher.refresh()
             },
             onDismiss = { languageDialog = false },
         )

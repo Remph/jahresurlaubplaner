@@ -12,6 +12,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,8 +50,11 @@ fun AppRoot(
     settingsViewModel: SettingsViewModel,
     plannerViewModel: PlannerViewModel,
     appearanceStore: AppearanceStore,
+    request: TabRequest? = null,
 ) {
     var tab by rememberSaveable { mutableStateOf(Tab.OVERVIEW) }
+    // A tap on the widget asks for a tab; it wins over where the user was.
+    LaunchedEffect(request) { request?.let { tab = it.tab } }
     val snackbar = remember { SnackbarHostState() }
     // A phone keeps the app in memory for days; the status must follow the date.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { plannerViewModel.refreshToday() }

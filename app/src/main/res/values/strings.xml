@@ -244,4 +244,33 @@
     <string name="holiday_buss_und_bettag">Buß- und Bettag</string>
     <string name="holiday_weihnachtstag_1">1. Weihnachtstag</string>
     <string name="holiday_weihnachtstag_2">2. Weihnachtstag</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Zeigt deine übrigen Urlaubstage und deinen nächsten Urlaub.</string>
+    <string name="widget_days_left">Tage übrig</string>
+    <string name="widget_days_left_year">Tage übrig %1$d</string>
+    <string name="widget_overbooked">überbucht</string>
+    <string name="widget_summary_next_trip">Nächster Urlaub %1$s</string>
+    <string name="widget_summary_on_trip">Im Urlaub bis %1$s</string>
+    <string name="widget_summary_no_trip">Kein Urlaub geplant</string>
+    <string name="widget_on_trip">Du bist gerade im Urlaub</string>
+    <string name="widget_until">bis %1$s</string>
+    <!-- Der Tag in "14.–16. April": mit Punkt, weil es ein Datum ist. -->
+    <string name="widget_day_pattern">d.</string>
+    <plurals name="widget_trip_cost">
+        <item quantity="one">%1$s Urlaubstag</item>
+        <item quantity="other">%1$s Urlaubstage</item>
+    </plurals>
+    <plurals name="widget_carry_over_warning">
+        <item quantity="one">%1$s Tag Resturlaub verfällt am %2$s</item>
+        <item quantity="other">%1$s Tage Resturlaub verfallen am %2$s</item>
+    </plurals>
+    <string name="widget_no_land_hint">Dann zeigt das Widget deinen Urlaub.</string>
+    <string name="widget_no_entitlement_hint">Für %1$d fehlen sie noch.</string>
+    <string name="widget_setup_title">Widget einrichten</string>
+    <string name="widget_transparency">Transparenz des Hintergrunds</string>
+    <string name="widget_percent">%1$d %%</string>
+    <string name="widget_colors">Farben des Widgets</string>
+    <string name="widget_colors_phone">Wie das Telefon</string>
+    <string name="widget_setup_done">Fertig</string>
 </resources>
