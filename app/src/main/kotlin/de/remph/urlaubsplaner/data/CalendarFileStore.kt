@@ -9,7 +9,7 @@ import java.io.File
 import java.io.FileNotFoundException
 
 /**
- * Gets the calendar file out of the app, two ways (Nick, 2026-10-26): written to a file the user
+ * Gets the calendar file out of the app, two ways (the maintainer, 2026-10-26): written to a file the user
  * picked with the system file picker ([write], needs no storage permission), or to a cache file
  * that a calendar app is given to open ([writeForOpening], through a [FileProvider] so the
  * other app can read exactly that one file). The text itself is made in `:core`.

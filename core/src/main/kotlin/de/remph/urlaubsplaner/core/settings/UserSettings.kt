@@ -22,7 +22,7 @@ data class UserSettings(
     val optOuts: Set<RegionalOptOut> = emptySet(),
     val schedule: WorkSchedule = WorkSchedule(),
     /**
-     * Off by default (Nick, 2026-10-25): when on, a new year's form suggests the days left over
+     * Off by default (the maintainer, 2026-10-25): when on, a new year's form suggests the days left over
      * from the year before as Resturlaub. Only a suggestion, the employer's figure still wins.
      */
     val suggestCarryOver: Boolean = false,

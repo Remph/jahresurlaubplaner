@@ -141,7 +141,7 @@ private fun WideStatus(
             ) {}
             Column(modifier = GlanceModifier.defaultWeight().padding(start = 16.dp)) {
                 // Two lines each: "Noch kein Urlaub geplant" and "30. April – 2. Mai" do not fit one
-                // line next to the number (Nick, 2026-10-26, on a phone).
+                // line next to the number (the maintainer, 2026-10-26, on a phone).
                 Text(model.tripLabel, style = textStyle(palette, 11.sp) { it.muted }, maxLines = 2)
                 Text(
                     model.tripWhen,

@@ -9,7 +9,7 @@ import java.util.Locale
  * it has no year, one in another year gets it, because "14.01." in December means next January.
  */
 object WidgetDates {
-    /** "14.04." as in the mock-up Nick approved, the same in German and English. */
+    /** "14.04." as in the mock-up the maintainer approved, the same in German and English. */
     fun short(
         date: LocalDate,
         year: Int,

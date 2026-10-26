@@ -147,7 +147,7 @@ val YearRowsExpanded = 48.dp
 
 /**
  * Swipe down on the grid to expand its rows, swipe up to make them compact again, like the
- * Samsung calendar. The swipe is only watched, never consumed, so the page still scrolls: when
+ * stock calendar app of some phones. The swipe is only watched, never consumed, so the page still scrolls: when
  * the rows are expanded and the page can scroll, a swipe up scrolls it first, and only a swipe
  * that starts with the page at its end makes the rows compact. [pageAtEnd] says that.
  */

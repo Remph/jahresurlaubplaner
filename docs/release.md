@@ -1,21 +1,21 @@
 # Releasing Urlaubsplaner
 
-How a release is made, and what is Nick's own step. Facts that change over time are dated; check
+How a release is made, and what is the maintainer's own step. Facts that change over time are dated; check
 them again before relying on them. Nothing here tags or publishes by itself: tags and GitHub
-releases only when Nick asks (`CLAUDE.md`).
+releases only when the maintainer asks (`CLAUDE.md`).
 
-## Decided (Nick, 2026-10-26)
+## Decided (the maintainer, 2026-10-26)
 
 - Two sources: **F-Droid** (preferred) and an **APK on GitHub**. No Google Play account for now.
 - First public version is **0.9.0**. Version scheme: `versionCode = major * 10000 + minor * 100 +
   patch`, so 0.9.0 is 900 and 1.0.0 is 10000. Both are set in `app/build.gradle.kts`.
-- The GitHub APK is signed with Nick's **own release key**, made on his PC. F-Droid signs its own
+- The GitHub APK is signed with the maintainer's **own release key**, made on their PC. F-Droid signs its own
   build with its own key, so the two sources cannot update each other: whoever switches from one to
   the other uninstalls first (back up through Einstellungen > Datensicherung before).
 - No contact e-mail anywhere; **GitHub issues** are the contact: <https://github.com/Remph/urlaubsplaner/issues>.
   A private, non-profit app without a website probably needs no Impressum, but that is not legal advice.
 
-## The release key (Nick's step, on his PC)
+## The release key (the maintainer's step, on his PC)
 
 The key is the identity of the app for everyone who installs the GitHub APK. **Lose it and nobody
 can update; the only way out is a new package name.** So:
@@ -102,16 +102,16 @@ backup export and import, calendar export, German and English, dark mode.
 1. A PR on its own branch (as always) that sets `versionCode` and `versionName` in
    `app/build.gradle.kts`, adds `fastlane/metadata/android/de-DE/changelogs/<versionCode>.txt` and
    the same for `en-US` (at most 500 characters), and updates the screenshots and the school holiday
-   file if they changed. Nick merges it after the review.
+   file if they changed. The maintainer merges it after the review.
 2. Build the signed APK on the PC and test it (above).
 3. Tag the merge commit **`v<versionName>`**, for example `v0.9.0`, and push the tag. F-Droid
    builds from tags: the tag must be on the commit that has that `versionCode`.
-4. A **GitHub release** with the signed APK attached, only when Nick asks. Name the file
+4. A **GitHub release** with the signed APK attached, only when the maintainer asks. Name the file
    `urlaubsplaner-<versionName>.apk`. Put the changelog text and the SHA-256 of the APK in the notes.
 5. F-Droid notices the new tag by itself once the app is in (`AutoUpdateMode: Version`,
    `UpdateCheckMode: Tags`), usually within a few days.
 
-## F-Droid (Nick's step: the merge request)
+## F-Droid (the maintainer's step: the merge request)
 
 Official sources, read on 2026-10-26 from F-Droid's own GitLab repositories (`fdroid/fdroiddata`:
 `CONTRIBUTING.md`, `templates/`, merge request template; `fdroid/fdroid-website`: Inclusion Policy,
@@ -174,9 +174,9 @@ CurrentVersion: 0.9.0
 CurrentVersionCode: 900
 ```
 
-`AuthorName` is public: Nick chose his GitHub name, Remph (2026-10-26). `License` is
+`AuthorName` is public: the maintainer chose the GitHub name Remph (2026-10-26). `License` is
 `GPL-3.0-only` because the project says "GPL-3.0" and no source file carries an "or any later
-version" notice; if Nick means "or later", change it here and add the notice to the sources. Likely
+version" notice; if the maintainer means "or later", change it here and add the notice to the sources. Likely
 questions from the build: the JDK of F-Droid's build server against the one in `gradle/` (the project
 builds on JDK 17 and newer), whether it can fetch the Gradle version of the wrapper, and whether its
 Android SDK has platform 37 (`compileSdk` and `targetSdk` are 37, very new, not checked against
@@ -185,20 +185,20 @@ fails, the pipeline log says why; fix it in the repo and move the tag, or add a 
 
 ## Google developer verification (to do before 2027)
 
-Decided "decide later" (Nick, 2026-10-26): **not registered now.** Facts from Google's own pages
+Decided "decide later" (the maintainer, 2026-10-26): **not registered now.** Facts from Google's own pages
 (developer.android.com, checked 2026-10-26):
 
 - Enforcement began on 30 September 2026 in Brazil, Indonesia, Singapore and Thailand for
   participating stores, and is to reach apps on certified Android phones worldwide in **2027**.
 - Apps from F-Droid or installed by hand (sideloaded) are not affected before that date.
 - A full developer account costs 25 US dollars and needs a government ID. A "limited distribution"
-  account is free and allows up to 20 devices (enough for Nick's own phone).
+  account is free and allows up to 20 devices (enough for the maintainer's own phone).
 - There is a route for open-source apps: register the package name `de.remph.urlaubsplaner` with the
   signing key's SHA-256. F-Droid re-signs with its own key, so its fingerprint has to be added too.
 
 **To do before 2027:** read Google's pages again (the rules were still moving), then decide:
 register the package name through the open-source route, take the limited distribution account, or
-accept that the app may not install on some phones. This is Nick's decision, ask him one question
+accept that the app may not install on some phones. This is the maintainer's decision, ask one question
 with a recommendation.
 
 ## Store assets
@@ -209,6 +209,6 @@ with a recommendation.
   app's own teal scheme, fixed date 10 March 2027, Nordrhein-Westfalen, a few marked days. They were
   made in the cloud with a throwaway Robolectric test (`AppRoot` inside `UrlaubsplanerTheme`,
   `captureToImage`, not kept in the repo), not on a phone. Replace them with phone screenshots
-  whenever Nick likes; the file names `1.png` to `4.png` set the order.
+  whenever the maintainer likes; the file names `1.png` to `4.png` set the order.
 - **Texts:** `fastlane/metadata/android/<locale>/`. German first. A text that promises a feature
   must match the app: check the descriptions when a feature is added or removed.

@@ -66,7 +66,7 @@ internal object HolidayRules {
                 ),
             ),
             // In Bayern only the communities with a mostly Catholic population have it (about 1,700
-            // of 2,056). Counted for the whole Land by Nick's decision (2026-10-25); see RegionalOptOut.
+            // of 2,056). Counted for the whole Land by the maintainer's decision (2026-10-25); see RegionalOptOut.
             HolidayRule(Holiday.MARIAE_HIMMELFAHRT, setOf(BAYERN, SAARLAND)),
             HolidayRule(Holiday.WELTKINDERTAG, setOf(THUERINGEN)),
             HolidayRule(Holiday.TAG_DER_DEUTSCHEN_EINHEIT, ALL),
