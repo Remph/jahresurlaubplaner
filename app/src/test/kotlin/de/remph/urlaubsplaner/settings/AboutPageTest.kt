@@ -1,16 +1,21 @@
 package de.remph.urlaubsplaner.settings
 
+import android.app.Application
+import android.content.Intent
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.core.schoolholidays.SchoolHolidayData
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /** The about page carries what the licences of the data and the libraries ask us to show. */
@@ -59,5 +64,20 @@ class AboutPageTest {
 
         compose.onNodeWithText("BSD-3-Clause (Protocol Buffers)").performScrollTo().performClick()
         compose.onNodeWithText("Copyright 2008 Google Inc.", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the source row opens the repository in a browser`() {
+        show()
+
+        compose.onNodeWithText("Source code").performScrollTo().performClick()
+
+        val started =
+            shadowOf(
+                ApplicationProvider.getApplicationContext<Application>(),
+            ).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW, started.action)
+        assertEquals(SOURCE_URL, started.dataString)
     }
 }
