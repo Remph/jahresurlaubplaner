@@ -275,4 +275,25 @@
     <string name="widget_colors">Widget colours</string>
     <string name="widget_colors_phone">Like the phone</string>
     <string name="widget_setup_done">Done</string>
+
+    <!-- About -->
+    <string name="section_about">About</string>
+    <string name="about_row_value">Version %1$s, source code and licences</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_privacy">Your data stays on the phone. The app has no internet access and sends nothing.</string>
+    <string name="about_copyright">© 2026 Remph. The app comes with absolutely no warranty.</string>
+    <string name="about_website">Website</string>
+    <string name="about_source">Source code</string>
+    <string name="about_licence">Licence of the app</string>
+    <string name="about_licence_value">GPL-3.0, free software</string>
+    <string name="about_data_title">School holiday data</string>
+    <string name="about_libraries_title">Libraries</string>
+    <string name="about_libraries_body">AndroidX (Compose, Room, Glance and more), Kotlin and kotlinx are under the Apache License 2.0. The widget includes Protocol Buffers (BSD-3-Clause).</string>
+    <string name="about_texts_title">Licence texts</string>
+    <string name="about_text_gpl">GPL-3.0 (this app)</string>
+    <string name="about_text_apache">Apache License 2.0</string>
+    <string name="about_text_bsd">BSD-3-Clause (Protocol Buffers)</string>
+    <string name="about_no_browser">No browser found.</string>
+    <string name="about_text_missing">The licence text could not be read.</string>
+    <string name="close">Close</string>
 </resources>
