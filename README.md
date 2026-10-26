@@ -29,7 +29,7 @@ The debug APK is `app/build/outputs/apk/debug/app-debug.apk`.
   [docs/release.md](docs/release.md) before installing. The F-Droid and GitHub builds are signed
   with different keys, so switching from one to the other means uninstalling first (back up
   through Einstellungen > Datensicherung).
-- Bugs and wishes: [GitHub issues](https://github.com/Remph/jahresurlaubplaner/issues). There is no
+- Bugs and wishes: [GitHub issues](https://github.com/Remph/urlaubsplaner/issues). There is no
   contact e-mail.
 
 How a release is made, the signing key and the F-Droid steps are in [docs/release.md](docs/release.md).
