@@ -402,7 +402,7 @@ Known snags:
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
   2026-10-25 (Nick added them); the Länder ministry sites are not (probe before relying on it).
 - Instrumented tests and the widget on a launcher (M3, M4) need an emulator or Nick's phone.
-- M5: the app has no launcher icon yet (lint `MissingApplicationIcon`).
+- The launcher icon exists since M5 (sun over day tiles, adaptive with a themed monochrome layer; mock-ups in the project folder `design/icon/`). The widget picker still has no preview image.
 
 ## Status
 
