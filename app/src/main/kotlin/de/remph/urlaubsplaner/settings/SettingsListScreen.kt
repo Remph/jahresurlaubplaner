@@ -104,6 +104,11 @@ fun SettingsListScreen(
                 title = stringResource(R.string.section_backup),
                 value = stringResource(R.string.backup_row_value),
                 onClick = { open(SettingsPage.BACKUP) },
+            )
+            SettingsRow(
+                title = stringResource(R.string.section_about),
+                value = stringResource(R.string.about_row_value, appVersion(context)),
+                onClick = { open(SettingsPage.ABOUT) },
                 showDivider = false,
             )
         }

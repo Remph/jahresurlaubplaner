@@ -25,7 +25,16 @@ import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.ui.rememberSharedAxis
 
 /** The settings list and the small page behind each row. */
-enum class SettingsPage { LIST, VACATION, WORK_DAYS, REGIONAL, APPEARANCE, CALENDAR_EXPORT, BACKUP }
+enum class SettingsPage {
+    LIST,
+    VACATION,
+    WORK_DAYS,
+    REGIONAL,
+    APPEARANCE,
+    CALENDAR_EXPORT,
+    BACKUP,
+    ABOUT,
+}
 
 /**
  * Shows the settings list or one of its pages, and the messages and questions that can come up
@@ -96,6 +105,10 @@ fun SettingsHost(
 
             SettingsPage.BACKUP -> {
                 BackupPage(ui, viewModel, outerPadding, leave)
+            }
+
+            SettingsPage.ABOUT -> {
+                AboutPage(outerPadding, leave)
             }
         }
     }

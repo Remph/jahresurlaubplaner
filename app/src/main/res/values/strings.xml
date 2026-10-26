@@ -276,4 +276,23 @@
     <string name="widget_colors">Farben des Widgets</string>
     <string name="widget_colors_phone">Wie das Telefon</string>
     <string name="widget_setup_done">Fertig</string>
+
+    <!-- Über die App -->
+    <string name="section_about">Über die App</string>
+    <string name="about_row_value">Version %1$s, Quellcode und Lizenzen</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_privacy">Deine Daten bleiben auf dem Telefon. Die App hat keinen Internetzugriff und sendet nichts.</string>
+    <string name="about_source">Quellcode</string>
+    <string name="about_licence">Lizenz der App</string>
+    <string name="about_licence_value">GPL-3.0, freie Software</string>
+    <string name="about_data_title">Schulferien-Daten</string>
+    <string name="about_libraries_title">Bibliotheken</string>
+    <string name="about_libraries_body">AndroidX (Compose, Room, Glance und weitere), Kotlin und kotlinx stehen unter der Apache-Lizenz 2.0. Das Widget bringt Protocol Buffers mit (BSD-3-Clause).</string>
+    <string name="about_texts_title">Lizenztexte</string>
+    <string name="about_text_gpl">GPL-3.0 (diese App)</string>
+    <string name="about_text_apache">Apache-Lizenz 2.0</string>
+    <string name="about_text_bsd">BSD-3-Clause (Protocol Buffers)</string>
+    <string name="about_no_browser">Kein Browser gefunden.</string>
+    <string name="about_text_missing">Der Lizenztext konnte nicht gelesen werden.</string>
+    <string name="close">Schließen</string>
 </resources>

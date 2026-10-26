@@ -109,8 +109,8 @@ fun SettingsGroup(content: @Composable () -> Unit) {
 @Composable
 fun SettingsRow(
     title: String,
-    value: String,
     onClick: () -> Unit,
+    value: String = "",
     showDivider: Boolean = true,
 ) {
     Column {
@@ -125,11 +125,13 @@ fun SettingsRow(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
-                Text(
-                    value,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                if (value.isNotEmpty()) {
+                    Text(
+                        value,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,

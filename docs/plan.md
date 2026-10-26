@@ -410,13 +410,24 @@ Designed with Nick on 2026-10-26 (card taps, one question at a time).
 - Tried by Nick on a Samsung phone: saving the file and opening it works. Not run: the new
   "In Kalender öffnen" button on a phone, and Google Calendar.
 
+### About screen (M6, first piece)
+
+Last row of Einstellungen ("Über die App" / "About"), one page: app name and version (from the
+manifest), one sentence that the data stays on the phone (the app declares no INTERNET
+permission), a link to the source (`SOURCE_URL`, opens the browser), the GPL-3.0 licence, the
+OpenHolidays credit (`SchoolHolidayData.CREDIT`, English as the licence asks), a line on the
+libraries and three licence texts shown in a dialog. The texts live in `app/src/main/assets/licenses/`
+(GPL-3.0, Apache-2.0, BSD-3-Clause for the Protocol Buffers copy inside Glance), so they travel
+with the APK. Dependency audit 2026-10-26 (`releaseRuntimeClasspath`): AndroidX, Kotlin, kotlinx and
+jspecify are Apache-2.0; only `glance-appwidget-external-protobuf` is BSD-3-Clause. Add a text when a
+dependency with another licence comes in. Screenshots: project folder `design/m6-about/`.
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
   2026-10-25 (Nick added them); the Länder ministry sites are not (probe before relying on it).
 - Instrumented tests and the widget on a launcher (M3, M4) need an emulator or Nick's phone.
 - The launcher icon exists since M5 (sun over day tiles, adaptive with a themed monochrome layer; mock-ups in the project folder `design/icon/`).
-- M6: the app has no launcher icon yet (lint `MissingApplicationIcon`).
 
 ## Status
 
