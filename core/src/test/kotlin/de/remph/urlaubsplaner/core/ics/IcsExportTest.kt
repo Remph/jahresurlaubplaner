@@ -171,6 +171,18 @@ class IcsExportTest {
     }
 
     @Test
+    fun `the first language the app has texts for decides`() {
+        val turkish = java.util.Locale.forLanguageTag("tr-TR")
+        val english = java.util.Locale.UK
+        val german = java.util.Locale.GERMANY
+        // The screens show English here, so the file does too.
+        assertEquals(IcsLanguage.ENGLISH, IcsLanguage.of(listOf(turkish, english, german)))
+        assertEquals(IcsLanguage.GERMAN, IcsLanguage.of(listOf(turkish, german, english)))
+        assertEquals(IcsLanguage.GERMAN, IcsLanguage.of(listOf(turkish)))
+        assertEquals(IcsLanguage.GERMAN, IcsLanguage.of(emptyList()))
+    }
+
+    @Test
     fun `text values are escaped`() {
         assertEquals("a\\,b\\;c\\\\d\\ne", IcsText.escape("a,b;c\\d\ne"))
     }

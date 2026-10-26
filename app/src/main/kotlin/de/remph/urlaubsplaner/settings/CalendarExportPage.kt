@@ -33,7 +33,8 @@ fun CalendarExportPage(
 ) {
     val context = LocalContext.current
     // The texts in the file follow the language the screens show right now.
-    val language = IcsLanguage.of(LocalConfiguration.current.locales[0])
+    val locales = LocalConfiguration.current.locales
+    val language = IcsLanguage.of(List(locales.size()) { locales[it] })
     var trips by remember { mutableStateOf<Int?>(null) }
     LaunchedEffect(Unit) { trips = viewModel.calendarTripCount() }
 
