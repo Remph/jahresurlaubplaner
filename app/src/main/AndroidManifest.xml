@@ -8,6 +8,8 @@
     <application
         android:name=".UrlaubsplanerApp"
         android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         tools:ignore="DataExtractionRules"
         android:label="@string/app_name"
         android:localeConfig="@xml/locales_config"

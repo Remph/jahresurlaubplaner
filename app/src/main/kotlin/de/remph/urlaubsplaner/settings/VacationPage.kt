@@ -7,14 +7,17 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,21 +51,20 @@ fun VacationPage(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(
+            // The same arrows as the calendar header; a text glyph was small and tinted differently.
+            IconButton(
                 onClick = { viewModel.selectYear(ui.year - 1) },
                 enabled = ui.canGoBack,
-                modifier = Modifier.size(48.dp).semantics { contentDescription = previous },
-            ) { Text("‹", style = MaterialTheme.typography.titleLarge) }
+            ) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = previous) }
             Text(
                 text = ui.year.toString(),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.semantics { contentDescription = yearDescription },
             )
-            TextButton(
+            IconButton(
                 onClick = { viewModel.selectYear(ui.year + 1) },
                 enabled = ui.canGoForward,
-                modifier = Modifier.size(48.dp).semantics { contentDescription = next },
-            ) { Text("›", style = MaterialTheme.typography.titleLarge) }
+            ) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = next) }
         }
         form.suggestedFrom?.let { from ->
             val carry = form.base?.carryOver
