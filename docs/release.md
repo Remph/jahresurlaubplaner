@@ -52,7 +52,7 @@ the repo root (never both needed):
 
 ```
 # keystore.properties (not in git)
-storeFile=C:/Users/Nick/keys/urlaubsplaner-release.jks
+storeFile=C:/Users/<you>/keys/urlaubsplaner-release.jks
 storePassword=...
 keyAlias=urlaubsplaner
 keyPassword=...
@@ -153,7 +153,7 @@ which needs `fdroidserver` on a PC or in the fork's pipeline):
 Categories:
   - Calendar & Agenda
 License: GPL-3.0-only
-AuthorName: Nick
+AuthorName: Remph
 SourceCode: https://github.com/Remph/urlaubsplaner
 IssueTracker: https://github.com/Remph/urlaubsplaner/issues
 
@@ -174,7 +174,7 @@ CurrentVersion: 0.9.0
 CurrentVersionCode: 900
 ```
 
-`AuthorName` is public: Nick decides what stands there (a nickname is fine). `License` is
+`AuthorName` is public: Nick chose his GitHub name, Remph (2026-10-26). `License` is
 `GPL-3.0-only` because the project says "GPL-3.0" and no source file carries an "or any later
 version" notice; if Nick means "or later", change it here and add the notice to the sources. Likely
 questions from the build: the JDK of F-Droid's build server against the one in `gradle/` (the project
