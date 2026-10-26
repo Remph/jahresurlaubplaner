@@ -10,7 +10,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -25,6 +28,11 @@ class WidgetRefresher(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var watching: Job? = null
+
+    private val _revision = MutableStateFlow(0)
+
+    /** Rises with every [invalidate]; a running widget session reads its data again when it moves. */
+    val revision: StateFlow<Int> = _revision
 
     /** Whether the user has put the widget on a home screen. */
     fun hasWidgets(): Boolean =
@@ -51,7 +59,13 @@ class WidgetRefresher(
         if (hasWidgets()) scope.launch { redraw() }
     }
 
+    /** Marks what the widgets show as outdated, for a session that is still running. */
+    fun invalidate() {
+        _revision.update { it + 1 }
+    }
+
     private suspend fun redraw() {
+        invalidate()
         UrlaubsplanerWidget().updateAll(context)
     }
 

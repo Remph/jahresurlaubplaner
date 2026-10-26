@@ -245,6 +245,21 @@ class WidgetModelTest {
     }
 
     @Test
+    fun `the first German or English language in the phone's list decides`() {
+        val mixed = android.content.res.Configuration(context.resources.configuration)
+        mixed.setLocales(android.os.LocaleList.forLanguageTags("tr,en-GB,de"))
+
+        val language =
+            WidgetLanguage.of(context.createConfigurationContext(mixed), LanguageChoice.SYSTEM)
+
+        assertEquals("en", language.locale.language)
+        assertEquals(
+            "days left",
+            language.context.getString(de.remph.urlaubsplaner.R.string.widget_days_left),
+        )
+    }
+
+    @Test
     fun `the system language English stays English`() {
         val english = android.content.res.Configuration(context.resources.configuration)
         english.setLocales(android.os.LocaleList(java.util.Locale.forLanguageTag("en-GB")))

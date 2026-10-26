@@ -4,6 +4,10 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.datastore.preferences.core.Preferences
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.GlanceAppWidget
@@ -14,6 +18,7 @@ import androidx.glance.currentState
 import de.remph.urlaubsplaner.UrlaubsplanerApp
 import de.remph.urlaubsplaner.core.widget.WidgetStatus
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 
 /**
@@ -27,16 +32,45 @@ class UrlaubsplanerWidget : GlanceAppWidget() {
         context: Context,
         id: GlanceId,
     ) {
-        val app = context.applicationContext as UrlaubsplanerApp
-        val language = WidgetLanguage.of(context)
-        // Read now, not inside the composition: a tap or a resize draws again from this model.
-        val data = withContext(Dispatchers.IO) { app.repository.readAll() }
-        val status = WidgetStatus.of(app.clock, data.settings, data.entitlements, data.marks)
-        val model = WidgetModel.of(status, language.context, language.locale)
+        val refresher = (context.applicationContext as UrlaubsplanerApp).widgetRefresher
+        // Taken before the first read, so a change in between reads the data again.
+        val seen = refresher.revision.value
+        val first = load(context)
         provideContent {
+            val model = liveModel(first, seen, refresher.revision) { load(context) }
             WidgetContent(model, WidgetStyle.from(currentState<Preferences>()))
         }
     }
+
+    private suspend fun load(context: Context): WidgetModel {
+        val app = context.applicationContext as UrlaubsplanerApp
+        val language = WidgetLanguage.of(context)
+        val data = withContext(Dispatchers.IO) { app.repository.readAll() }
+        val status = WidgetStatus.of(app.clock, data.settings, data.entitlements, data.marks)
+        return WidgetModel.of(status, language.context, language.locale)
+    }
+}
+
+/**
+ * The model of a widget whose data stays current. Glance keeps a session alive for about a minute
+ * after a draw, and while it lives an update only changes the widget's state:
+ * [UrlaubsplanerWidget.provideGlance] does not run again. So a second change within that minute
+ * (marking two days one after the other) would show the numbers of the first. Each
+ * [WidgetRefresher.invalidate] raises [revision]; the model is read again when it moves past
+ * [seen], the value [first] was read at.
+ */
+@Composable
+internal fun liveModel(
+    first: WidgetModel,
+    seen: Int,
+    revision: StateFlow<Int>,
+    load: suspend () -> WidgetModel,
+): WidgetModel {
+    val current by revision.collectAsState()
+    val model by produceState(first, current) {
+        if (current != seen) value = load()
+    }
+    return model
 }
 
 class UrlaubsplanerWidgetReceiver : GlanceAppWidgetReceiver() {
@@ -46,6 +80,10 @@ class UrlaubsplanerWidgetReceiver : GlanceAppWidgetReceiver() {
         context: Context,
         intent: Intent,
     ) {
+        // A running Glance session would keep showing the old date or language (see [liveModel]).
+        if (intent.action in DAY_CHANGES || intent.action == Intent.ACTION_LOCALE_CHANGED) {
+            (context.applicationContext as UrlaubsplanerApp).widgetRefresher.invalidate()
+        }
         if (intent.action in DAY_CHANGES) {
             // The date is what "next vacation" and "days left" depend on. Glance already redraws
             // on a language change; the same path serves these.

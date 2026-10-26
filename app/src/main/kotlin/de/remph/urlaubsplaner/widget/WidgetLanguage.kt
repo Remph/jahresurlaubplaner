@@ -15,9 +15,9 @@ class WidgetLanguage(
     companion object {
         /**
          * The widget lives outside any activity, so the language the user chose in the app is not
-         * applied to its context; this builds one. With the system language it is the system's,
-         * and German when that is neither German nor English, the same rule as in the app
-         * (Nick, 2026-10-26).
+         * applied to its context; this builds one. With the system language it is the first
+         * German or English one in the phone's list, and German when there is none, the same rule
+         * as in the app (Nick, 2026-10-26).
          */
         fun of(context: Context): WidgetLanguage = of(context, LanguageChoice.stored(context))
 
@@ -28,7 +28,7 @@ class WidgetLanguage(
             context: Context,
             choice: LanguageChoice,
         ): WidgetLanguage {
-            val system = context.resources.configuration.locales[0]
+            val locales = context.resources.configuration.locales
             val locale =
                 when (choice) {
                     LanguageChoice.GERMAN -> {
@@ -40,11 +40,12 @@ class WidgetLanguage(
                     }
 
                     LanguageChoice.SYSTEM -> {
-                        if (system.language == "de" || system.language == "en") {
-                            system
-                        } else {
-                            Locale.GERMAN
-                        }
+                        // The first language in the phone's list that the app has texts for
+                        // decides, like Android picks the screens and the ICS file: with Turkish
+                        // before English the screens are English, so the widget is too.
+                        List(locales.size()) { locales[it] }
+                            .firstOrNull { it.language == "de" || it.language == "en" }
+                            ?: Locale.GERMAN
                     }
                 }
             val configuration =
