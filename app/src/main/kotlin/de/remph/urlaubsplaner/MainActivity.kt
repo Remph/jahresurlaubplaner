@@ -18,6 +18,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // With three-button navigation the system lays a translucent scrim over its bar by
+        // default, which showed as a second tone under our navigation bar (Nick, 2026-10-26).
+        // Our bar reaches under the system bar, so without the scrim it is one colour.
+        window.isNavigationBarContrastEnforced = false
         val app = application as UrlaubsplanerApp
         setContent {
             val appearance by app.appearanceStore.state.collectAsStateWithLifecycle()
