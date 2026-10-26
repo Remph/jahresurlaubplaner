@@ -93,8 +93,13 @@ class PlannerViewModel(
         shownMode.value = mode
     }
 
-    /** One month in month mode, one year in year mode; [steps] is -1 or 1. */
+    /**
+     * One month in month mode, one year in year mode; [steps] is -1 or 1. Does nothing at the end
+     * of the calendar: clamping would still move the month (March 2028 to December 2028 in year
+     * mode), and a swipe, unlike the disabled arrow, can reach this.
+     */
     fun step(steps: Long) {
+        if (!canStep(steps)) return
         val month = shownMonth.value
         showMonth(
             if (shownMode.value ==

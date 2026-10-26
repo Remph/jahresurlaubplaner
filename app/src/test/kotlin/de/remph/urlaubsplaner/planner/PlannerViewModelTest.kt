@@ -120,6 +120,17 @@ class PlannerViewModelTest {
     }
 
     @Test
+    fun `stepping past the last year keeps the month instead of clamping it`() {
+        val model = viewModel()
+        model.showMode(CalendarMode.YEAR)
+        model.showMonth(YearMonth.of(2028, 3))
+
+        model.step(1)
+
+        assertEquals(YearMonth.of(2028, 3), model.calendarMonth.value)
+    }
+
+    @Test
     fun `the calendar loads the year of the month it shows`() {
         fixture.fill()
         val model = viewModel()
