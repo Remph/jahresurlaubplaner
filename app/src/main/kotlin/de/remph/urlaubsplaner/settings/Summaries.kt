@@ -2,8 +2,8 @@ package de.remph.urlaubsplaner.settings
 
 import de.remph.urlaubsplaner.core.balance.AmountText
 import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.planner.shortText
 import java.time.DayOfWeek
-import java.time.format.TextStyle
 import java.util.Locale
 
 /**
@@ -17,7 +17,7 @@ fun workDaysSummary(
 ): String {
     val sorted = days.sorted()
     if (sorted.isEmpty()) return ""
-    val name = { day: DayOfWeek -> day.getDisplayName(TextStyle.SHORT, locale).trimEnd('.') }
+    val name = { day: DayOfWeek -> day.shortText(locale) }
     val inARow = sorted.zipWithNext().all { (a, b) -> b.value == a.value + 1 }
     return if (sorted.size >= 3 && inARow) {
         range(name(sorted.first()), name(sorted.last()))

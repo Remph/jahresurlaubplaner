@@ -10,7 +10,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -135,5 +135,19 @@ class AppRootTest {
         compose.waitForIdle()
 
         compose.onNode(tab("Kalender")).assertIsSelected()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a settings page stays open when the user visits another tab and comes back`() {
+        compose.onNode(tab("Einstellungen")).performClick()
+        waitForText("Datensicherung")
+        compose.onNodeWithText("Datensicherung").performClick()
+        waitForText("Sicherung wiederherstellen")
+
+        compose.onNode(tab("Übersicht")).performClick()
+        compose.onNode(tab("Einstellungen")).performClick()
+
+        compose.onNodeWithText("Sicherung wiederherstellen").assertIsDisplayed()
     }
 }

@@ -7,9 +7,11 @@ import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.AmountText
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.schoolholidays.SchoolHoliday
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
@@ -45,5 +47,8 @@ fun LocalDate.weekdayDateText(locale: Locale): String =
     }
 
 /** "Mi" or "Wed": the short weekday without the German full stop. */
-fun LocalDate.weekdayText(locale: Locale): String =
-    dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, locale).trimEnd('.')
+fun LocalDate.weekdayText(locale: Locale): String = dayOfWeek.shortText(locale)
+
+/** The short name Android gives German weekdays is "Mi." with a full stop; the app drops it. */
+fun DayOfWeek.shortText(locale: Locale): String =
+    getDisplayName(TextStyle.SHORT, locale).trimEnd('.')
