@@ -71,8 +71,13 @@ place, so it is the one used here. Both can be installed side by side.
   cloud builds with the shared cloud debug key. A phone does not update from one to the other
   (uninstall first, back up before through Einstellungen > Datensicherung). Pick one source per
   device: the PC build for emulators, the cloud APK for the phone.
-- `.\gradlew connectedDebugAndroidTest` runs the instrumented tests on every connected device or
-  running emulator. There are none yet, so it only proves that the setup works.
+- `.\gradlew connectedDebugAndroidTest` runs the instrumented tests (`app/src/androidTest`) on every
+  connected device or running emulator. Run them on both emulators (API 30 and 37) and **not on
+  your phone**: they empty the app's database, and Gradle uninstalls the app afterwards. A rule in
+  the tests refuses to run anywhere but on an emulator. One emulator only:
+  `.\gradlew connectedDebugAndroidTest` with only that one started, or pick it in Android Studio.
+  What they cover and what not is in the "Instrumented tests" section of
+  [plan.md](plan.md#instrumented-tests-092).
 
 ## The release key
 
