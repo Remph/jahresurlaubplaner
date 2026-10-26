@@ -40,12 +40,13 @@ import java.util.Locale
 @Composable
 fun BridgesCard(
     view: YearView,
+    modifier: Modifier = Modifier,
     onBridge: (Bridge) -> Unit,
 ) {
     val groups = view.bridgeGroups
     if (groups.isEmpty()) return
     val locale = currentLocale()
-    Card {
+    Card(modifier) {
         Text(
             stringResource(R.string.bridges_title),
             style = MaterialTheme.typography.bodySmall,

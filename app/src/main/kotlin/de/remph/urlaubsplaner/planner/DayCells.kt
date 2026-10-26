@@ -1,5 +1,7 @@
 package de.remph.urlaubsplaner.planner
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,6 +91,9 @@ private fun WeekdayHeader(locale: Locale) {
     }
 }
 
+/** The fade of a day's tile when it is marked or unmarked: short, so the status stays first. */
+private val DayFade = tween<Color>(durationMillis = 150)
+
 /** One month as a grid of days, six rows at most. Days outside the month stay empty. */
 @Composable
 fun MonthGrid(
@@ -107,7 +114,11 @@ fun MonthGrid(
                     if (day < 1 || day > month.lengthOfMonth()) {
                         Box(Modifier.weight(1f).height(52.dp))
                     } else {
-                        DayCell(view, month.atDay(day), locale, onDayClick, Modifier.weight(1f))
+                        // Keyed by date: a cell that appears with a new month starts at its colours
+                        // instead of fading from the previous month's day at the same place.
+                        key(month.atDay(day)) {
+                            DayCell(view, month.atDay(day), locale, onDayClick, Modifier.weight(1f))
+                        }
                     }
                 }
             }
@@ -133,20 +144,29 @@ private fun DayCell(
     // 2026-10-25). The tile's colour is the strongest thing the day is; a school holiday under a
     // taken day or a holiday still shows as a bar along the bottom (in the text colour on a taken
     // day, since the wallpaper's colour can be close to any fixed blue).
-    val fill =
+    val fillTarget =
         when {
             look.taken -> colors.taken
             look.holiday -> colors.holiday
             look.school -> colors.school
             else -> MaterialTheme.colorScheme.surfaceContainerLow
         }
-    val textColor =
+    val textTarget =
         when {
             look.taken -> colors.onTaken
             look.holiday -> colors.onHoliday
             !look.workDay -> colors.weekend
             else -> MaterialTheme.colorScheme.onSurface
         }
+    // Marking or removing a day fades the tile instead of flipping it. Compose follows Android's
+    // "Remove animations" setting, so with it on the colours change at once.
+    val fill by animateColorAsState(fillTarget, DayFade, label = "dayFill")
+    val textColor by animateColorAsState(textTarget, DayFade, label = "dayText")
+    val outline by animateColorAsState(
+        if (planned) colors.planned else colors.planned.copy(alpha = 0f),
+        DayFade,
+        label = "dayOutline",
+    )
     val schoolBar = look.school && (look.taken || look.holiday || planned)
     // The touch area is the whole cell; the tile is drawn 2 dp inside it, so a narrow phone does
     // not lose 4 dp of the 48 dp target.
@@ -166,9 +186,17 @@ private fun DayCell(
                     .background(fill)
                     .then(
                         when {
-                            planned -> Modifier.border(BorderStroke(2.dp, colors.planned), shape)
-                            look.bridge -> Modifier.dashedBorder(colors.planned, shape)
-                            else -> Modifier
+                            planned || outline.alpha > 0f -> {
+                                Modifier.border(BorderStroke(2.dp, outline), shape)
+                            }
+
+                            look.bridge -> {
+                                Modifier.dashedBorder(colors.planned, shape)
+                            }
+
+                            else -> {
+                                Modifier
+                            }
                         },
                     ),
             contentAlignment = Alignment.Center,

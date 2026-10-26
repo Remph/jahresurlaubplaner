@@ -56,6 +56,24 @@ class PlannerViewModelTest {
     }
 
     @Test
+    fun `the numbers count up once per start of the app`() {
+        val model = viewModel()
+
+        assertTrue(model.takeIntro())
+        assertFalse(model.takeIntro())
+    }
+
+    @Test
+    fun `a number counts from zero to its value and shows exactly the value at the end`() {
+        val thirtyThree = VacationDays.of(33)
+
+        assertEquals(VacationDays.ZERO, thirtyThree.countedUp(0f))
+        assertEquals(VacationDays.ofHalves(33), thirtyThree.countedUp(0.5f))
+        assertEquals(thirtyThree, thirtyThree.countedUp(1f))
+        assertEquals(VacationDays.ofHalves(-4), VacationDays.ofHalves(-9).countedUp(0.5f))
+    }
+
+    @Test
     fun `a fresh start has no Land and no balance`() {
         val view = await(viewModel().overview)
 

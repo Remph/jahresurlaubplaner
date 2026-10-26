@@ -1,6 +1,8 @@
 package de.remph.urlaubsplaner.settings
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.appearance.AppearanceStore
 import de.remph.urlaubsplaner.core.holidays.Bundesland
+import de.remph.urlaubsplaner.ui.rememberSharedAxis
 
 /** The settings list and the small page behind each row. */
 enum class SettingsPage { LIST, VACATION, WORK_DAYS, REGIONAL, APPEARANCE, CALENDAR_EXPORT, BACKUP }
@@ -56,33 +59,44 @@ fun SettingsHost(
         }
     }
 
-    when (page) {
-        SettingsPage.LIST -> {
-            SettingsListScreen(ui, viewModel, appearanceStore, outerPadding) { page = it }
-        }
+    val axis = rememberSharedAxis<SettingsPage>()
+    AnimatedContent(
+        page,
+        transitionSpec = {
+            axis(
+                initialState == SettingsPage.LIST,
+            ).using(SizeTransform(clip = false))
+        },
+        label = "settingsPage",
+    ) { shown ->
+        when (shown) {
+            SettingsPage.LIST -> {
+                SettingsListScreen(ui, viewModel, appearanceStore, outerPadding) { page = it }
+            }
 
-        SettingsPage.VACATION -> {
-            VacationPage(ui, viewModel, outerPadding, leave)
-        }
+            SettingsPage.VACATION -> {
+                VacationPage(ui, viewModel, outerPadding, leave)
+            }
 
-        SettingsPage.WORK_DAYS -> {
-            WorkDaysPage(ui, viewModel, outerPadding, leave)
-        }
+            SettingsPage.WORK_DAYS -> {
+                WorkDaysPage(ui, viewModel, outerPadding, leave)
+            }
 
-        SettingsPage.REGIONAL -> {
-            RegionalPage(ui, viewModel, outerPadding, leave)
-        }
+            SettingsPage.REGIONAL -> {
+                RegionalPage(ui, viewModel, outerPadding, leave)
+            }
 
-        SettingsPage.APPEARANCE -> {
-            AppearancePage(appearanceStore, outerPadding, leave)
-        }
+            SettingsPage.APPEARANCE -> {
+                AppearancePage(appearanceStore, outerPadding, leave)
+            }
 
-        SettingsPage.CALENDAR_EXPORT -> {
-            CalendarExportPage(viewModel, outerPadding, leave)
-        }
+            SettingsPage.CALENDAR_EXPORT -> {
+                CalendarExportPage(viewModel, outerPadding, leave)
+            }
 
-        SettingsPage.BACKUP -> {
-            BackupPage(ui, viewModel, outerPadding, leave)
+            SettingsPage.BACKUP -> {
+                BackupPage(ui, viewModel, outerPadding, leave)
+            }
         }
     }
 

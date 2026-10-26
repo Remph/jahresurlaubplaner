@@ -1,5 +1,9 @@
 package de.remph.urlaubsplaner.planner
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,24 +23,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.ui.rememberAnimationsRemoved
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * Status first: how many days are left, what was taken and planned, a warning when Resturlaub
@@ -121,17 +133,20 @@ private fun Status(
     val locale = currentLocale()
     val balance = view.balance ?: return
     val overbooked = balance.remaining < VacationDays.ZERO
+    val intro = rememberIntro(viewModel)
 
     // The one number that matters, first.
-    Column(Modifier.semantics(mergeDescendants = true) {}) {
+    Column(Modifier.riseIn(intro, 0).semantics(mergeDescendants = true) {}) {
         Text(
             text = stringResource(R.string.days_left_label, view.year),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.semantics { heading() },
         )
+        val left = balance.remaining.text(locale)
         Text(
-            text = balance.remaining.text(locale),
+            text = balance.remaining.countedUp(countFraction(intro)).text(locale),
+            modifier = Modifier.clearAndSetSemantics { text = AnnotatedString(left) },
             style = MaterialTheme.typography.displayLarge,
             color =
                 if (overbooked) {
@@ -148,26 +163,31 @@ private fun Status(
             )
         }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Figure(R.string.taken, balance.taken.text(locale), Modifier.weight(1f))
-        Figure(R.string.planned, balance.planned.text(locale), Modifier.weight(1f))
-        val total = (balance.entitlement + balance.carryOver).text(locale)
-        Figure(R.string.of_total, total, Modifier.weight(1f))
+    Row(Modifier.riseIn(intro, 1), Arrangement.spacedBy(12.dp)) {
+        Figure(R.string.taken, balance.taken, intro, locale, Modifier.weight(1f))
+        Figure(R.string.planned, balance.planned, intro, locale, Modifier.weight(1f))
+        val total = balance.entitlement + balance.carryOver
+        Figure(R.string.of_total, total, intro, locale, Modifier.weight(1f))
     }
 
     val open = balance.carryOverOpen
     if (open > VacationDays.ZERO && !view.today.isAfter(balance.carryOverExpiry)) {
-        CarryOverWarning(open, balance.carryOverExpiry.mediumText(locale), locale)
+        CarryOverWarning(
+            open,
+            balance.carryOverExpiry.mediumText(locale),
+            locale,
+            Modifier.riseIn(intro, 2),
+        )
     }
 
-    Card {
+    Card(Modifier.riseIn(intro, 3)) {
         NextTrip(view, locale)
         NextHoliday(view, locale)
     }
 
-    BridgesCard(view) { sheetStart = it.leave.first() }
+    BridgesCard(view, Modifier.riseIn(intro, 4)) { sheetStart = it.leave.first() }
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.riseIn(intro, 5), Arrangement.spacedBy(8.dp)) {
         Text(
             text = view.year.toString(),
             style = MaterialTheme.typography.titleMedium,
@@ -192,10 +212,72 @@ private fun Status(
     }
 }
 
+/**
+ * Milliseconds since the app started counting up and sliding in the panels; [INTRO_MILLIS] at every
+ * other time. A screen reader gets the final numbers at once (see the semantics on the texts), and
+ * "Remove animations" makes the whole intro jump to the end.
+ */
+@Composable
+private fun rememberIntro(viewModel: PlannerViewModel): Float {
+    val animationsRemoved = rememberAnimationsRemoved()
+    // takeIntro() first: the start counts as played even when there is nothing to play.
+    val elapsed =
+        remember {
+            Animatable(
+                if (viewModel.takeIntro() &&
+                    !animationsRemoved
+                ) {
+                    0f
+                } else {
+                    INTRO_MILLIS
+                },
+            )
+        }
+    LaunchedEffect(Unit) {
+        if (elapsed.value < INTRO_MILLIS) {
+            elapsed.animateTo(INTRO_MILLIS, tween(INTRO_MILLIS.toInt(), easing = LinearEasing))
+        }
+    }
+    return elapsed.value
+}
+
+private fun countFraction(elapsed: Float) =
+    Decelerate.transform((elapsed / COUNT_UP_MILLIS).coerceIn(0f, 1f))
+
+/** Each panel rises a little and fades in, one after the other (the [index] sets the order). */
+private fun Modifier.riseIn(
+    elapsed: Float,
+    index: Int,
+): Modifier =
+    if (elapsed >= INTRO_MILLIS) {
+        this
+    } else {
+        graphicsLayer {
+            val t =
+                Decelerate.transform(
+                    ((elapsed - index * RISE_STAGGER_MILLIS) / RISE_MILLIS).coerceIn(0f, 1f),
+                )
+            alpha = t
+            translationY = (1 - t) * RISE_DISTANCE.toPx()
+        }
+    }
+
+internal fun VacationDays.countedUp(progress: Float) =
+    if (progress >= 1f) this else VacationDays.ofHalves((days * 2 * progress).roundToInt())
+
+private const val COUNT_UP_MILLIS = 700f
+private const val RISE_MILLIS = 380f
+private const val RISE_STAGGER_MILLIS = 70f
+private const val INTRO_MILLIS = 1000f
+private val RISE_DISTANCE = 22.dp
+private val Decelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
+
 @Composable
 private fun Figure(
     label: Int,
-    value: String,
+    value: VacationDays,
+    intro: Float,
+    locale: Locale,
     modifier: Modifier,
 ) {
     Surface(
@@ -204,7 +286,12 @@ private fun Figure(
         modifier = modifier,
     ) {
         Column(Modifier.padding(12.dp).semantics(mergeDescendants = true) {}) {
-            Text(value, style = MaterialTheme.typography.headlineSmall)
+            val final = value.text(locale)
+            Text(
+                value.countedUp(countFraction(intro)).text(locale),
+                modifier = Modifier.clearAndSetSemantics { text = AnnotatedString(final) },
+                style = MaterialTheme.typography.headlineSmall,
+            )
             Text(
                 stringResource(label),
                 style = MaterialTheme.typography.bodySmall,
@@ -219,12 +306,13 @@ private fun CarryOverWarning(
     open: VacationDays,
     expiry: String,
     locale: Locale,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         shape = MaterialTheme.shapes.large,
         color = dayColors().holiday,
         contentColor = dayColors().onHoliday,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Row(
             Modifier.padding(16.dp).semantics(mergeDescendants = true) {},
@@ -241,11 +329,14 @@ private fun CarryOverWarning(
 }
 
 @Composable
-internal fun Card(content: @Composable () -> Unit) {
+internal fun Card(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
     Surface(
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             content()
