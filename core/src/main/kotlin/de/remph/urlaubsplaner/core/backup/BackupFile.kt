@@ -141,7 +141,8 @@ object BackupFile {
             }
             buffer.write(chunk, 0, count)
         }
-        return decode(buffer.toString(Charsets.UTF_8))
+        // Not buffer.toString(Charset): that overload is Java 10 and missing below Android 13.
+        return decode(buffer.toByteArray().decodeToString())
     }
 
     /** @throws BackupException when [text] is not a backup this app can restore completely. */
