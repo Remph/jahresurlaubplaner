@@ -3,6 +3,8 @@ package de.remph.urlaubsplaner.data
 import android.content.Context
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -35,6 +37,8 @@ class MigrationTest {
         MigrationTestHelper(
             InstrumentationRegistry.getInstrumentation(),
             UrlaubsplanerDatabase::class.java,
+            emptyList(),
+            AbsoluteNameOpenHelperFactory(),
         )
 
     @Test
@@ -157,6 +161,26 @@ class MigrationTest {
             assertEquals(1, later?.carryOverExpiryYears)
         } finally {
             database.close()
+        }
+    }
+
+    /**
+     * [MigrationTestHelper] opens the database by its absolute path, while androidx.sqlite 2.6.2
+     * (`SupportSQLiteDriver`) compares that path with the helper's name only after the last '/'.
+     * That never matches a Windows path, so the helper reports the absolute path as its name.
+     */
+    private class AbsoluteNameOpenHelperFactory : SupportSQLiteOpenHelper.Factory {
+        private val framework = FrameworkSQLiteOpenHelperFactory()
+
+        override fun create(
+            configuration: SupportSQLiteOpenHelper.Configuration,
+        ): SupportSQLiteOpenHelper {
+            val helper = framework.create(configuration)
+            val name = configuration.name
+            val path = name?.let { configuration.context.getDatabasePath(it).absolutePath }
+            return object : SupportSQLiteOpenHelper by helper {
+                override val databaseName: String? = path
+            }
         }
     }
 
