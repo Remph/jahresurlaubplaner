@@ -246,7 +246,10 @@
     <string name="holiday_weihnachtstag_2">Boxing Day</string>
 
     <!-- Widget -->
-    <string name="widget_description">Shows your days left and your next vacation.</string>
+    <string name="widget_description_small">Shows your days left and the date of your next vacation.</string>
+    <string name="widget_description_big">Shows your days left, your next vacation with its cost and your totals.</string>
+    <string name="widget_label_small">Urlaubsplaner (small)</string>
+    <string name="widget_label_big">Urlaubsplaner (big)</string>
     <string name="widget_days_left">days left</string>
     <string name="widget_days_left_year">days left %1$d</string>
     <string name="widget_overbooked">overbooked</string>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The big widget: 4x2 and a fixed size (Nick, 2026-10-26), so the next trip and the three figures
+     always have the room the layout was made for. Before Android 12 the minimum size decides the
+     cells (4 x 2 here). The small widget is widget_info.xml. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="UnusedAttribute"
+    android:description="@string/widget_description_big"
+    android:configure="de.remph.urlaubsplaner.widget.WidgetConfigActivity"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:resizeMode="none"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable" />

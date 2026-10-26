@@ -2,7 +2,6 @@ package de.remph.urlaubsplaner.widget
 
 import android.content.Context
 import android.content.Intent
-import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.testing.unit.hasStartActivityClickAction
 import androidx.glance.appwidget.testing.unit.runGlanceAppWidgetUnitTest
 import androidx.glance.testing.GlanceNodeMatcher
@@ -43,8 +42,7 @@ class WidgetContentTest {
     fun `the wide widget shows the number, the trip, its cost and the three figures`() =
         runGlanceAppWidgetUnitTest {
             setContext(context)
-            setAppWidgetSize(WIDE_SIZE)
-            provideComposable { WidgetContent(status, WidgetStyle()) }
+            provideComposable { WidgetContent(status, WidgetStyle(), WidgetLayout.BIG) }
 
             onNode(hasText("12,5")).assertExists()
             onNode(hasText("Tage übrig 2027")).assertExists()
@@ -61,9 +59,8 @@ class WidgetContentTest {
     fun `the warning takes the place of the figures`() =
         runGlanceAppWidgetUnitTest {
             setContext(context)
-            setAppWidgetSize(WIDE_SIZE)
             val warned = status.copy(warning = "3 Tage Resturlaub verfallen am 31.03.")
-            provideComposable { WidgetContent(warned, WidgetStyle()) }
+            provideComposable { WidgetContent(warned, WidgetStyle(), WidgetLayout.BIG) }
 
             onNode(hasText("3 Tage Resturlaub verfallen am 31.03.")).assertExists()
             onNode(hasText("Genommen 8")).assertDoesNotExist()
@@ -73,8 +70,7 @@ class WidgetContentTest {
     fun `the small widget shows the number and one line`() =
         runGlanceAppWidgetUnitTest {
             setContext(context)
-            setAppWidgetSize(SMALL_SIZE)
-            provideComposable { WidgetContent(status, WidgetStyle()) }
+            provideComposable { WidgetContent(status, WidgetStyle(), WidgetLayout.SMALL) }
 
             onNode(hasText("12,5")).assertExists()
             onNode(hasText("Tage übrig")).assertExists()
@@ -87,8 +83,7 @@ class WidgetContentTest {
     fun `a tap on a status opens the overview`() =
         runGlanceAppWidgetUnitTest {
             setContext(context)
-            setAppWidgetSize(SMALL_SIZE)
-            provideComposable { WidgetContent(status, WidgetStyle()) }
+            provideComposable { WidgetContent(status, WidgetStyle(), WidgetLayout.SMALL) }
 
             onNode(hasStartActivityClickAction(open(Tab.OVERVIEW))).assertExists()
             onNode(hasStartActivityClickAction(open(Tab.SETTINGS))).assertDoesNotExist()
@@ -98,13 +93,18 @@ class WidgetContentTest {
     fun `a missing input is a prompt and a tap opens the settings`() =
         runGlanceAppWidgetUnitTest {
             setContext(context)
-            setAppWidgetSize(WIDE_SIZE)
             val prompt =
                 WidgetModel.Prompt(
                     "Bundesland wählen",
                     "Dann zeigt das Widget deinen Urlaub.",
                 )
-            provideComposable { WidgetContent(prompt, WidgetStyle(transparencyPercent = 50)) }
+            provideComposable {
+                WidgetContent(
+                    prompt,
+                    WidgetStyle(transparencyPercent = 50),
+                    WidgetLayout.BIG,
+                )
+            }
 
             onNode(hasText("Bundesland wählen")).assertExists()
             onNode(hasText("Dann zeigt das Widget deinen Urlaub.")).assertExists()
@@ -115,25 +115,11 @@ class WidgetContentTest {
     fun `the small prompt is the title alone`() =
         runGlanceAppWidgetUnitTest {
             setContext(context)
-            setAppWidgetSize(SMALL_SIZE)
             val prompt = WidgetModel.Prompt("Urlaubstage eintragen", "Für 2027 fehlen sie noch.")
-            provideComposable { WidgetContent(prompt, WidgetStyle()) }
+            provideComposable { WidgetContent(prompt, WidgetStyle(), WidgetLayout.SMALL) }
 
             onNode(hasText("Urlaubstage eintragen")).assertExists()
             onNode(hasText("Für 2027 fehlen sie noch.")).assertDoesNotExist()
-        }
-
-    @Test
-    fun `the widget draws at the size between the two layouts as the small one`() =
-        runGlanceAppWidgetUnitTest {
-            setContext(context)
-            setAppWidgetSize(
-                androidx.compose.ui.unit
-                    .DpSize(250.dp, 60.dp),
-            )
-            provideComposable { WidgetContent(status, WidgetStyle()) }
-
-            onNode(hasText("Nächster Urlaub 14.04.")).assertExists()
         }
 
     private fun hasMaxLines(
@@ -149,9 +135,8 @@ class WidgetContentTest {
     fun `the trip texts of the wide widget may wrap to two lines`() =
         runGlanceAppWidgetUnitTest {
             setContext(context)
-            setAppWidgetSize(WIDE_SIZE)
             val none = status.copy(tripWhen = "Noch kein Urlaub geplant", tripCost = null)
-            provideComposable { WidgetContent(none, WidgetStyle()) }
+            provideComposable { WidgetContent(none, WidgetStyle(), WidgetLayout.BIG) }
 
             onNode(hasMaxLines("Noch kein Urlaub geplant", 2)).assertExists()
             onNode(hasMaxLines("Nächster Urlaub", 2)).assertExists()
@@ -161,9 +146,8 @@ class WidgetContentTest {
     fun `the Resturlaub warning may wrap to two lines`() =
         runGlanceAppWidgetUnitTest {
             setContext(context)
-            setAppWidgetSize(WIDE_SIZE)
             val warned = status.copy(warning = "3 Tage Resturlaub verfallen am 31.03.")
-            provideComposable { WidgetContent(warned, WidgetStyle()) }
+            provideComposable { WidgetContent(warned, WidgetStyle(), WidgetLayout.BIG) }
 
             onNode(hasMaxLines("3 Tage Resturlaub verfallen am 31.03.", 2)).assertExists()
         }

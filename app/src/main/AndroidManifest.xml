@@ -34,13 +34,14 @@
             </intent-filter>
         </activity>
 
-        <!-- The home screen widget. The date and time broadcasts redraw it when the day changes;
-             whether Android delivers them to a manifest receiver is not verified on a phone, so
-             the provider's update period is the safety net. -->
+        <!-- The two home screen widgets, small (2x1) and big (4x2). The date and time broadcasts
+             redraw them when the day changes; whether Android delivers them to a manifest receiver
+             is not verified on a phone, so the provider's update period is the safety net. The
+             small one keeps the receiver name of the one widget that came before. -->
         <receiver
             android:name=".widget.UrlaubsplanerWidgetReceiver"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="@string/widget_label_small">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
@@ -51,6 +52,21 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.UrlaubsplanerBigWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_label_big">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_big" />
         </receiver>
 
         <!-- Hands the calendar file to a calendar app, that one file only. -->

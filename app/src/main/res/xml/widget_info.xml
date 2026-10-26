@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One resizable widget: 2x1 and up (the target cells count from Android 12, before that the
-     minimum size does), the layout changes at 4x2. Set up when placed, and again by
-     long press from Android 12. No preview image yet (M5, with the launcher icon). -->
+<!-- The small widget: 2x1 (the target cells count from Android 12, before that the minimum size
+     does), the small layout at any size. The big one is widget_info_big.xml. Set up when placed,
+     and again by long press from Android 12. No preview image yet (M5, with the launcher icon). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="UnusedAttribute"
-    android:description="@string/widget_description"
+    android:description="@string/widget_description_small"
     android:configure="de.remph.urlaubsplaner.widget.WidgetConfigActivity"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:minWidth="110dp"

@@ -22,11 +22,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 
 /**
- * The home screen widget, one widget with two layouts: the launcher picks by the size the user
- * gives it (small 2x1, wide 4x2). Each widget keeps its own [WidgetStyle] in Glance's state.
+ * The home screen widget. There are two in the launcher's picker (Nick, 2026-10-26): the small one
+ * (2x1) and [UrlaubsplanerBigWidget] (4x2), each with its own layout, so the text always has the
+ * room it was made for. Each placed widget keeps its own [WidgetStyle] in Glance's state.
  */
-class UrlaubsplanerWidget : GlanceAppWidget() {
-    override val sizeMode = SizeMode.Responsive(setOf(SMALL_SIZE, WIDE_SIZE))
+open class UrlaubsplanerWidget(
+    private val layout: WidgetLayout = WidgetLayout.SMALL,
+) : GlanceAppWidget() {
+    // The cell the launcher gives is the size of the layout; nothing to choose between.
+    override val sizeMode = SizeMode.Single
 
     override suspend fun provideGlance(
         context: Context,
@@ -38,7 +42,7 @@ class UrlaubsplanerWidget : GlanceAppWidget() {
         val first = load(context)
         provideContent {
             val model = liveModel(first, seen, refresher.revision) { load(context) }
-            WidgetContent(model, WidgetStyle.from(currentState<Preferences>()))
+            WidgetContent(model, WidgetStyle.from(currentState<Preferences>()), layout)
         }
     }
 
@@ -73,9 +77,11 @@ internal fun liveModel(
     return model
 }
 
-class UrlaubsplanerWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = UrlaubsplanerWidget()
+/** The big widget, 4x2: the layout with the next trip, its cost and the three figures. */
+class UrlaubsplanerBigWidget : UrlaubsplanerWidget(WidgetLayout.BIG)
 
+/** Both receivers keep their widget current the same way. */
+abstract class WidgetReceiver : GlanceAppWidgetReceiver() {
     override fun onReceive(
         context: Context,
         intent: Intent,
@@ -102,5 +108,34 @@ class UrlaubsplanerWidgetReceiver : GlanceAppWidgetReceiver() {
                 Intent.ACTION_TIME_CHANGED,
                 Intent.ACTION_TIMEZONE_CHANGED,
             )
+    }
+}
+
+/**
+ * The small widget. Its class name is what widgets placed before there were two sizes belong to,
+ * so it must not change; those keep working and show the small layout.
+ */
+class UrlaubsplanerWidgetReceiver : WidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = UrlaubsplanerWidget()
+}
+
+class UrlaubsplanerBigWidgetReceiver : WidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = UrlaubsplanerBigWidget()
+}
+
+/** The receivers of both widgets, to find the placed ones. */
+internal val WIDGET_RECEIVERS =
+    listOf(UrlaubsplanerWidgetReceiver::class.java, UrlaubsplanerBigWidgetReceiver::class.java)
+
+/** The widget a placed widget id belongs to, by its provider; the small one if it is unknown. */
+internal fun widgetFor(
+    context: Context,
+    appWidgetId: Int,
+): UrlaubsplanerWidget {
+    val provider = AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId)?.provider
+    return if (provider?.className == UrlaubsplanerBigWidgetReceiver::class.java.name) {
+        UrlaubsplanerBigWidget()
+    } else {
+        UrlaubsplanerWidget()
     }
 }
