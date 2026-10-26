@@ -182,4 +182,41 @@ class AppRootTest {
         waitForText("Bundesland wählen")
         compose.onAllNodesWithText("Sicherung wiederherstellen").assertCountEquals(0)
     }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `switching tabs fades, so both screens exist half way and only the new one at the end`() {
+        waitForText("Einstellungen öffnen")
+        compose.mainClock.autoAdvance = false
+
+        compose.onNode(tab("Einstellungen")).performClick()
+        compose.mainClock.advanceTimeBy(60)
+
+        compose.onNodeWithText("Einstellungen öffnen").assertExists()
+        compose.onNodeWithText("Bundesland wählen").assertExists()
+
+        compose.mainClock.advanceTimeBy(500)
+
+        compose.onNodeWithText("Einstellungen öffnen").assertDoesNotExist()
+        compose.onNodeWithText("Bundesland wählen").assertExists()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a settings page slides in, so both exist half way and only the page at the end`() {
+        compose.onNode(tab("Einstellungen")).performClick()
+        waitForText("Datensicherung")
+        compose.mainClock.autoAdvance = false
+
+        compose.onNodeWithText("Datensicherung").performClick()
+        compose.mainClock.advanceTimeBy(60)
+
+        compose.onNodeWithText("Bundesland wählen").assertExists()
+        compose.onNodeWithText("Sicherung wiederherstellen").assertExists()
+
+        compose.mainClock.advanceTimeBy(500)
+
+        compose.onNodeWithText("Bundesland wählen").assertDoesNotExist()
+        compose.onNodeWithText("Sicherung wiederherstellen").assertExists()
+    }
 }

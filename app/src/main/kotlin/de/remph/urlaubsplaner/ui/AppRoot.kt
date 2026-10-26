@@ -1,5 +1,7 @@
 package de.remph.urlaubsplaner.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
@@ -14,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -60,8 +63,14 @@ fun AppRoot(
     val tabState = rememberSaveableStateHolder()
     // A button or the widget that says "settings" means the list, not the page left open earlier;
     // only the tab bar brings back where the user was.
+    // The old settings screen is still composed while it fades out and saves its state when it
+    // goes, so removing the state is not enough; a new key makes the next settings screen start fresh.
+    var settingsGeneration by rememberSaveable { mutableIntStateOf(0) }
     val show = { target: Tab ->
-        if (target == Tab.SETTINGS && tab != Tab.SETTINGS) tabState.removeState(Tab.SETTINGS)
+        if (target == Tab.SETTINGS && tab != Tab.SETTINGS) {
+            tabState.removeState(stateKey(Tab.SETTINGS, settingsGeneration))
+            settingsGeneration++
+        }
         tab = target
     }
     // A tap on the widget asks for a tab; it wins over where the user was.
@@ -84,33 +93,54 @@ fun AppRoot(
             }
         },
     ) { padding ->
-        tabState.SaveableStateProvider(tab) {
-            when (tab) {
-                Tab.OVERVIEW -> {
-                    OverviewScreen(
-                        plannerViewModel,
-                        padding,
-                        onOpenSettings = { show(Tab.SETTINGS) },
-                        onOpenMonth = {
-                            plannerViewModel.showMode(CalendarMode.MONTH)
-                            plannerViewModel.showMonth(it)
-                            tab = Tab.CALENDAR
-                        },
-                    )
-                }
+        // The tabs slide a short way in the direction of the tab bar, with a fade.
+        val axis = rememberSharedAxis<Tab>()
+        AnimatedContent(
+            tab,
+            transitionSpec = {
+                axis(targetState.ordinal > initialState.ordinal).using(SizeTransform(clip = false))
+            },
+            label = "tab",
+        ) { shown ->
+            tabState.SaveableStateProvider(stateKey(shown, settingsGeneration)) {
+                when (shown) {
+                    Tab.OVERVIEW -> {
+                        OverviewScreen(
+                            plannerViewModel,
+                            padding,
+                            onOpenSettings = { show(Tab.SETTINGS) },
+                            onOpenMonth = {
+                                plannerViewModel.showMode(CalendarMode.MONTH)
+                                plannerViewModel.showMonth(it)
+                                tab = Tab.CALENDAR
+                            },
+                        )
+                    }
 
-                Tab.CALENDAR -> {
-                    CalendarScreen(
-                        plannerViewModel,
-                        padding,
-                        onOpenSettings = { show(Tab.SETTINGS) },
-                    )
-                }
+                    Tab.CALENDAR -> {
+                        CalendarScreen(
+                            plannerViewModel,
+                            padding,
+                            onOpenSettings = { show(Tab.SETTINGS) },
+                        )
+                    }
 
-                Tab.SETTINGS -> {
-                    SettingsHost(settingsViewModel, appearanceStore, snackbar, padding)
+                    Tab.SETTINGS -> {
+                        SettingsHost(settingsViewModel, appearanceStore, snackbar, padding)
+                    }
                 }
             }
         }
     }
+}
+
+private fun stateKey(
+    tab: Tab,
+    settingsGeneration: Int,
+) = if (tab ==
+    Tab.SETTINGS
+) {
+    "SETTINGS$settingsGeneration"
+} else {
+    tab.name
 }
