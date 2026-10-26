@@ -21,6 +21,8 @@ You need JDK 17 or newer and the Android SDK (platform 37; set `ANDROID_HOME` or
 
 The debug APK is `app/build/outputs/apk/debug/app-debug.apk`.
 
+Setting up a Windows PC with Android Studio, a phone and emulators: [docs/dev-setup.md](docs/dev-setup.md).
+
 ## Install
 
 - **F-Droid:** planned; the app is not in the F-Droid repository yet.
