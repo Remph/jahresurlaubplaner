@@ -17,6 +17,7 @@ import de.remph.urlaubsplaner.core.holidays.RegionalExtra
 import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
 import de.remph.urlaubsplaner.core.settings.UserSettings
 import de.remph.urlaubsplaner.data.BackupFileStore
+import de.remph.urlaubsplaner.data.CalendarFileStore
 import de.remph.urlaubsplaner.data.UrlaubsplanerDatabase
 import de.remph.urlaubsplaner.data.UserDataRepository
 import kotlinx.coroutines.Dispatchers
@@ -81,7 +82,12 @@ class SettingsViewModelTest {
 
     private fun viewModel(): SettingsViewModel {
         val viewModel =
-            SettingsViewModel(repository, BackupFileStore(context.contentResolver), clock)
+            SettingsViewModel(
+                repository,
+                BackupFileStore(context.contentResolver),
+                CalendarExporter(repository, CalendarFileStore(context), clock),
+                clock,
+            )
         // The store clears it after the test, which cancels its viewModelScope.
         viewModels.put("settings-${created++}", viewModel)
         return viewModel

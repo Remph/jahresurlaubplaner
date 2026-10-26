@@ -21,11 +21,13 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.appearance.AppearanceStore
 import de.remph.urlaubsplaner.appearance.ThemeMode
+import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.YearEntitlement
 import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.settings.UserSettings
 import de.remph.urlaubsplaner.data.BackupFileStore
+import de.remph.urlaubsplaner.data.CalendarFileStore
 import de.remph.urlaubsplaner.data.UrlaubsplanerDatabase
 import de.remph.urlaubsplaner.data.UserDataRepository
 import kotlinx.coroutines.Dispatchers
@@ -68,7 +70,13 @@ class SettingsScreenTest {
         database = Room.inMemoryDatabaseBuilder(context, UrlaubsplanerDatabase::class.java).build()
         repository = UserDataRepository(database)
         val clock = Clock.fixed(Instant.parse("2027-01-15T10:00:00Z"), ZoneOffset.UTC)
-        viewModel = SettingsViewModel(repository, BackupFileStore(context.contentResolver), clock)
+        viewModel =
+            SettingsViewModel(
+                repository,
+                BackupFileStore(context.contentResolver),
+                CalendarExporter(repository, CalendarFileStore(context), clock),
+                clock,
+            )
         val preferences = context.getSharedPreferences("appearance-test", Context.MODE_PRIVATE)
         preferences.edit().clear().commit()
         appearance = AppearanceStore(preferences)
@@ -323,5 +331,54 @@ class SettingsScreenTest {
 
         waitForText("Vorschlag aus 2026", substring = true)
         compose.onNodeWithText("läuft noch", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the calendar export row only shows with a Land`() {
+        show("Einstellungen")
+        compose.onNodeWithText("Kalender-Export").assertDoesNotExist()
+
+        chooseLand(Bundesland.BAYERN, "Bayern")
+
+        compose.onNodeWithText("Kalender-Export").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the calendar export page names the trips and offers send and save`() {
+        runBlocking {
+            repository.saveSettings(UserSettings(land = Bundesland.NORDRHEIN_WESTFALEN))
+            repository.markAll(
+                listOf(
+                    java.time.LocalDate.parse("2027-03-16"),
+                    java.time.LocalDate.parse("2027-03-17"),
+                ),
+                DayMark.FULL,
+            )
+        }
+        show("Einstellungen")
+        waitForText("Nordrhein-Westfalen")
+        openRow("Kalender-Export")
+
+        waitForText("1 Urlaub in der Datei")
+        compose.onNodeWithText("Senden oder in Kalender öffnen").assertIsEnabled()
+        compose.onNodeWithText("Als Datei speichern").assertIsEnabled()
+        compose
+            .onNodeWithText("Feiertage und Schulferien sind nicht dabei", substring = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the calendar export page in English with no vacation has both buttons off`() {
+        runBlocking { repository.saveSettings(UserSettings(land = Bundesland.NORDRHEIN_WESTFALEN)) }
+        show("Settings")
+        waitForText("North Rhine-Westphalia")
+        openRow("Calendar export")
+
+        waitForText("No vacation entered yet", substring = true)
+        compose.onNodeWithText("Send or open in calendar").assertIsNotEnabled()
+        compose.onNodeWithText("Save as file").assertIsNotEnabled()
     }
 }

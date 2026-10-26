@@ -15,10 +15,13 @@ import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.holidays.PublicHolidays
 import de.remph.urlaubsplaner.core.holidays.RegionalExtra
 import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
+import de.remph.urlaubsplaner.core.ics.IcsLanguage
 import de.remph.urlaubsplaner.core.settings.UserSettings
 import de.remph.urlaubsplaner.data.BackupFileStore
 import de.remph.urlaubsplaner.data.UserDataRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +29,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,6 +51,7 @@ import java.time.MonthDay
 class SettingsViewModel(
     private val repository: UserDataRepository,
     private val store: BackupFileStore,
+    private val calendar: CalendarExporter,
     private val clock: Clock,
 ) : ViewModel() {
     /** The year the page starts on, and the one the settings list shows. */
@@ -292,6 +297,45 @@ class SettingsViewModel(
             }
             this@SettingsViewModel.edits.value = Edits(current.year)
             notice.value = Notice.EntitlementSaved
+        }
+    }
+
+    // Calendar file (ICS).
+
+    private val shareRequests = Channel<Uri>(Channel.BUFFERED)
+
+    /** Each address is a calendar file ready for the share sheet; the screen opens the sheet. */
+    val shares: Flow<Uri> = shareRequests.receiveAsFlow()
+
+    /** The number of events the file would hold, read when the page opens. */
+    suspend fun calendarTripCount(): Int = calendar.tripCount()
+
+    fun suggestedCalendarName(): String = calendar.suggestedFileName()
+
+    fun saveCalendar(
+        uri: Uri,
+        language: IcsLanguage,
+    ) {
+        viewModelScope.launch {
+            notice.value =
+                try {
+                    calendar.save(uri, language)
+                    Notice.CalendarSaved
+                } catch (_: IOException) {
+                    Notice.ExportFailed
+                } catch (_: SecurityException) {
+                    Notice.ExportFailed
+                }
+        }
+    }
+
+    fun shareCalendar(language: IcsLanguage) {
+        viewModelScope.launch {
+            try {
+                calendar.shareUri(language)?.let { shareRequests.send(it) }
+            } catch (_: IOException) {
+                notice.value = Notice.ExportFailed
+            }
         }
     }
 

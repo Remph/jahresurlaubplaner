@@ -1,0 +1,91 @@
+package de.remph.urlaubsplaner.settings
+
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import de.remph.urlaubsplaner.R
+import de.remph.urlaubsplaner.core.ics.IcsExport
+import de.remph.urlaubsplaner.core.ics.IcsLanguage
+
+/** The vacation as a calendar file: sent to another app through the share sheet, or saved. */
+@Composable
+fun CalendarExportPage(
+    viewModel: SettingsViewModel,
+    outerPadding: PaddingValues,
+    onBack: () -> Unit,
+) {
+    val context = LocalContext.current
+    // The texts in the file follow the language the screens show right now.
+    val language = IcsLanguage.of(LocalConfiguration.current.locales[0])
+    var trips by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(Unit) { trips = viewModel.calendarTripCount() }
+
+    val shareTitle = stringResource(R.string.calendar_export_share_title)
+    LaunchedEffect(Unit) {
+        viewModel.shares.collect { uri -> context.startActivity(shareIntent(uri, shareTitle)) }
+    }
+    val saveLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument(IcsExport.MIME_TYPE),
+        ) { uri: Uri? -> uri?.let { viewModel.saveCalendar(it, language) } }
+
+    SettingsPageFrame(stringResource(R.string.section_calendar_export), outerPadding, onBack) {
+        Text(
+            stringResource(R.string.calendar_export_explain),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        val count = trips
+        if (count != null) {
+            Text(
+                if (count == 0) {
+                    stringResource(R.string.calendar_export_none)
+                } else {
+                    pluralStringResource(R.plurals.calendar_export_trips, count, count)
+                },
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+        val hasTrips = (count ?: 0) > 0
+        OutlinedButton(
+            onClick = { viewModel.shareCalendar(language) },
+            enabled = hasTrips,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(stringResource(R.string.calendar_export_share)) }
+        OutlinedButton(
+            onClick = { saveLauncher.launch(viewModel.suggestedCalendarName()) },
+            enabled = hasTrips,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text(stringResource(R.string.calendar_export_save)) }
+    }
+}
+
+/** The share sheet for one calendar file; the other app may only read that file. */
+private fun shareIntent(
+    file: Uri,
+    title: String,
+): Intent =
+    Intent.createChooser(
+        Intent(Intent.ACTION_SEND)
+            .setType(IcsExport.MIME_TYPE)
+            .putExtra(Intent.EXTRA_STREAM, file)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+        title,
+    )

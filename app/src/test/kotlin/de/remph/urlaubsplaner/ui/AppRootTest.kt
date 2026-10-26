@@ -15,7 +15,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.appearance.AppearanceStore
 import de.remph.urlaubsplaner.data.BackupFileStore
+import de.remph.urlaubsplaner.data.CalendarFileStore
 import de.remph.urlaubsplaner.planner.PlannerFixture
+import de.remph.urlaubsplaner.settings.CalendarExporter
 import de.remph.urlaubsplaner.settings.SettingsViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.After
@@ -41,6 +43,7 @@ class AppRootTest {
             SettingsViewModel(
                 fixture.repository,
                 BackupFileStore(context.contentResolver),
+                CalendarExporter(fixture.repository, CalendarFileStore(context), fixture.clock),
                 fixture.clock,
             )
         val appearance = AppearanceStore(context.getSharedPreferences("app-root-test", 0))
