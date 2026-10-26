@@ -17,6 +17,8 @@ data class SettingsUiState(
     val canGoBack: Boolean,
     val canGoForward: Boolean,
     val form: YearForm,
+    /** How many days are marked in [year], for the clear action. */
+    val markedDays: Int,
     val pendingImport: ImportPlan?,
     val notice: Notice?,
 )
@@ -65,6 +67,10 @@ sealed interface Notice {
     data object CalendarSaved : Notice
 
     data object Imported : Notice
+
+    data class YearCleared(
+        val year: Int,
+    ) : Notice
 
     data object ExportFailed : Notice
 

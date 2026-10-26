@@ -77,7 +77,8 @@ class SettingsViewModel(
                         LocalDate.of(year - 1, 1, 1),
                         LocalDate.of(year - 1, 12, 31),
                     ),
-                ) { settings, stored, previous, previousMarks ->
+                    repository.observeMarks(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31)),
+                ) { settings, stored, previous, previousMarks, yearMarks ->
                     val suggestion =
                         if (stored ==
                             null
@@ -92,6 +93,7 @@ class SettingsViewModel(
                         stored ?: suggestion,
                         isSuggestion =
                             stored == null && suggestion != null,
+                        markedDays = yearMarks.size,
                     )
                 }
             }.combine(edits) { base, typed -> base to typed.takeIf { it.year == base.year } }
@@ -169,6 +171,7 @@ class SettingsViewModel(
             canGoBack = base.year > firstYear,
             canGoForward = base.year < lastYear,
             form = form,
+            markedDays = base.markedDays,
             pendingImport = plan,
             notice = notice,
         )
@@ -300,6 +303,18 @@ class SettingsViewModel(
         }
     }
 
+    /**
+     * Removes the marked days of [year]. The screen has asked before; the entitlement stays. The
+     * widget redraws by itself, it watches the table.
+     */
+    fun clearYear(year: Int) {
+        if (year !in firstYear..lastYear) return
+        viewModelScope.launch {
+            repository.clearMarks(year)
+            notice.value = Notice.YearCleared(year)
+        }
+    }
+
     // Calendar file (ICS).
 
     private val openRequests = Channel<Uri>(Channel.BUFFERED)
@@ -421,6 +436,7 @@ class SettingsViewModel(
         val settings: UserSettings,
         val entitlement: YearEntitlement?,
         val isSuggestion: Boolean,
+        val markedDays: Int,
     )
 
     /** What the user has typed for [year] and not saved; null means the field is untouched. */
