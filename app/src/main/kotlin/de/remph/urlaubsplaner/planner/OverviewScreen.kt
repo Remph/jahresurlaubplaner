@@ -1,5 +1,8 @@
 package de.remph.urlaubsplaner.planner
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,16 +22,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
@@ -37,6 +45,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * Status first: how many days are left, what was taken and planned, a warning when Resturlaub
@@ -121,6 +130,7 @@ private fun Status(
     val locale = currentLocale()
     val balance = view.balance ?: return
     val overbooked = balance.remaining < VacationDays.ZERO
+    val intro = rememberIntroProgress(viewModel)
 
     // The one number that matters, first.
     Column(Modifier.semantics(mergeDescendants = true) {}) {
@@ -130,8 +140,10 @@ private fun Status(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.semantics { heading() },
         )
+        val left = balance.remaining.text(locale)
         Text(
-            text = balance.remaining.text(locale),
+            text = balance.remaining.countedUp(intro).text(locale),
+            modifier = Modifier.clearAndSetSemantics { text = AnnotatedString(left) },
             style = MaterialTheme.typography.displayLarge,
             color =
                 if (overbooked) {
@@ -149,10 +161,10 @@ private fun Status(
         }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Figure(R.string.taken, balance.taken.text(locale), Modifier.weight(1f))
-        Figure(R.string.planned, balance.planned.text(locale), Modifier.weight(1f))
-        val total = (balance.entitlement + balance.carryOver).text(locale)
-        Figure(R.string.of_total, total, Modifier.weight(1f))
+        Figure(R.string.taken, balance.taken, intro, locale, Modifier.weight(1f))
+        Figure(R.string.planned, balance.planned, intro, locale, Modifier.weight(1f))
+        val total = balance.entitlement + balance.carryOver
+        Figure(R.string.of_total, total, intro, locale, Modifier.weight(1f))
     }
 
     val open = balance.carryOverOpen
@@ -192,10 +204,32 @@ private fun Status(
     }
 }
 
+/**
+ * 0 to 1 while the numbers count up when the app starts, 1 at every other time. A screen reader
+ * gets the final numbers at once (see the semantics on the texts), and "Remove animations" makes
+ * the count jump to the end.
+ */
+@Composable
+private fun rememberIntroProgress(viewModel: PlannerViewModel): Float {
+    val progress = remember { Animatable(if (viewModel.takeIntro()) 0f else 1f) }
+    LaunchedEffect(Unit) {
+        if (progress.value < 1f) progress.animateTo(1f, tween(COUNT_UP_MILLIS, easing = Decelerate))
+    }
+    return progress.value
+}
+
+internal fun VacationDays.countedUp(progress: Float) =
+    if (progress >= 1f) this else VacationDays.ofHalves((days * 2 * progress).roundToInt())
+
+private const val COUNT_UP_MILLIS = 700
+private val Decelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
+
 @Composable
 private fun Figure(
     label: Int,
-    value: String,
+    value: VacationDays,
+    intro: Float,
+    locale: Locale,
     modifier: Modifier,
 ) {
     Surface(
@@ -204,7 +238,12 @@ private fun Figure(
         modifier = modifier,
     ) {
         Column(Modifier.padding(12.dp).semantics(mergeDescendants = true) {}) {
-            Text(value, style = MaterialTheme.typography.headlineSmall)
+            val final = value.text(locale)
+            Text(
+                value.countedUp(intro).text(locale),
+                modifier = Modifier.clearAndSetSemantics { text = AnnotatedString(final) },
+                style = MaterialTheme.typography.headlineSmall,
+            )
             Text(
                 stringResource(label),
                 style = MaterialTheme.typography.bodySmall,

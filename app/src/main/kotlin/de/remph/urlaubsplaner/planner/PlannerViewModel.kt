@@ -45,6 +45,11 @@ class PlannerViewModel(
     // front (refreshToday), not only once when this ViewModel is made.
     private val today = MutableStateFlow(LocalDate.now(clock))
 
+    private var introTaken = false
+
+    /** True once per start of the app: the overview's numbers count up only then. */
+    fun takeIntro(): Boolean = !introTaken.also { introTaken = true }
+
     val currentYear: Int get() = today.value.year
     val firstYear = PublicHolidays.FIRST_SUPPORTED_YEAR
     val lastYear: Int get() = currentYear + 1
