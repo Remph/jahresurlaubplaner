@@ -416,7 +416,7 @@ class SettingsScreenTest {
             .assertIsNotEnabled()
         compose
             .onNodeWithText(
-                "2027 sind keine Tage markiert.",
+                "Für 2027 sind keine Tage markiert.",
             ).performScrollTo()
             .assertIsDisplayed()
     }

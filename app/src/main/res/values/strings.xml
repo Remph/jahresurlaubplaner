@@ -100,7 +100,7 @@
 
     <!-- Jahr leeren -->
     <string name="clear_year_action">Urlaubstage von %1$d löschen</string>
-    <string name="clear_year_none">%1$d sind keine Tage markiert.</string>
+    <string name="clear_year_none">Für %1$d sind keine Tage markiert.</string>
     <string name="clear_year_title">Urlaubstage von %1$d löschen?</string>
     <plurals name="clear_year_body">
         <item quantity="one">Der markierte Tag von %2$d wird gelöscht. Urlaubsanspruch und Resturlaub bleiben.</item>
