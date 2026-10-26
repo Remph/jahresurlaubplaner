@@ -54,12 +54,18 @@ fun AppRoot(
     request: TabRequest? = null,
 ) {
     var tab by rememberSaveable { mutableStateOf(Tab.OVERVIEW) }
-    // A tap on the widget asks for a tab; it wins over where the user was.
-    LaunchedEffect(request) { request?.let { tab = it.tab } }
     val snackbar = remember { SnackbarHostState() }
     // Leaving a tab drops its composables; this keeps what each tab remembered (the open settings
     // page, scroll positions) for the way back.
     val tabState = rememberSaveableStateHolder()
+    // A button or the widget that says "settings" means the list, not the page left open earlier;
+    // only the tab bar brings back where the user was.
+    val show = { target: Tab ->
+        if (target == Tab.SETTINGS && tab != Tab.SETTINGS) tabState.removeState(Tab.SETTINGS)
+        tab = target
+    }
+    // A tap on the widget asks for a tab; it wins over where the user was.
+    LaunchedEffect(request) { request?.let { show(it.tab) } }
     // A phone keeps the app in memory for days; the status must follow the date.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { plannerViewModel.refreshToday() }
     Scaffold(
@@ -84,7 +90,7 @@ fun AppRoot(
                     OverviewScreen(
                         plannerViewModel,
                         padding,
-                        onOpenSettings = { tab = Tab.SETTINGS },
+                        onOpenSettings = { show(Tab.SETTINGS) },
                         onOpenMonth = {
                             plannerViewModel.showMode(CalendarMode.MONTH)
                             plannerViewModel.showMonth(it)
@@ -97,7 +103,7 @@ fun AppRoot(
                     CalendarScreen(
                         plannerViewModel,
                         padding,
-                        onOpenSettings = { tab = Tab.SETTINGS },
+                        onOpenSettings = { show(Tab.SETTINGS) },
                     )
                 }
 

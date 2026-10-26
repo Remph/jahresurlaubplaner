@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
@@ -149,5 +150,36 @@ class AppRootTest {
         compose.onNode(tab("Einstellungen")).performClick()
 
         compose.onNodeWithText("Sicherung wiederherstellen").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the button on the overview opens the settings list, not the page left open`() {
+        compose.onNode(tab("Einstellungen")).performClick()
+        waitForText("Datensicherung")
+        compose.onNodeWithText("Datensicherung").performClick()
+        waitForText("Sicherung wiederherstellen")
+        compose.onNode(tab("Übersicht")).performClick()
+        waitForText("Einstellungen öffnen")
+
+        compose.onNodeWithText("Einstellungen öffnen").performClick()
+
+        waitForText("Bundesland wählen")
+        compose.onAllNodesWithText("Sicherung wiederherstellen").assertCountEquals(0)
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a request from the widget opens the settings list, not the page left open`() {
+        compose.onNode(tab("Einstellungen")).performClick()
+        waitForText("Datensicherung")
+        compose.onNodeWithText("Datensicherung").performClick()
+        waitForText("Sicherung wiederherstellen")
+        compose.onNode(tab("Übersicht")).performClick()
+
+        request = TabRequest(Tab.SETTINGS)
+
+        waitForText("Bundesland wählen")
+        compose.onAllNodesWithText("Sicherung wiederherstellen").assertCountEquals(0)
     }
 }
