@@ -57,8 +57,8 @@ in the cloud container on 2026-10-25, except the instrumented tests:
 - `./gradlew -PcoreOnly :core:test`: only the rules module, no Android SDK needed.
 - `./gradlew connectedDebugAndroidTest`: instrumented tests, need an emulator or device. Not
   possible in the cloud container: say "not run" in the PR and ask Nick to run it on his PC.
-- On Windows 5 `:app` unit tests are skipped (`assumeUnixPaths()`, 4 in `MigrationTest`, 1 in
-  `CalendarExporterTest`): AndroidX compares paths after a hard-coded '/'. They run in the cloud.
+- On Windows one `:app` unit test is skipped (`assumeUnixPaths()` in `CalendarExporterTest`):
+  androidx.core's `FileProvider` compares paths after a hard-coded '/'. It runs in the cloud.
 
 ### Cloud containers
 Since 2026-10-25 `dl.google.com` is reachable, so the app module builds in the cloud. The
