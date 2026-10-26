@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import de.remph.urlaubsplaner.assumeUnixPaths
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.ics.IcsLanguage
@@ -120,6 +121,7 @@ class CalendarExporterTest {
 
     @Test
     fun `opening writes a cache file a calendar app can read`() {
+        assumeUnixPaths()
         land()
         twoTrips()
 

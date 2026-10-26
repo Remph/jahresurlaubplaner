@@ -6,6 +6,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import de.remph.urlaubsplaner.assumeUnixPaths
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.WorkSchedule
@@ -48,6 +49,7 @@ class MigrationTest {
 
     @Test
     fun `the exported schema of the current version matches the code`() {
+        assumeUnixPaths()
         helper.createDatabase(TEST_DB, UrlaubsplanerDatabase.VERSION).close()
 
         helper.runMigrationsAndValidate(
@@ -60,6 +62,7 @@ class MigrationTest {
 
     @Test
     fun `a database from version 1 opens with the real builder and keeps its rows`() {
+        assumeUnixPaths()
         helper.createDatabase(TEST_DB, 1).apply {
             execSQL("INSERT INTO marked_day (date, mark) VALUES ('2026-08-14', 'HALF')")
             close()
@@ -86,6 +89,7 @@ class MigrationTest {
 
     @Test
     fun `version 1 settings migrate with the carry-over setting off`() {
+        assumeUnixPaths()
         helper.createDatabase(TEST_DB, 1).apply {
             execSQL(
                 "INSERT INTO settings " +
@@ -132,6 +136,7 @@ class MigrationTest {
 
     @Test
     fun `version 2 entitlements migrate with the expiry in their own year`() {
+        assumeUnixPaths()
         helper.createDatabase(TEST_DB, 2).apply {
             execSQL(
                 "INSERT INTO year_entitlement (year, halves, carryOverHalves, carryOverExpiry) " +
