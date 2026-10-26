@@ -101,15 +101,15 @@
     <!-- Calendar export -->
     <string name="section_calendar_export">Calendar export</string>
     <string name="calendar_export_row_value">Vacation as a calendar file</string>
-    <string name="calendar_export_explain">The file holds your vacation, taken and planned, with one entry per vacation. Public holidays and school holidays are not in it. You can send it to a calendar app or save it as a file.</string>
+    <string name="calendar_export_explain">The file holds your vacation, taken and planned, with one entry per vacation. Public holidays and school holidays are not in it. You can open it in a calendar app or save it as a file.</string>
     <string name="calendar_export_none">No vacation entered yet. Mark vacation days in the calendar.</string>
     <plurals name="calendar_export_trips">
         <item quantity="one">%d vacation in the file</item>
         <item quantity="other">%d vacations in the file</item>
     </plurals>
-    <string name="calendar_export_share">Send or open in calendar</string>
+    <string name="calendar_export_open">Open in calendar</string>
     <string name="calendar_export_save">Save as file</string>
-    <string name="calendar_export_share_title">Send vacation</string>
+    <string name="calendar_export_open_title">Open in calendar</string>
     <string name="notice_calendar_saved">Calendar file saved.</string>
 
     <!-- Navigation -->

@@ -302,10 +302,10 @@ class SettingsViewModel(
 
     // Calendar file (ICS).
 
-    private val shareRequests = Channel<Uri>(Channel.BUFFERED)
+    private val openRequests = Channel<Uri>(Channel.BUFFERED)
 
-    /** Each address is a calendar file ready for the share sheet; the screen opens the sheet. */
-    val shares: Flow<Uri> = shareRequests.receiveAsFlow()
+    /** Each address is a calendar file ready to open; the screen hands it to a calendar app. */
+    val opens: Flow<Uri> = openRequests.receiveAsFlow()
 
     /** The number of events the file would hold, read when the page opens. */
     suspend fun calendarTripCount(): Int = calendar.tripCount()
@@ -329,10 +329,10 @@ class SettingsViewModel(
         }
     }
 
-    fun shareCalendar(language: IcsLanguage) {
+    fun openCalendar(language: IcsLanguage) {
         viewModelScope.launch {
             try {
-                calendar.shareUri(language)?.let { shareRequests.send(it) }
+                calendar.openUri(language)?.let { openRequests.send(it) }
             } catch (_: IOException) {
                 notice.value = Notice.ExportFailed
             }

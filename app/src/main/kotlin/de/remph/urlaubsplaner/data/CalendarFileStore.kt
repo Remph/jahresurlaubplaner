@@ -11,7 +11,7 @@ import java.io.FileNotFoundException
 /**
  * Gets the calendar file out of the app, two ways (Nick, 2026-10-26): written to a file the user
  * picked with the system file picker ([write], needs no storage permission), or to a cache file
- * that the share sheet hands to another app ([writeForSharing], through a [FileProvider] so the
+ * that a calendar app is given to open ([writeForOpening], through a [FileProvider] so the
  * other app can read exactly that one file). The text itself is made in `:core`.
  */
 class CalendarFileStore(
@@ -28,8 +28,8 @@ class CalendarFileStore(
         output.use { it.write(text.toByteArray(Charsets.UTF_8)) }
     }
 
-    /** Writes [text] to the cache and returns the shareable address of that file. */
-    suspend fun writeForSharing(
+    /** Writes [text] to the cache and returns the address of that file for another app. */
+    suspend fun writeForOpening(
         fileName: String,
         text: String,
     ): Uri =

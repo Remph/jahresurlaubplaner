@@ -23,7 +23,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Hands the calendar file to another app through the share sheet, that one file only. -->
+        <!-- Hands the calendar file to a calendar app, that one file only. -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

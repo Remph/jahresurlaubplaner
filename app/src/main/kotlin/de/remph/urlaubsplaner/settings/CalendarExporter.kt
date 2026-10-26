@@ -34,11 +34,11 @@ class CalendarExporter(
         store.write(uri, export.encode(marks, language))
     }
 
-    /** The shareable address of a freshly written file, or null when there is nothing to send. */
-    suspend fun shareUri(language: IcsLanguage): Uri? {
+    /** The address of a freshly written file for a calendar app, or null when there is nothing to open. */
+    suspend fun openUri(language: IcsLanguage): Uri? {
         val (export, marks) = prepared() ?: return null
         if (export.tripCount(marks) == 0) return null
-        return store.writeForSharing(suggestedFileName(), export.encode(marks, language))
+        return store.writeForOpening(suggestedFileName(), export.encode(marks, language))
     }
 
     /** Without a Land there are no public holidays, so what a marked day costs is not known. */

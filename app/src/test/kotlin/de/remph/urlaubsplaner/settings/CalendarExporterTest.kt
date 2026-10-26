@@ -71,7 +71,7 @@ class CalendarExporterTest {
         twoTrips()
 
         assertEquals(0, runBlocking { exporter.tripCount() })
-        assertNull(runBlocking { exporter.shareUri(IcsLanguage.GERMAN) })
+        assertNull(runBlocking { exporter.openUri(IcsLanguage.GERMAN) })
     }
 
     @Test
@@ -119,11 +119,11 @@ class CalendarExporterTest {
     }
 
     @Test
-    fun `sharing writes a cache file the share sheet can read`() {
+    fun `opening writes a cache file a calendar app can read`() {
         land()
         twoTrips()
 
-        val uri = runBlocking { exporter.shareUri(IcsLanguage.GERMAN) }
+        val uri = runBlocking { exporter.openUri(IcsLanguage.GERMAN) }
 
         assertNotNull(uri)
         assertEquals("de.remph.urlaubsplaner.fileprovider", uri!!.authority)
@@ -139,10 +139,10 @@ class CalendarExporterTest {
     }
 
     @Test
-    fun `sharing with no vacation sends nothing`() {
+    fun `opening with no vacation hands over nothing`() {
         land()
 
-        assertNull(runBlocking { exporter.shareUri(IcsLanguage.GERMAN) })
+        assertNull(runBlocking { exporter.openUri(IcsLanguage.GERMAN) })
     }
 
     @Test

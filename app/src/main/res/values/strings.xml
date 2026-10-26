@@ -101,15 +101,15 @@
     <!-- Kalender-Export -->
     <string name="section_calendar_export">Kalender-Export</string>
     <string name="calendar_export_row_value">Urlaub als Kalenderdatei</string>
-    <string name="calendar_export_explain">Die Datei enthält deinen Urlaub, genommen und geplant, mit einem Eintrag pro Urlaub. Feiertage und Schulferien sind nicht dabei. Du kannst sie an eine Kalender-App senden oder als Datei speichern.</string>
+    <string name="calendar_export_explain">Die Datei enthält deinen Urlaub, genommen und geplant, mit einem Eintrag pro Urlaub. Feiertage und Schulferien sind nicht dabei. Du kannst sie in einer Kalender-App öffnen oder als Datei speichern.</string>
     <string name="calendar_export_none">Noch kein Urlaub eingetragen. Markiere Urlaubstage im Kalender.</string>
     <plurals name="calendar_export_trips">
         <item quantity="one">%d Urlaub in der Datei</item>
         <item quantity="other">%d Urlaube in der Datei</item>
     </plurals>
-    <string name="calendar_export_share">Senden oder in Kalender öffnen</string>
+    <string name="calendar_export_open">In Kalender öffnen</string>
     <string name="calendar_export_save">Als Datei speichern</string>
-    <string name="calendar_export_share_title">Urlaub senden</string>
+    <string name="calendar_export_open_title">In Kalender öffnen</string>
     <string name="notice_calendar_saved">Kalenderdatei gespeichert.</string>
 
     <!-- Navigation -->

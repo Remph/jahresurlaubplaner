@@ -349,14 +349,17 @@ Designed with Nick on 2026-10-26 (card taps, one question at a time).
   clock. The end date is exclusive, as RFC 5545 wants for all-day events.
 - `:app`: page "Kalender-Export" in Einstellungen (only with a Land chosen; without a Land what a
   marked day costs is not known). It says how many vacations the file holds and has two buttons,
-  "Senden oder in Kalender öffnen" (share sheet, `ACTION_SEND`, `text/calendar`, a cache file read
-  through a `FileProvider`, only the newest export is kept) and "Als Datei speichern"
-  (`CreateDocument`, no storage permission, like the backup). Both are off with no vacation.
-  The file's language is the one the screens show at that moment.
+  "In Kalender öffnen" (`ACTION_VIEW`, `text/calendar`, a cache file read through a
+  `FileProvider`, only the newest export is kept) and "Als Datei speichern" (`CreateDocument`, no
+  storage permission, like the backup). Both are off with no vacation. The file's language is the
+  first one in the system list that the app has texts for (`IcsLanguage.of(List<Locale>)`).
+- No share sheet (Nick, 2026-10-26): Samsung Calendar is not offered there, it only takes a
+  `.ics` file through "open". The first version had "Senden oder in Kalender öffnen" with
+  `ACTION_SEND`; Nick tried it and chose to turn it into "open".
 - Marks from before 2019 (only from a hand-made backup) are left out: the holiday rules start
   in 2019, so what they cost is not known.
-- Not run: the share sheet and the file picker on a real phone; whether Google or Samsung
-  Calendar offer themselves in the share sheet for `text/calendar` and import the events.
+- Tried by Nick on a Samsung phone: saving the file and opening it works. Not run: the new
+  "In Kalender öffnen" button on a phone, and Google Calendar.
 
 Known snags:
 

@@ -362,7 +362,7 @@ class SettingsScreenTest {
         openRow("Kalender-Export")
 
         waitForText("1 Urlaub in der Datei")
-        compose.onNodeWithText("Senden oder in Kalender öffnen").assertIsEnabled()
+        compose.onNodeWithText("In Kalender öffnen").assertIsEnabled()
         compose.onNodeWithText("Als Datei speichern").assertIsEnabled()
         compose
             .onNodeWithText("Feiertage und Schulferien sind nicht dabei", substring = true)
@@ -378,7 +378,7 @@ class SettingsScreenTest {
         openRow("Calendar export")
 
         waitForText("No vacation entered yet", substring = true)
-        compose.onNodeWithText("Send or open in calendar").assertIsNotEnabled()
+        compose.onNodeWithText("Open in calendar").assertIsNotEnabled()
         compose.onNodeWithText("Save as file").assertIsNotEnabled()
     }
 }

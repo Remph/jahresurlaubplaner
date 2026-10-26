@@ -24,7 +24,7 @@ import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.ics.IcsExport
 import de.remph.urlaubsplaner.core.ics.IcsLanguage
 
-/** The vacation as a calendar file: sent to another app through the share sheet, or saved. */
+/** The vacation as a calendar file: opened in a calendar app, or saved. */
 @Composable
 fun CalendarExportPage(
     viewModel: SettingsViewModel,
@@ -38,9 +38,9 @@ fun CalendarExportPage(
     var trips by remember { mutableStateOf<Int?>(null) }
     LaunchedEffect(Unit) { trips = viewModel.calendarTripCount() }
 
-    val shareTitle = stringResource(R.string.calendar_export_share_title)
+    val openTitle = stringResource(R.string.calendar_export_open_title)
     LaunchedEffect(Unit) {
-        viewModel.shares.collect { uri -> context.startActivity(shareIntent(uri, shareTitle)) }
+        viewModel.opens.collect { uri -> context.startActivity(openIntent(uri, openTitle)) }
     }
     val saveLauncher =
         rememberLauncherForActivityResult(
@@ -66,10 +66,10 @@ fun CalendarExportPage(
         }
         val hasTrips = (count ?: 0) > 0
         OutlinedButton(
-            onClick = { viewModel.shareCalendar(language) },
+            onClick = { viewModel.openCalendar(language) },
             enabled = hasTrips,
             modifier = Modifier.fillMaxWidth(),
-        ) { Text(stringResource(R.string.calendar_export_share)) }
+        ) { Text(stringResource(R.string.calendar_export_open)) }
         OutlinedButton(
             onClick = { saveLauncher.launch(viewModel.suggestedCalendarName()) },
             enabled = hasTrips,
@@ -78,15 +78,17 @@ fun CalendarExportPage(
     }
 }
 
-/** The share sheet for one calendar file; the other app may only read that file. */
-private fun shareIntent(
+/**
+ * The file shown in a calendar app, which may read only that file. It is "open", not "share":
+ * Samsung Calendar takes .ics files that way and is not offered in the share sheet (Nick, 2026-10-26).
+ */
+private fun openIntent(
     file: Uri,
     title: String,
 ): Intent =
     Intent.createChooser(
-        Intent(Intent.ACTION_SEND)
-            .setType(IcsExport.MIME_TYPE)
-            .putExtra(Intent.EXTRA_STREAM, file)
+        Intent(Intent.ACTION_VIEW)
+            .setDataAndType(file, IcsExport.MIME_TYPE)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
         title,
     )
