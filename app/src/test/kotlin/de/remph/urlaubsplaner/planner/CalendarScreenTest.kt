@@ -1,6 +1,8 @@
 package de.remph.urlaubsplaner.planner
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
@@ -17,6 +19,7 @@ import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -137,11 +140,7 @@ class CalendarScreenTest {
         waitForText("Karfreitag")
 
         day("Donnerstag, 25. März 2027").performTouchInput {
-            swipeLeft(
-                startX = centerX,
-                endX =
-                    centerX - 200f,
-            )
+            swipeLeft(startX = centerX, endX = centerX - 200f)
         }
 
         waitForText("April 2027")
@@ -184,6 +183,21 @@ class CalendarScreenTest {
         compose.waitForIdle()
 
         compose.onNodeWithText("Dezember 2028").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `in a right to left layout the swipe directions are mirrored`() {
+        compose.setContent {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                CalendarScreen(fixture.viewModel(), PaddingValues(), onOpenSettings = {})
+            }
+        }
+        waitForText("März 2027")
+
+        compose.onRoot().performTouchInput { swipeRight() }
+
+        waitForText("April 2027")
     }
 
     @Test
