@@ -154,7 +154,8 @@ class SettingsViewModelTest {
         vm.editCarryOver("2")
         vm.editExpiry("30.4.")
 
-        assertTrue(vm.await { it.form.canSave }.form.canSave)
+        // canSave is already true after the first edit, so wait until the last one has landed.
+        assertTrue(vm.await { it.form.typedExpiry == "30.4." && it.form.canSave }.form.canSave)
         vm.saveEntitlement()
 
         val state = vm.await { it.notice == Notice.EntitlementSaved }
@@ -176,7 +177,11 @@ class SettingsViewModelTest {
         vm.editExpiry("31.3.")
         vm.editExpiryYears(1)
 
-        assertEquals(1, vm.await { it.form.canSave }.form.typedExpiryYears)
+        // Same as above: canSave is true before the year choice is applied.
+        assertEquals(
+            1,
+            vm.await { it.form.typedExpiryYears == 1 && it.form.canSave }.form.typedExpiryYears,
+        )
         vm.saveEntitlement()
 
         val state = vm.await { it.notice == Notice.EntitlementSaved }
@@ -237,7 +242,7 @@ class SettingsViewModelTest {
         vm.land()
         vm.editDays("30")
         vm.editCarryOver("")
-        vm.await { it.form.canSave }
+        vm.await { it.form.typedCarryOver == "" && it.form.canSave }
         vm.saveEntitlement()
         vm.await { it.notice == Notice.EntitlementSaved }
 

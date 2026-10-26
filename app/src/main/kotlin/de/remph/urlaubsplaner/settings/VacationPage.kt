@@ -97,6 +97,7 @@ fun VacationPage(
             isError = form.daysError,
             error = stringResource(R.string.error_days),
             onChange = viewModel::editDays,
+            modifier = Modifier.fillMaxWidth(),
         )
         AmountField(
             label = stringResource(R.string.field_carry_over),
@@ -106,6 +107,7 @@ fun VacationPage(
             isError = form.carryOverError,
             error = stringResource(R.string.error_days),
             onChange = viewModel::editCarryOver,
+            modifier = Modifier.fillMaxWidth(),
         )
         // Day and year share a line: the field is the shorter part, the year is a two-way choice.
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

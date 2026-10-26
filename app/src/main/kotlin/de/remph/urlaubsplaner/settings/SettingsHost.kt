@@ -58,10 +58,7 @@ fun SettingsHost(
 
     when (page) {
         SettingsPage.LIST -> {
-            SettingsListScreen(ui, viewModel, appearanceStore, outerPadding) {
-                page =
-                    it
-            }
+            SettingsListScreen(ui, viewModel, appearanceStore, outerPadding) { page = it }
         }
 
         SettingsPage.VACATION -> {

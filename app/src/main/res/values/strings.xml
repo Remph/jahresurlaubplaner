@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Urlaubsplaner</string>
 
     <string name="nav_settings">Einstellungen</string>
@@ -41,7 +41,7 @@
     <string name="error_expiry">Bitte einen echten Tag eingeben, zum Beispiel 31.03.</string>
     <string name="suggestion_from_year">Vorschlag aus %1$d. Noch nicht gespeichert.</string>
     <string name="suggestion_from_year_with_carry_over">Vorschlag aus %1$d, mit den übrigen Tagen als Resturlaub (Stand heute). Noch nicht gespeichert.</string>
-    <string name="suggestion_year_running">Das Jahr %1$d läuft noch. Gerechnet ist der Stand von heute.</string>
+    <string name="suggestion_year_running" tools:ignore="PluralsCandidate">Das Jahr %1$d läuft noch. Gerechnet ist der Stand von heute.</string>
     <string name="save">Speichern</string>
     <string name="suggest_carry_over">Übrige Tage als Resturlaub vorschlagen</string>
     <string name="suggest_carry_over_support">Gilt für ein neues Jahr: Was im Vorjahr übrig bleibt, wird als Resturlaub vorgeschlagen. Du kannst es ändern, gespeichert wird erst mit „Speichern“.</string>
@@ -146,7 +146,7 @@
     <string name="go_to_settings">Einstellungen öffnen</string>
     <string name="enter_vacation_days">Urlaubstage eintragen</string>
     <string name="overview_no_land">Wähle zuerst dein Bundesland. Danach zeigt die App die Feiertage und deinen Urlaub.</string>
-    <string name="overview_no_entitlement">Für %1$d sind noch keine Urlaubstage eingetragen.</string>
+    <string name="overview_no_entitlement" tools:ignore="PluralsCandidate">Für %1$d sind noch keine Urlaubstage eingetragen.</string>
     <string name="days_left_label">Tage übrig %1$d</string>
     <string name="overbooked">Mehr Urlaub eingetragen, als dir zusteht.</string>
     <string name="taken">Genommen</string>
@@ -266,7 +266,7 @@
         <item quantity="other">%1$s Tage Resturlaub verfallen am %2$s</item>
     </plurals>
     <string name="widget_no_land_hint">Dann zeigt das Widget deinen Urlaub.</string>
-    <string name="widget_no_entitlement_hint">Für %1$d fehlen sie noch.</string>
+    <string name="widget_no_entitlement_hint" tools:ignore="PluralsCandidate">Für %1$d fehlen sie noch.</string>
     <string name="widget_setup_title">Widget einrichten</string>
     <string name="widget_transparency">Transparenz des Hintergrunds</string>
     <string name="widget_percent">%1$d %%</string>

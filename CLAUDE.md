@@ -2,8 +2,8 @@
 
 Personal, non-profit Android app for planning the year's vacation in Germany: holidays, school
 holidays, vacation balance and bridge days, status first. Nick's own phone, used on the go.
-Local-first, no backend for the MVP. The skeleton is in (Gradle with `:core` and `:app`, no features
-yet); the plan and milestones are in `docs/plan.md`.
+Local-first, no backend for the MVP. Gradle with `:core` and `:app`; the MVP features are built
+(M0 to M4), M5 is polish, M6 release prep. The plan and milestones are in `docs/plan.md`.
 
 ## Decided
 - Android first; no web app for now. Distribution: F-Droid preferred, Google Play optional.

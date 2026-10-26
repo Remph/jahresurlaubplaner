@@ -4,8 +4,9 @@ A personal, non-profit Android app for planning the year's vacation in Germany: 
 school holidays, vacation balance and bridge days, status first. Local-first: the data stays on
 the phone. German first, English second.
 
-Status: skeleton only, the app shows an empty screen. The plan is in [docs/plan.md](docs/plan.md),
-the project rules in [CLAUDE.md](CLAUDE.md).
+Status: the rules, storage, screens (Übersicht, Kalender, Einstellungen), ICS export, backup and the
+home screen widget are built; polish and release preparation are next. The plan is in
+[docs/plan.md](docs/plan.md), the project rules in [CLAUDE.md](CLAUDE.md).
 
 ## Build
 
@@ -22,8 +23,9 @@ The debug APK is `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Layout
 
-- `core/`: plain Kotlin/JVM, all rules (holidays, balance, bridge days), unit-tested.
-- `app/`: the Android app (Jetpack Compose, Material 3), depends on `core`.
+- `core/`: plain Kotlin/JVM, all rules (holidays, school holidays, balance, bridge days, backup and
+  ICS format, widget status), unit-tested.
+- `app/`: the Android app (Jetpack Compose, Material 3, Room, Glance widget), depends on `core`.
 
 ## Licence
 

@@ -43,7 +43,6 @@ import de.remph.urlaubsplaner.core.balance.VacationDays
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.format.TextStyle
 import java.util.Locale
 
 /** What a day is, put together once for the cell, the year grid and the spoken description. */
@@ -78,7 +77,7 @@ private fun WeekdayHeader(locale: Locale) {
     Row(Modifier.fillMaxWidth()) {
         for (day in DayOfWeek.entries) {
             Text(
-                text = day.getDisplayName(TextStyle.SHORT, locale).trimEnd('.'),
+                text = day.shortText(locale),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

@@ -213,8 +213,8 @@ fun AmountField(
     isError: Boolean,
     error: String,
     onChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
     placeholder: String? = null,
-    modifier: Modifier = Modifier.fillMaxWidth(),
 ) {
     OutlinedTextField(
         value = value,

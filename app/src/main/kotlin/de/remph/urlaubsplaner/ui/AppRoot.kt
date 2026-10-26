@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -53,9 +54,18 @@ fun AppRoot(
     request: TabRequest? = null,
 ) {
     var tab by rememberSaveable { mutableStateOf(Tab.OVERVIEW) }
-    // A tap on the widget asks for a tab; it wins over where the user was.
-    LaunchedEffect(request) { request?.let { tab = it.tab } }
     val snackbar = remember { SnackbarHostState() }
+    // Leaving a tab drops its composables; this keeps what each tab remembered (the open settings
+    // page, scroll positions) for the way back.
+    val tabState = rememberSaveableStateHolder()
+    // A button or the widget that says "settings" means the list, not the page left open earlier;
+    // only the tab bar brings back where the user was.
+    val show = { target: Tab ->
+        if (target == Tab.SETTINGS && tab != Tab.SETTINGS) tabState.removeState(Tab.SETTINGS)
+        tab = target
+    }
+    // A tap on the widget asks for a tab; it wins over where the user was.
+    LaunchedEffect(request) { request?.let { show(it.tab) } }
     // A phone keeps the app in memory for days; the status must follow the date.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { plannerViewModel.refreshToday() }
     Scaffold(
@@ -74,26 +84,32 @@ fun AppRoot(
             }
         },
     ) { padding ->
-        when (tab) {
-            Tab.OVERVIEW -> {
-                OverviewScreen(
-                    plannerViewModel,
-                    padding,
-                    onOpenSettings = { tab = Tab.SETTINGS },
-                    onOpenMonth = {
-                        plannerViewModel.showMode(CalendarMode.MONTH)
-                        plannerViewModel.showMonth(it)
-                        tab = Tab.CALENDAR
-                    },
-                )
-            }
+        tabState.SaveableStateProvider(tab) {
+            when (tab) {
+                Tab.OVERVIEW -> {
+                    OverviewScreen(
+                        plannerViewModel,
+                        padding,
+                        onOpenSettings = { show(Tab.SETTINGS) },
+                        onOpenMonth = {
+                            plannerViewModel.showMode(CalendarMode.MONTH)
+                            plannerViewModel.showMonth(it)
+                            tab = Tab.CALENDAR
+                        },
+                    )
+                }
 
-            Tab.CALENDAR -> {
-                CalendarScreen(plannerViewModel, padding, onOpenSettings = { tab = Tab.SETTINGS })
-            }
+                Tab.CALENDAR -> {
+                    CalendarScreen(
+                        plannerViewModel,
+                        padding,
+                        onOpenSettings = { show(Tab.SETTINGS) },
+                    )
+                }
 
-            Tab.SETTINGS -> {
-                SettingsHost(settingsViewModel, appearanceStore, snackbar, padding)
+                Tab.SETTINGS -> {
+                    SettingsHost(settingsViewModel, appearanceStore, snackbar, padding)
+                }
             }
         }
     }
