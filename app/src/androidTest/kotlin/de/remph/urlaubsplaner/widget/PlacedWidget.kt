@@ -32,7 +32,8 @@ class PlacedWidget(
 
     init {
         // Binding needs a permission a launcher has; the shell may hand it to this package.
-        shell("appwidget grantbind --package ${context.packageName}")
+        // `cmd appwidget` goes straight to the service, whether or not the image has a wrapper.
+        shell("cmd appwidget grantbind --package ${context.packageName}")
         val bound = manager.bindAppWidgetIdIfAllowed(id, ComponentName(context, receiver))
         check(bound) { "The system did not allow binding the widget ${receiver.simpleName}" }
         host.startListening()
@@ -76,7 +77,7 @@ class PlacedWidget(
     override fun close() {
         host.stopListening()
         host.deleteAppWidgetId(id)
-        shell("appwidget revokebind --package ${context.packageName}")
+        shell("cmd appwidget revokebind --package ${context.packageName}")
     }
 
     private fun collect(
