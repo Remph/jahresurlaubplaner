@@ -165,7 +165,7 @@ everything".
   file. The format is documented in the `BackupFile` comment; a test reads a hand-written version 1
   file so a rename in the app cannot silently change it.
 - Reading is strict and happens before anything is changed. `BackupException.NotABackup` (not JSON,
-  not ours, over 8 MB), `NewerVersion(found, supported)` (checked before the rest, so a newer
+  not ours, over 2 MiB), `NewerVersion(found, supported)` (checked before the rest, so a newer
   structure still gets this message) and `Damaged(detail)` (a missing or wrong value, an unknown
   name, a duplicate year, date or special day, a value outside the rules). Nothing is skipped
   silently. The screens in M3 pick the text from the class.
