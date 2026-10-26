@@ -34,7 +34,8 @@ Rules:
   2026.09.00, activity-compose 1.13.0, JUnit 6.1.3, Spotless 8.10.4 (ktlint).
 - Well-known, maintained libraries may be added when they make development easier; name them in
   the PR and ask first when unsure.
-- Widget later with Jetpack Glance (AndroidX, no Google Play Services, fine for F-Droid).
+- Widget with Jetpack Glance 1.2.0 (AndroidX, Apache-2.0, no Google Play Services, fine for F-Droid;
+  it brings WorkManager and DataStore). Details under "Home screen widget (M4)".
 
 ## Milestones
 
@@ -313,6 +314,40 @@ and PR C (Brückentage).
   screens show no bridges.
 - Not built: bridges that combine two gaps, bridges in the widget or the ICS export (M4).
 
+### Home screen widget (M4)
+
+Designed with Nick on 2026-10-26 (clickable mock-up `design/m4-widget-mockup/` in the project
+folder); the logic is `:core.widget.WidgetStatus` (unit-tested), the rest is `:app` package `widget`.
+
+- One resizable widget (`SizeMode.Responsive`): small (2x1 and up) shows the days left and one line
+  ("Nächster Urlaub 14.04."); from 250 x 110 dp (4x2) the wide layout adds the next trip as a
+  range with its cost and "Genommen, Geplant, Anspruch" (Anspruch = entitlement plus Resturlaub),
+  which the warning "3 Tage Resturlaub verfallen am 31.03." replaces while Resturlaub is about to
+  expire (same rule as the overview card). Overbooked shows a negative number in the error colour.
+- A missing Bundesland or missing days for this year show a prompt instead of numbers; a tap
+  opens the Einstellungen tab, every other tap the Übersicht. `MainActivity` is `singleTask` and
+  takes the tab as the intent action (`TabRequest`), at a real start and in `onNewIntent`.
+- Set up per widget (`WidgetConfigActivity`, when placed, and by long press from Android 12):
+  background transparency 0 to 100 % in steps of 5 (default 0, solid) and colours Wie das Telefon
+  (default), Hell, Dunkel. Stored in Glance's preferences per widget (`WidgetStyle`); a new
+  option is a new key with a default.
+- Colours follow the phone's light/dark mode, not "Darstellung" in the app: wallpaper colours on
+  Android 12+, the app's teal scheme on Android 11. Day/night are both in each `ColorProvider`,
+  so the launcher switches them. Android 11 cannot round a Glance view, so a tinted shape drawable
+  is the background there.
+- Texts: string resources in `values/` (German) and `values-en/`, in the app language. The widget
+  runs outside an activity, so `WidgetLanguage` builds a configuration context; the choice is read
+  from `LocaleManager` (Android 13+) or from a copy `LanguageChoice.apply` stores (below 13).
+  A system language that is neither German nor English gives German (Nick, 2026-10-26).
+- Refresh: while the app process lives, `WidgetRefresher` watches the three tables (debounced
+  500 ms) and redraws; the app also redraws after a language change and a configuration change.
+  The date changes through `DATE_CHANGED`, `TIME_SET`, `TIMEZONE_CHANGED` in the receiver and
+  `updatePeriodMillis` 30 minutes as the safety net.
+- Not tried on a launcher (the cloud has none): placing, the setup screen, transparency, light and
+  dark, the language switch, the tap targets, the redraw after marking a day, whether Android
+  delivers the date broadcasts, how the small layout fits a 2x1 cell on a real phone. No preview
+  image for the widget picker yet (M5, with the launcher icon).
+
 ### Design review of the screens (after M3, 2026-10-25)
 
 Nick answered each question in the thread; research (Material 3, One UI, Apple), screenshots and a
@@ -336,7 +371,7 @@ Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
   2026-10-25 (Nick added them); the Länder ministry sites are not (probe before relying on it).
-- Instrumented tests and the widget (M3, M4) need an emulator or Nick's phone.
+- Instrumented tests and the widget on a launcher (M3, M4) need an emulator or Nick's phone.
 - M5: the app has no launcher icon yet (lint `MissingApplicationIcon`).
 
 ## Status
