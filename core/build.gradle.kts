@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
 }
@@ -31,6 +33,43 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
+// The API level check (ApiLevelGuardTest) needs the SDK's list of which API came with which
+// Android version. It finds it like the Android plugin does: environment variable first, then
+// sdk.dir in local.properties. With -PcoreOnly there is no SDK, and the check is skipped.
+val sdkDirInLocalProperties: String? =
+    rootProject.file("local.properties").takeIf { it.exists() }?.let { file ->
+        val props = Properties()
+        file.inputStream().use { props.load(it) }
+        props.getProperty("sdk.dir")
+    }
+val androidSdk: File? =
+    listOfNotNull(
+        System.getenv("ANDROID_HOME"),
+        System.getenv("ANDROID_SDK_ROOT"),
+        sdkDirInLocalProperties,
+    ).map { File(it) }
+        .firstOrNull { it.isDirectory }
+
+// Any platform will do, newer ones list everything older too; the biggest file is the newest.
+val apiVersionsFile: File? =
+    androidSdk
+        ?.resolve("platforms")
+        ?.listFiles()
+        ?.map { it.resolve("data/api-versions.xml") }
+        ?.filter { it.isFile }
+        ?.maxByOrNull { it.length() }
+
 tasks.test {
     useJUnitPlatform()
+    systemProperty("urlaubsplaner.maxApi", libs.versions.minSdk.get())
+    systemProperty("urlaubsplaner.apiVersions", apiVersionsFile?.path.orEmpty())
+    systemProperty("urlaubsplaner.apiCheckOptional", providers.gradleProperty("coreOnly").isPresent)
+    systemProperty(
+        "urlaubsplaner.mainClasses",
+        sourceSets.main
+            .get()
+            .output.classesDirs.asPath,
+    )
+    // The list is read from the SDK, not declared by the task, so a changed SDK reruns the check.
+    inputs.files(listOfNotNull(apiVersionsFile)).withPropertyName("apiVersions")
 }

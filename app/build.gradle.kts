@@ -39,12 +39,15 @@ android {
     defaultConfig {
         // The application ID is permanent, do not change it.
         applicationId = "de.remph.urlaubsplaner"
-        minSdk = 30
+        minSdk =
+            libs.versions.minSdk
+                .get()
+                .toInt()
         targetSdk = 37
-        // versionCode = major * 10000 + minor * 100 + patch (0.9.0 is 900, 1.0.0 is 10000). F-Droid
+        // versionCode = major * 10000 + minor * 100 + patch (0.9.1 is 901, 1.0.0 is 10000). F-Droid
         // names the changelog after it: fastlane/metadata/android/*/changelogs/<versionCode>.txt.
-        versionCode = 900
-        versionName = "0.9.0"
+        versionCode = 901
+        versionName = "0.9.1"
     }
 
     signingConfigs {

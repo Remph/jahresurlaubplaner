@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
@@ -130,6 +131,24 @@ fun YearGrid(
                             cell,
                             corner,
                             style = Stroke(1.5.dp.toPx()),
+                        )
+                    }
+                    // The month view's dashed outline (the maintainer chose it over a dot, 2026-10-26),
+                    // with shorter dashes to fit a tile of about 10 dp.
+                    if (look.bridge) {
+                        drawRoundRect(
+                            colors.planned,
+                            topLeft,
+                            cell,
+                            corner,
+                            style =
+                                Stroke(
+                                    1.5.dp.toPx(),
+                                    pathEffect =
+                                        PathEffect.dashPathEffect(
+                                            floatArrayOf(3.dp.toPx(), 2.dp.toPx()),
+                                        ),
+                                ),
                         )
                     }
                     if (look.today) {

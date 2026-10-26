@@ -6,7 +6,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "jahresurlaubplaner"
+rootProject.name = "urlaubsplaner"
 
 include(":core")
 // The Android app is skipped with -PcoreOnly, so :core builds and tests where the Android SDK

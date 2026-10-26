@@ -1,0 +1,1 @@
+Die Jahresansicht zeigt jetzt auch die Brückentage: ein gestrichelter Rahmen markiert die Tage, die du für einen Brückentag nehmen kannst.
