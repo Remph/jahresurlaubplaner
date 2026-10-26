@@ -1,0 +1,1 @@
+Erste öffentliche Version: Feiertage und Schulferien je Bundesland, Urlaubskonto mit Resturlaub, Brückentage, Monats- und Jahresansicht, Kalenderexport, Sicherung und Widgets.

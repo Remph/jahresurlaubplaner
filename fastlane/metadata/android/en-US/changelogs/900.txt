@@ -1,0 +1,1 @@
+First public release: public and school holidays by state, vacation balance with carry-over, bridge days, month and year views, calendar export, backup and widgets.

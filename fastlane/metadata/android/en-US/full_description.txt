@@ -1,0 +1,29 @@
+Urlaubsplaner shows you what you want to know first: how many vacation days you have left this year, and when your next vacation and the next public holiday are. Everything else is one tap away. It is made for Germany and its 16 federal states; the app is in German and English.
+
+<b>Public holidays and school holidays</b>
+Pick your state. Public holidays are calculated by the state's rules; school holidays come from a data file that ships inside the app and is renewed every year. The app needs no internet for this.
+
+<b>Vacation balance</b>
+• Yearly entitlement and days carried over from last year, with a date on which the carried-over days expire
+• Days taken and planned, half days included
+• A warning when carried-over days are about to expire
+• Working days of your choice, Christmas Eve and New Year's Eve by your own rule
+
+<b>Marking days and finding bridge days</b>
+• Mark single days or a whole range in the month calendar
+• Year overview with holidays, school holidays and your vacation
+• Bridge days: the app suggests where one day off gets you the most days free
+
+<b>Calendar and widget</b>
+• Export your vacation as a calendar file (ICS) for any calendar app
+• Two home screen widgets: next vacation and days left
+
+<b>Your data stays with you</b>
+The app has no internet access, no account, no ads and no tracking. To back up or move to a new phone, save a backup file wherever you like and restore it later.
+
+<b>More</b>
+• German and English, switchable in the app
+• Light, dark and pure black, optionally with the colours of your wallpaper
+• Free software under the GPL-3.0, source code on GitHub. The school holiday data comes from OpenHolidays (ODbL).
+
+Urlaubsplaner is a private, non-profit project. Bugs and wishes are welcome as issues on GitHub.

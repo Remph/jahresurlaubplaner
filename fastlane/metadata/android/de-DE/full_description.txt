@@ -1,0 +1,29 @@
+Urlaubsplaner zeigt dir zuerst, was du wissen willst: wie viele Urlaubstage dir dieses Jahr noch bleiben und wann dein nächster Urlaub und der nächste Feiertag sind. Alles andere ist ein Fingertipp entfernt.
+
+<b>Feiertage und Schulferien</b>
+Wähle dein Bundesland. Die Feiertage werden nach den Regeln des Landes berechnet, die Schulferien kommen aus einer Datei, die in der App steckt und jedes Jahr erneuert wird. Die App braucht dafür kein Internet.
+
+<b>Urlaubskonto</b>
+• Jahresanspruch und Resturlaub aus dem Vorjahr, mit einem Datum, an dem der Resturlaub verfällt
+• Genommene und geplante Tage, auch halbe Tage
+• Eine Warnung, wenn Resturlaub bald verfällt
+• Arbeitstage frei wählbar, Heiligabend und Silvester nach deiner Regel
+
+<b>Tage eintragen und Brückentage finden</b>
+• Einzelne Tage oder einen ganzen Zeitraum im Monatskalender markieren
+• Jahresübersicht mit Feiertagen, Schulferien und deinem Urlaub
+• Brückentage: Die App schlägt vor, an welchen Tagen sich ein Urlaubstag besonders lohnt
+
+<b>Kalender und Widget</b>
+• Deinen Urlaub als Kalenderdatei (ICS) exportieren, für jede Kalender-App
+• Zwei Widgets für den Startbildschirm: nächster Urlaub und verbleibende Tage
+
+<b>Deine Daten bleiben bei dir</b>
+Die App hat keinen Internetzugriff, kein Konto, keine Werbung und keine Auswertung. Zum Sichern und für den Umzug auf ein neues Telefon speicherst du eine Sicherungsdatei, wohin du willst, und stellst sie später wieder her.
+
+<b>Mehr</b>
+• Deutsch und Englisch, umschaltbar in der App
+• Hell, dunkel und reines Schwarz, wahlweise mit den Farben deines Hintergrundbilds
+• Freie Software unter der GPL-3.0, der Quellcode liegt auf GitHub. Die Schulferien-Daten stammen von OpenHolidays (ODbL).
+
+Urlaubsplaner ist ein privates Projekt ohne Gewinnabsicht. Fehler und Wünsche gern als Issue auf GitHub.

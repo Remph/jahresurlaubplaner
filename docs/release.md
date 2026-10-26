@@ -1,0 +1,205 @@
+# Releasing Urlaubsplaner
+
+How a release is made, and what is Nick's own step. Facts that change over time are dated; check
+them again before relying on them. Nothing here tags or publishes by itself: tags and GitHub
+releases only when Nick asks (`CLAUDE.md`).
+
+## Decided (Nick, 2026-10-26)
+
+- Two sources: **F-Droid** (preferred) and an **APK on GitHub**. No Google Play account for now.
+- First public version is **0.9.0**. Version scheme: `versionCode = major * 10000 + minor * 100 +
+  patch`, so 0.9.0 is 900 and 1.0.0 is 10000. Both are set in `app/build.gradle.kts`.
+- The GitHub APK is signed with Nick's **own release key**, made on his PC. F-Droid signs its own
+  build with its own key, so the two sources cannot update each other: whoever switches from one to
+  the other uninstalls first (back up through Einstellungen > Datensicherung before).
+- No contact e-mail anywhere; **GitHub issues** are the contact: <https://github.com/Remph/jahresurlaubplaner/issues>.
+  A private, non-profit app without a website probably needs no Impressum, but that is not legal advice.
+
+## The release key (Nick's step, on his PC)
+
+The key is the identity of the app for everyone who installs the GitHub APK. **Lose it and nobody
+can update; the only way out is a new package name.** So:
+
+1. Make it once, on the PC, with the JDK's `keytool` (Android Studio ships one in its `jbr\bin`
+   folder). Choose strong passwords and write them into the password manager:
+
+   ```
+   keytool -genkeypair -v -keystore urlaubsplaner-release.jks -alias urlaubsplaner ^
+     -keyalg RSA -keysize 4096 -validity 10000
+   ```
+
+   (`^` continues a line in the Windows command prompt, use `\` on Linux and macOS.)
+2. Keep the `.jks` file **outside the repo folder** and make a backup copy somewhere else (a second
+   disk or the password manager's file store). It is never committed and never goes to the cloud;
+   `*.jks`, `*.keystore` and `keystore.properties` are in `.gitignore`.
+3. Write down the certificate fingerprint, it is public and later needed to register the app with
+   Google (below) and to check a downloaded APK:
+
+   ```
+   keytool -list -v -keystore urlaubsplaner-release.jks -alias urlaubsplaner
+   ```
+
+   SHA-256 fingerprint of the release key: _to be added here once Nick has made the key_.
+
+## Building the signed APK (on the PC)
+
+The build reads the key from environment variables or from an untracked `keystore.properties` in
+the repo root (never both needed):
+
+```
+# keystore.properties (not in git)
+storeFile=C:/Users/Nick/keys/urlaubsplaner-release.jks
+storePassword=...
+keyAlias=urlaubsplaner
+keyPassword=...
+```
+
+The environment variables are `URLAUBSPLANER_STORE_FILE`, `URLAUBSPLANER_STORE_PASSWORD`,
+`URLAUBSPLANER_KEY_ALIAS` and `URLAUBSPLANER_KEY_PASSWORD`. A relative `storeFile` counts from the
+repo root. If only some of the four are given the build stops with a message; if none is given
+`assembleRelease` makes an **unsigned** APK, which is what F-Droid and the cloud get.
+
+```
+./gradlew assembleRelease
+```
+
+The signed APK is `app/build/outputs/apk/release/app-release.apk` (the unsigned one is
+`app-release-unsigned.apk`). Check the signature and the key before sending it anywhere:
+
+```
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+```
+
+(`apksigner` is in the Android SDK's `build-tools` folder.) The SHA-256 line must be the
+fingerprint written down above. Do not put the APK in git (`*.apk` is ignored).
+
+### R8 (code shrinking) is off
+
+`isMinifyEnabled` is `false` for 0.9.0. Tried in the cloud on 2026-10-26: with R8 the release APK
+drops from about 30 MB to about 5.4 MB and the build passes, but Room, Glance, WorkManager and
+kotlinx-serialization reach classes by reflection and the cloud has no emulator, so a shrunk APK
+was never run. To turn it on later, do it in its own PR and test the release APK on a phone: open
+the app, mark days, export and **import a backup**, add both widgets and let them update, change
+the language. Missing rules go into a new `app/proguard-rules.pro` (not there yet).
+
+## Before a release: test on the phone
+
+The standard check (`./gradlew lint test assembleDebug spotlessCheck`) is not enough for a release;
+the instrumented tests and the widget have never run on a device in the cloud. Install the signed
+release APK on the phone (uninstall the debug build first, the keys differ) and walk through: first
+start, choose a Land, enter the entitlement, mark days, bridge days, widget (small and big),
+backup export and import, calendar export, German and English, dark mode.
+
+## Making a release (checklist)
+
+1. A PR on its own branch (as always) that sets `versionCode` and `versionName` in
+   `app/build.gradle.kts`, adds `fastlane/metadata/android/de-DE/changelogs/<versionCode>.txt` and
+   the same for `en-US` (at most 500 characters), and updates the screenshots and the school holiday
+   file if they changed. Nick merges it after the review.
+2. Build the signed APK on the PC and test it (above).
+3. Tag the merge commit **`v<versionName>`**, for example `v0.9.0`, and push the tag. F-Droid
+   builds from tags: the tag must be on the commit that has that `versionCode`.
+4. A **GitHub release** with the signed APK attached, only when Nick asks. Name the file
+   `urlaubsplaner-<versionName>.apk`. Put the changelog text and the SHA-256 of the APK in the notes.
+5. F-Droid notices the new tag by itself once the app is in (`AutoUpdateMode: Version`,
+   `UpdateCheckMode: Tags`), usually within a few days.
+
+## F-Droid (Nick's step: the merge request)
+
+Official sources, read on 2026-10-26 from F-Droid's own GitLab repositories (`fdroid/fdroiddata`:
+`CONTRIBUTING.md`, `templates/`, merge request template; `fdroid/fdroid-website`: Inclusion Policy,
+Quick Start Guide). `f-droid.org` itself is not reachable from the cloud, `gitlab.com` is.
+
+**What is ready in this repo** (`fastlane/metadata/android/`): `de-DE` and `en-US` with `title.txt`,
+`short_description.txt` (under 80 characters, no trailing dot), `full_description.txt`,
+`changelogs/900.txt`, `images/icon.png` (512 px) and four screenshots in `images/phoneScreenshots/`.
+F-Droid requires `en-US`; `de-DE` is extra. Descriptions use only the HTML tags F-Droid allows.
+
+**What F-Droid checks**: free licence (GPL-3.0), only free dependencies and tools (no Google Play
+Services: the dependency audit in the about screen thread found only Apache-2.0 and BSD-3), no
+tracking or ads (the app has no INTERNET permission), tag per release, and that the app builds from
+source with their tools. The school holiday data is ODbL and sits in its own directory with the
+licence text, its credit is in the about screen.
+
+**Possible snag, the "3 months" rule.** The Inclusion Policy asks that an app "has been actively
+developed for at least 3 months", unless it has proven users or the author already maintains apps on
+F-Droid. This repo started on 2026-10-25, so the reviewers may ask to wait, or accept it on the
+strength of the finished app. Say plainly in the merge request that the app is new; that is fine.
+
+**Steps:**
+
+1. Make an account on <https://gitlab.com> and fork <https://gitlab.com/fdroid/fdroiddata>.
+2. Optional but recommended for a first app: open a request for packaging at
+   <https://gitlab.com/fdroid/rfp/-/issues> (fill in the template).
+3. In the fork, new branch `de.remph.urlaubsplaner` (never commit to the fork's `master`), add
+   `metadata/de.remph.urlaubsplaner.yml` (draft below), commit.
+4. Check the pipeline of the fork (CI/CD menu) is green; fix what it reports.
+5. Open the merge request into `fdroid/fdroiddata`, title "New app: Urlaubsplaner", fill in the
+   template (what the app does, why it exists, the checklist), one app per merge request.
+6. Answer the reviewers' questions. Do not rebase unless there is a conflict.
+
+**Draft of `metadata/de.remph.urlaubsplaner.yml`** (the fields follow `templates/general.yml` and
+`templates/build-gradle.yml` of fdroiddata as read on 2026-10-26; not run through `fdroid lint`,
+which needs `fdroidserver` on a PC or in the fork's pipeline):
+
+```yaml
+Categories:
+  - Calendar & Agenda
+License: GPL-3.0-only
+AuthorName: Nick
+SourceCode: https://github.com/Remph/jahresurlaubplaner
+IssueTracker: https://github.com/Remph/jahresurlaubplaner/issues
+
+RepoType: git
+Repo: https://github.com/Remph/jahresurlaubplaner.git
+
+Builds:
+  - versionName: 0.9.0
+    versionCode: 900
+    commit: v0.9.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 0.9.0
+CurrentVersionCode: 900
+```
+
+`AuthorName` is public: Nick decides what stands there (a nickname is fine). `License` is
+`GPL-3.0-only` because the project says "GPL-3.0" and no source file carries an "or any later
+version" notice; if Nick means "or later", change it here and add the notice to the sources. Likely
+questions from the build: the JDK of F-Droid's build server against the one in `gradle/` (the project
+builds on JDK 17 and newer) and whether it can fetch the Gradle version of the wrapper. If the build
+fails, the pipeline log says why; fix it in the repo and move the tag, or add a `prebuild` line.
+
+## Google developer verification (to do before 2027)
+
+Decided "decide later" (Nick, 2026-10-26): **not registered now.** Facts from Google's own pages
+(developer.android.com, checked 2026-10-26):
+
+- Enforcement began on 30 September 2026 in Brazil, Indonesia, Singapore and Thailand for
+  participating stores, and is to reach apps on certified Android phones worldwide in **2027**.
+- Apps from F-Droid or installed by hand (sideloaded) are not affected before that date.
+- A full developer account costs 25 US dollars and needs a government ID. A "limited distribution"
+  account is free and allows up to 20 devices (enough for Nick's own phone).
+- There is a route for open-source apps: register the package name `de.remph.urlaubsplaner` with the
+  signing key's SHA-256. F-Droid re-signs with its own key, so its fingerprint has to be added too.
+
+**To do before 2027:** read Google's pages again (the rules were still moving), then decide:
+register the package name through the open-source route, take the limited distribution account, or
+accept that the app may not install on some phones. This is Nick's decision, ask him one question
+with a recommendation.
+
+## Store assets
+
+- **512 px icon:** `python3 tools/render-store-icon.py` redraws it from the launcher icon's numbers
+  into both locales (Pillow needed). Run it again whenever the launcher icon changes.
+- **Screenshots:** four per language (overview, month, year, settings), 411 x 891 dp, light, the
+  app's own teal scheme, fixed date 10 March 2027, Nordrhein-Westfalen, a few marked days. They were
+  made in the cloud with a throwaway Robolectric test (`AppRoot` inside `UrlaubsplanerTheme`,
+  `captureToImage`, not kept in the repo), not on a phone. Replace them with phone screenshots
+  whenever Nick likes; the file names `1.png` to `4.png` set the order.
+- **Texts:** `fastlane/metadata/android/<locale>/`. German first. A text that promises a feature
+  must match the app: check the descriptions when a feature is added or removed.

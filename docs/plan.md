@@ -442,4 +442,4 @@ Known snags:
 - [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B); Brückentage (PR C, PR #18); design review changes (shapes, month card, year rows, weekend contrast)
 - [x] M4 Export and widget: ICS export (PR #20, merged 2026-10-26); widget (PR #21, merged 2026-10-26; split into a small and a big widget, PR in review)
 - [ ] M5 Polish (animations, final UI review, tech debt review)
-- [ ] M6 Release prep
+- [ ] M6 Release prep: about screen (PR #29); signing, version 0.9.0, F-Droid texts and icon, `docs/release.md` (release-files PR); still Nick's: the key, the F-Droid merge request, the phone test
