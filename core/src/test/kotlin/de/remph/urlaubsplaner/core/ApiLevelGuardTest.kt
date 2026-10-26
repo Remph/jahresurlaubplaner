@@ -90,6 +90,23 @@ class ApiLevelGuardTest {
         )
     }
 
+    /** `invokeinterface` lines carry an argument count that the plain `invokevirtual` lines lack. */
+    @Test
+    fun `the scan fails on an interface method, Stream toList, which is API 34`(
+        @TempDir directory: File,
+    ) {
+        val found =
+            scanSnippet(
+                directory,
+                "java.util.Arrays.asList(1).stream().toList();",
+            )
+
+        assertTrue(
+            found.any { it.owner == "java/util/stream/Stream" && it.member.startsWith("toList") },
+            "$found",
+        )
+    }
+
     @Test
     fun `the scan passes ordinary old calls`(
         @TempDir directory: File,

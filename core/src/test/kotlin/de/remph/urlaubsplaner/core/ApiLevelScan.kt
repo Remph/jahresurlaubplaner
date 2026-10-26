@@ -126,9 +126,10 @@ class ApiLevelScan(
         const val JAVAP_BATCH = 50
 
         // "// Method java/time/LocalDate.datesUntil:(Ljava/time/LocalDate;)Ljava/util/stream/Stream;"
+        // invokeinterface also prints its argument count: "invokeinterface #33,  1  // InterfaceMethod".
         val MEMBER_REFERENCE =
             Regex(
-                """(?:invoke\w+|getstatic|getfield|putstatic|putfield)\s+#\d+\s+//\s+(?:Interface)?(?:Method|Field)\s+([\w/$]+)\.([\w<>$]+):(\S+)""",
+                """(?:invoke\w+|getstatic|getfield|putstatic|putfield)\s+#\d+(?:,\s*\d+)?\s+//\s+(?:Interface)?(?:Method|Field)\s+([\w/$]+)\.([\w<>$]+):(\S+)""",
             )
 
         // "new #7 // class java/util/Locale", also checkcast, instanceof, ldc.
