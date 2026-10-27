@@ -44,10 +44,11 @@ android {
                 .get()
                 .toInt()
         targetSdk = 37
-        // versionCode = major * 10000 + minor * 100 + patch (0.9.1 is 901, 1.0.0 is 10000). F-Droid
+        // versionCode = major * 10000 + minor * 100 + patch (0.9.2 is 902, 1.0.0 is 10000). F-Droid
         // names the changelog after it: fastlane/metadata/android/*/changelogs/<versionCode>.txt.
-        versionCode = 901
-        versionName = "0.9.1"
+        versionCode = 902
+        versionName = "0.9.2"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -88,6 +89,9 @@ android {
         // The migration tests read the committed schemas as assets. Robolectric takes its assets
         // from the debug build, not from the test source set; the release build stays without them.
         getByName("debug").assets.directories.add("schemas")
+        // The same schemas for the migration tests that run on a device or emulator, where the
+        // test APK has its own assets.
+        getByName("androidTest").assets.directories.add("schemas")
     }
 
     testOptions {
@@ -145,4 +149,12 @@ dependencies {
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Instrumented tests (src/androidTest): they run on an emulator or device, not in the cloud.
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 }

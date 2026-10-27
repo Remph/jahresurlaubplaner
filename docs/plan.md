@@ -424,6 +424,30 @@ Designed with the maintainer on 2026-10-26 (card taps, one question at a time).
 - Tried by the maintainer on a phone: saving the file and opening it works. Not run: the new
   "In Kalender öffnen" button on a phone, and Google Calendar.
 
+### Instrumented tests (0.9.2)
+
+`app/src/androidTest` holds the first tests that run on a device (`connectedDebugAndroidTest`,
+AndroidJUnit4, Compose test rule). They cover what the JVM tests cannot see: the real SQLite, a
+real `ContentResolver`, the system's widget service and the Android 11 library. Written in the
+cloud, which has no emulator: they compile (`assembleDebugAndroidTest`) but **had not run** when
+they were merged into the plan; the first run on the API 30 and API 37 emulators is the
+maintainer's PC.
+
+| Class | What it checks |
+| --- | --- |
+| `widget/WidgetOnDeviceTest` | Both widgets bound on a launcher of the test's own (`PlacedWidget`: `AppWidgetHost` + `AppWidgetHostView`) show the Land prompt, then follow entering days, a second change soon after, marking, unmarking, and a restored backup. This is the test for parked item 7 (widget stale after clear data + restore); it cannot clear the app's own data, so it covers the restore, not the process death. |
+| `data/BackupOnDeviceTest` | Export and import through a MediaStore file (Downloads) and the real `SettingsViewModel`: round trip, the question before replacing, no tail of a longer old file ("wt"), a file that is not a backup. |
+| `data/MigrationOnDeviceTest` | The Room migrations on the device's SQLite, with the committed schemas as test assets. |
+| `planner/MarkingOnDeviceTest` | The real `MainActivity`: choosing a Bundesland in the settings; marking a day in the calendar and removing the mark. |
+| `data/AllLaenderOnDeviceTest` | Every Bundesland through holidays, bridges, school holidays, ICS and backup on the device's Java (Android 11 for the lowest level). |
+
+Rules for these tests: they work on the app's real database, so `FreshApp` empties it before and
+after and refuses to run anywhere but on an emulator (`-Pandroid.testInstrumentationRunnerArguments.allowRealDevice=true`
+overrides it, never on a phone with real data). Texts come from the app's string resources, not
+literals, so the language of the emulator does not matter. Test names in backticks must not contain
+commas or dots: dex cannot represent them. Not covered: the system file picker, the setup screen of
+the widget, a real launcher's resizing, and TalkBack.
+
 ### About screen (M6, first piece)
 
 Last row of Einstellungen ("Über die App" / "About"), one page: app name and version (from the
@@ -441,7 +465,7 @@ Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
   2026-10-25 (the maintainer added them); the Länder ministry sites are not (probe before relying on it).
-- Instrumented tests and the widget on a launcher (M3, M4) need an emulator or the maintainer's phone.
+- Instrumented tests (`app/src/androidTest`) need an emulator; see "Instrumented tests (0.9.2)" below. The cloud can only compile them (`assembleDebugAndroidTest`).
 - The launcher icon exists since M5 (sun over day tiles, adaptive with a themed monochrome layer; mock-ups in the project folder `design/icon/`).
 
 ## Status
