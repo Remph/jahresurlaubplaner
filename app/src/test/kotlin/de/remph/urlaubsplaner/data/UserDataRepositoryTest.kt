@@ -11,8 +11,12 @@ import de.remph.urlaubsplaner.core.balance.YearEntitlement
 import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
 import de.remph.urlaubsplaner.core.settings.UserSettings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -113,5 +117,60 @@ class UserDataRepositoryTest {
             repository.unmark(day)
             repository.unmark(day)
             assertEquals(emptyMap<LocalDate, DayMark>(), marks())
+        }
+
+    @Test
+    fun `clearing a year removes its marks, ends included, and nothing else`() =
+        runBlocking {
+            val kept =
+                listOf(
+                    LocalDate.of(2025, 12, 31),
+                    LocalDate.of(2027, 1, 1),
+                    LocalDate.of(2027, 6, 1),
+                )
+            kept.forEach { repository.mark(it, DayMark.FULL) }
+            listOf(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 7, 7), LocalDate.of(2026, 12, 31))
+                .forEach { repository.mark(it, DayMark.HALF) }
+            repository.saveEntitlement(YearEntitlement(2026, VacationDays.of(30)))
+            repository.saveSettings(UserSettings(land = Bundesland.BAYERN))
+
+            repository.clearMarks(2026)
+
+            assertEquals(emptyMap<LocalDate, DayMark>(), marks())
+            val rest =
+                repository
+                    .observeMarks(LocalDate.of(2025, 1, 1), LocalDate.of(2027, 12, 31))
+                    .first()
+            assertEquals(kept.toSet(), rest.keys)
+            assertEquals(VacationDays.of(30), repository.observeEntitlement(2026).first()?.days)
+            assertEquals(Bundesland.BAYERN, repository.observeSettings().first().land)
+        }
+
+    @Test
+    fun `clearing a year with no marks is harmless`() =
+        runBlocking {
+            repository.mark(LocalDate.of(2027, 3, 3), DayMark.FULL)
+
+            repository.clearMarks(2026)
+
+            assertEquals(1, repository.readAll().marks.size)
+        }
+
+    @Test
+    fun `clearing a year is seen by whoever watches the table, like the widget`() =
+        runBlocking {
+            repository.mark(LocalDate.of(2026, 5, 5), DayMark.FULL)
+            // The widget refresher listens to the table through the invalidation tracker.
+            val seen = Channel<Set<String>>(Channel.UNLIMITED)
+            val watcher =
+                launch(Dispatchers.Default) {
+                    database.invalidationTracker.createFlow("marked_day").collect { seen.send(it) }
+                }
+            withTimeout(5_000) { seen.receive() }
+
+            repository.clearMarks(2026)
+
+            assertEquals(setOf("marked_day"), withTimeout(5_000) { seen.receive() })
+            watcher.cancel()
         }
 }

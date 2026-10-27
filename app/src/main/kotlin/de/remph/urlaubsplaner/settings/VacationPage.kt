@@ -1,5 +1,6 @@
 package de.remph.urlaubsplaner.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,18 +11,27 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -141,6 +151,69 @@ fun VacationPage(
             support = stringResource(R.string.suggest_carry_over_support),
             checked = ui.settings.suggestCarryOver,
             onChange = viewModel::setSuggestCarryOver,
+        )
+        ClearYearAction(ui.year, ui.markedDays, viewModel)
+    }
+}
+
+/**
+ * The one destructive action of the page, last and in the error colour. It only removes the
+ * marked days; the dialog says so and points to the backup, because there is no undo.
+ */
+@Composable
+private fun ClearYearAction(
+    year: Int,
+    markedDays: Int,
+    viewModel: SettingsViewModel,
+) {
+    var asking by rememberSaveable { mutableStateOf(false) }
+    val error = MaterialTheme.colorScheme.error
+    OutlinedButton(
+        onClick = { asking = true },
+        enabled = markedDays > 0,
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = error),
+        border =
+            BorderStroke(
+                1.dp,
+                if (markedDays >
+                    0
+                ) {
+                    error
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                },
+            ),
+        modifier = Modifier.fillMaxWidth(),
+    ) { Text(stringResource(R.string.clear_year_action, year)) }
+    if (markedDays == 0) {
+        Text(
+            text = stringResource(R.string.clear_year_none, year),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    if (asking && markedDays > 0) {
+        AlertDialog(
+            onDismissRequest = { asking = false },
+            title = { Text(stringResource(R.string.clear_year_title, year)) },
+            text = {
+                Text(
+                    pluralStringResource(R.plurals.clear_year_body, markedDays, markedDays, year) +
+                        "\n\n" + stringResource(R.string.clear_year_hint),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        asking = false
+                        viewModel.clearYear(year)
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = error),
+                ) { Text(stringResource(R.string.clear_year_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { asking = false }) { Text(stringResource(R.string.cancel)) }
+            },
         )
     }
 }

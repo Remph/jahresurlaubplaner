@@ -62,6 +62,13 @@ class UserDataRepository(
     suspend fun unmarkAll(dates: Collection<LocalDate>) =
         markedDayDao.deleteDates(dates.map { it.toString() })
 
+    /** Removes every mark of [year]; other years, the entitlement and the settings stay. */
+    suspend fun clearMarks(year: Int) =
+        markedDayDao.deleteBetween(
+            LocalDate.of(year, 1, 1).toString(),
+            LocalDate.of(year, 12, 31).toString(),
+        )
+
     /**
      * Everything the user has entered, for the backup file. A row that cannot be read (a damaged
      * value) is left out here as it is everywhere else in the app.

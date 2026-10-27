@@ -201,6 +201,10 @@ private fun noticeText(notice: Notice): String =
             stringResource(R.string.notice_imported)
         }
 
+        is Notice.YearCleared -> {
+            stringResource(R.string.notice_year_cleared, notice.year)
+        }
+
         Notice.ExportFailed -> {
             stringResource(R.string.notice_export_failed)
         }

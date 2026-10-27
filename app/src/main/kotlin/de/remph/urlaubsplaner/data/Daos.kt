@@ -64,4 +64,11 @@ interface MarkedDayDao {
 
     @Query("DELETE FROM marked_day")
     suspend fun deleteAll()
+
+    /** [from] and [to] are ISO dates, both ends are included. */
+    @Query("DELETE FROM marked_day WHERE date BETWEEN :from AND :to")
+    suspend fun deleteBetween(
+        from: String,
+        to: String,
+    )
 }

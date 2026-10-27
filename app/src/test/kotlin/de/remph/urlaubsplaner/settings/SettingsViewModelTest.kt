@@ -593,4 +593,51 @@ class SettingsViewModelTest {
 
         assertEquals(Notice.ImportUnreadable, vm.await { it.notice != null }.notice)
     }
+
+    @Test
+    fun `the state counts the marked days of the shown year only`() {
+        runBlocking {
+            repository.mark(LocalDate.of(2026, 12, 31), DayMark.FULL)
+            repository.mark(LocalDate.of(2027, 1, 4), DayMark.FULL)
+            repository.mark(LocalDate.of(2027, 8, 2), DayMark.HALF)
+        }
+        val vm = viewModel()
+
+        assertEquals(2, vm.await { it.year == 2027 }.markedDays)
+
+        vm.selectYear(2026)
+        assertEquals(1, vm.await { it.year == 2026 }.markedDays)
+    }
+
+    @Test
+    fun `clearing a year removes only its marks and keeps the entitlement, then says so`() {
+        runBlocking {
+            repository.saveEntitlement(YearEntitlement(2027, VacationDays.of(30)))
+            repository.saveEntitlement(YearEntitlement(2026, VacationDays.of(28)))
+            repository.mark(LocalDate.of(2026, 8, 3), DayMark.FULL)
+            repository.mark(LocalDate.of(2027, 1, 4), DayMark.FULL)
+            repository.mark(LocalDate.of(2027, 8, 2), DayMark.HALF)
+        }
+        val vm = viewModel()
+        vm.await { it.markedDays == 2 }
+
+        vm.clearYear(2027)
+
+        vm.await { it.notice == Notice.YearCleared(2027) && it.markedDays == 0 }
+        val rest = runBlocking { repository.readAll() }
+        assertEquals(mapOf(LocalDate.of(2026, 8, 3) to DayMark.FULL), rest.marks)
+        assertEquals(setOf(2026, 2027), rest.entitlements.map { it.year }.toSet())
+    }
+
+    @Test
+    fun `a year outside the supported range is not cleared`() {
+        runBlocking { repository.mark(LocalDate.of(2018, 5, 1), DayMark.FULL) }
+        val vm = viewModel()
+        vm.await()
+
+        vm.clearYear(2018)
+
+        assertNull(vm.await().notice)
+        assertEquals(1, runBlocking { repository.readAll() }.marks.size)
+    }
 }
