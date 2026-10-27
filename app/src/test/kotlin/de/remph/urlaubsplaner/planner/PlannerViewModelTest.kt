@@ -202,6 +202,31 @@ class PlannerViewModelTest {
         await(model.overview) { it.markOn(day) == DayMark.FULL }
         assertEquals(emptySet<LocalDate>(), runBlocking { fixture.repository.readAll() }.granted)
     }
+
+    @Test
+    fun `showing a date opens its month and asks for the highlight`() {
+        val model = viewModel()
+        model.showMode(CalendarMode.YEAR)
+
+        model.showDate(fixture.date("2027-03-26"))
+
+        assertEquals(YearMonth.of(2027, 3), model.calendarMonth.value)
+        assertEquals(CalendarMode.MONTH, model.calendarMode.value)
+        assertEquals(fixture.date("2027-03-26"), model.highlight.value)
+
+        model.highlightDone()
+
+        assertNull(model.highlight.value)
+    }
+
+    @Test
+    fun `a date outside the calendar opens nothing to highlight`() {
+        val model = viewModel()
+
+        model.showDate(fixture.date("2018-12-25"))
+
+        assertNull(model.highlight.value)
+    }
 }
 
 /** A clock that tells the same time of day as [base] on a day the test can change. */

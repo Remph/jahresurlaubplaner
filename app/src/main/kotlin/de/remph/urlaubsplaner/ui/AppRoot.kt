@@ -118,6 +118,10 @@ fun AppRoot(
                                 plannerViewModel.showMonth(it)
                                 tab = Tab.CALENDAR
                             },
+                            onShowDate = {
+                                plannerViewModel.showDate(it)
+                                tab = Tab.CALENDAR
+                            },
                         )
                     }
 

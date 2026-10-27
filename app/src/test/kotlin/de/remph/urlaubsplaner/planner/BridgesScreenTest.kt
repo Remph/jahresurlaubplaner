@@ -51,6 +51,7 @@ class BridgesScreenTest {
                 PaddingValues(),
                 onOpenSettings = {},
                 onOpenMonth = {},
+                onShowDate = {},
             )
         }
         waitForText(waitFor)

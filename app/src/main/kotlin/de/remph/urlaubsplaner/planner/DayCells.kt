@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.MarkStatus
@@ -103,6 +105,8 @@ private val DayFade = tween<Color>(durationMillis = 150)
 fun MonthGrid(
     view: YearView,
     month: YearMonth,
+    highlight: LocalDate? = null,
+    onHighlightDone: () -> Unit = {},
     onDayClick: (LocalDate) -> Unit,
 ) {
     val locale = currentLocale()
@@ -112,7 +116,11 @@ fun MonthGrid(
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         WeekdayHeader(locale)
         for (row in 0 until rows) {
-            Row(Modifier.fillMaxWidth()) {
+            // The rings of the highlighted day reach into the rows around it, so its row is drawn last.
+            val highlightRow =
+                highlight != null && YearMonth.from(highlight) == month &&
+                    (highlight.dayOfMonth + blanks - 1) / 7 == row
+            Row(Modifier.fillMaxWidth().zIndex(if (highlightRow) 1f else 0f)) {
                 for (column in 0 until 7) {
                     val day = row * 7 + column - blanks + 1
                     if (day < 1 || day > month.lengthOfMonth()) {
@@ -121,7 +129,16 @@ fun MonthGrid(
                         // Keyed by date: a cell that appears with a new month starts at its colours
                         // instead of fading from the previous month's day at the same place.
                         key(month.atDay(day)) {
-                            DayCell(view, month.atDay(day), locale, onDayClick, Modifier.weight(1f))
+                            val date = month.atDay(day)
+                            DayCell(
+                                view,
+                                date,
+                                locale,
+                                onDayClick,
+                                Modifier.weight(1f),
+                                highlight = date == highlight,
+                                onHighlightDone = onHighlightDone,
+                            )
                         }
                     }
                 }
@@ -137,8 +154,11 @@ private fun DayCell(
     locale: Locale,
     onClick: (LocalDate) -> Unit,
     modifier: Modifier,
+    highlight: Boolean,
+    onHighlightDone: () -> Unit,
 ) {
     val colors = dayColors()
+    val clock = rememberHighlightClock(highlight, onHighlightDone)
     val look = view.look(date)
     val description = dayDescription(view, date, look, locale)
     // The theme's large step, the same as the cards (design review, the maintainer, 2026-10-25).
@@ -180,6 +200,8 @@ private fun DayCell(
         modifier =
             modifier
                 .height(52.dp)
+                .zIndex(if (highlight) 1f else 0f)
+                .highlightRings(clock, MaterialTheme.colorScheme.primary, shape, 2.dp)
                 .clickable { onClick(date) }
                 .semantics(mergeDescendants = true) { contentDescription = description },
     ) {
@@ -188,7 +210,11 @@ private fun DayCell(
                 Modifier
                     .fillMaxSize()
                     .padding(2.dp)
-                    .clip(shape)
+                    .graphicsLayer {
+                        val scale = popScale(clock.elapsed)
+                        scaleX = scale
+                        scaleY = scale
+                    }.clip(shape)
                     .background(fill)
                     .then(
                         when {
