@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.core.balance.YearEntitlement
 import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.settings.UserSettings
 import kotlinx.coroutines.runBlocking
@@ -43,6 +45,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import java.time.MonthDay
 
 /** Composes the real calendar: the month, the colours in words, and marking through the sheet. */
 @RunWith(AndroidJUnit4::class)
@@ -578,6 +581,46 @@ class CalendarScreenTest {
         compose.mainClock.advanceTimeByFrame()
         compose.onAllNodesWithText("März 2027").assertCountEquals(0)
         compose.onAllNodesWithText("2027").assertCountEquals(1)
+    }
+
+    @Test
+    @Config(qualifiers = "de-w411dp-h900dp")
+    fun `the year sliding in does not start at the least row height and grow`() {
+        runBlocking {
+            fixture.repository.saveEntitlement(
+                YearEntitlement(2026, VacationDays.of(30), VacationDays.of(0), MonthDay.of(3, 31)),
+            )
+        }
+        showYear()
+        expandRows()
+        val fit2027 = gridHeight()
+        compose.onNodeWithContentDescription("Vorheriges Jahr").performClick()
+        waitForText("2026")
+        compose.waitForIdle()
+        val fit2026 =
+            compose
+                .onNode(hasContentDescription("Jahresübersicht 2026", substring = true))
+                .getBoundsInRoot()
+                .height
+        val least = minOf(fit2027, fit2026)
+        assertTrue("$fit2026 $fit2027", least > YearRowsMin * 12)
+        compose.mainClock.autoAdvance = false
+
+        // Both years are expanded, so while they slide neither grid may be smaller than the
+        // smaller of the two.
+        for (button in listOf("Nächstes Jahr", "Vorheriges Jahr")) {
+            compose.onNodeWithContentDescription(button).performClick()
+            repeat(80) {
+                Thread.sleep(5)
+                compose.mainClock.advanceTimeByFrame()
+                val heights =
+                    compose
+                        .onAllNodes(hasContentDescription("Jahresübersicht 20", substring = true))
+                        .fetchSemanticsNodes()
+                        .map { it.size.height }
+                assertTrue("$heights", heights.all { it >= least.value })
+            }
+        }
     }
 
     private fun assertEmptyStatesMatchTitles() {

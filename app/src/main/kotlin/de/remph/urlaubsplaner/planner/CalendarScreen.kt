@@ -86,6 +86,9 @@ fun CalendarScreen(
     val locale = currentLocale()
     val motion = rememberPageMotion()
     var headerPx by remember { mutableIntStateOf(0) }
+    // What the year page takes besides its grid, kept for the page that slides in (it has no
+    // measure of its own yet and would start at the least row height and grow) and over a tab change.
+    var othersPx by rememberSaveable { mutableIntStateOf(-1) }
 
     BoxWithConstraints {
         // What the page can fill without scrolling: the screen without the bars and the frame.
@@ -124,6 +127,9 @@ fun CalendarScreen(
                     locale,
                     viewModel,
                     onOpenSettings,
+                    savedOthersPx = othersPx,
+                    // Only the page that stays reports: the one sliding out has another year's size.
+                    onOthersPx = { if (shownPage.generation == page.generation) othersPx = it },
                     onDay = { sheetDate = it },
                 )
             }
@@ -173,18 +179,21 @@ private fun CalendarBody(
     locale: Locale,
     viewModel: PlannerViewModel,
     onOpenSettings: () -> Unit,
+    savedOthersPx: Int,
+    onOthersPx: (Int) -> Unit,
     onDay: (LocalDate) -> Unit,
 ) {
     val shown = page.view
     val month = page.month
     val density = LocalDensity.current
     // The expanded rows are what is left of the screen once the rest of the page has its height.
-    // That rest is measured (the page minus the grid), and kept over a tab change.
-    var savedOthers by rememberSaveable { mutableIntStateOf(-1) }
-    var bodyPx by remember { mutableIntStateOf(0) }
-    var gridPx by remember { mutableIntStateOf(0) }
-    val othersPx = if (bodyPx > 0 && gridPx > 0) bodyPx - gridPx else savedOthers
-    SideEffect { savedOthers = othersPx }
+    // That rest is measured (the page minus the grid) while the year is shown. Until then, and
+    // after a switch from the month view (whose sizes are not the year's), the last one counts.
+    var bodyPx by remember(page.mode) { mutableIntStateOf(0) }
+    var gridPx by remember(page.mode) { mutableIntStateOf(0) }
+    val measured = if (bodyPx > 0 && gridPx > 0) bodyPx - gridPx else -1
+    SideEffect { if (measured >= 0) onOthersPx(measured) }
+    val othersPx = if (measured >= 0) measured else savedOthersPx
     val expanded =
         if (othersPx < 0) {
             YearRowsMin
