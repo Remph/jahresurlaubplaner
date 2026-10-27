@@ -152,6 +152,12 @@ fun VacationPage(
             checked = ui.settings.suggestCarryOver,
             onChange = viewModel::setSuggestCarryOver,
         )
+        SwitchRow(
+            label = stringResource(R.string.granted_days),
+            support = stringResource(R.string.granted_days_support),
+            checked = ui.settings.grantedDays,
+            onChange = viewModel::setGrantedDays,
+        )
         ClearYearAction(ui.year, ui.markedDays, viewModel)
     }
 }

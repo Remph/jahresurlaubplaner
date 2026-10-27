@@ -47,7 +47,23 @@ abstract class UrlaubsplanerDatabase : RoomDatabase() {
                 }
             }
 
-        const val VERSION = 3
+        /**
+         * Version 4: the employer has granted a marked day (shown apart from a planned one), and
+         * the setting that turns this on.
+         */
+        private val MIGRATION_3_4 =
+            object : Migration(3, 4) {
+                override fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL(
+                        "ALTER TABLE marked_day ADD COLUMN granted INTEGER NOT NULL DEFAULT 0",
+                    )
+                    connection.execSQL(
+                        "ALTER TABLE settings ADD COLUMN grantedDays INTEGER NOT NULL DEFAULT 0",
+                    )
+                }
+            }
+
+        const val VERSION = 4
         const val FILE_NAME = "urlaubsplaner.db"
 
         /**
@@ -55,7 +71,7 @@ abstract class UrlaubsplanerDatabase : RoomDatabase() {
          * goes up; a test fails if one is missing. There is deliberately no fallback to
          * destructive migration: this is the user's vacation data.
          */
-        val MIGRATIONS: List<Migration> = listOf(MIGRATION_1_2, MIGRATION_2_3)
+        val MIGRATIONS: List<Migration> = listOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
         fun create(context: Context): UrlaubsplanerDatabase =
             Room

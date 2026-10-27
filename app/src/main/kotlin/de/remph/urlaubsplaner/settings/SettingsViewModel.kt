@@ -227,6 +227,8 @@ class SettingsViewModel(
 
     fun setSuggestCarryOver(on: Boolean) = changeSettings { it.copy(suggestCarryOver = on) }
 
+    fun setGrantedDays(on: Boolean) = changeSettings { it.copy(grantedDays = on) }
+
     /**
      * Reads the settings from the database, not from [state], which can be a moment behind: two
      * quick taps must both count. The lock keeps one change from overwriting another.

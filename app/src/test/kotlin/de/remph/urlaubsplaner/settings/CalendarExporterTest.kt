@@ -151,4 +151,40 @@ class CalendarExporterTest {
     fun `the suggested name has the date`() {
         assertEquals("urlaubsplaner-2027-03-10.ics", exporter.suggestedFileName())
     }
+
+    @Test
+    fun `with granted days on planned parts are tentative and granted parts confirmed`() {
+        runBlocking {
+            repository.saveSettings(
+                UserSettings(land = Bundesland.BAYERN, grantedDays = true),
+            )
+        }
+        twoTrips()
+        // Monday to Wednesday of the planned week are granted, Thursday and Friday are not.
+        runBlocking {
+            repository.setGranted((15..17).map { date("2027-03-$it") }, true)
+        }
+
+        runBlocking { exporter.save(Uri.fromFile(file), IcsLanguage.GERMAN) }
+
+        val text = file.readText()
+        // The taken trip and the granted part are confirmed, the rest of the week is tentative.
+        assertEquals(3, text.split("BEGIN:VEVENT").size - 1)
+        assertEquals(2, text.split("STATUS:CONFIRMED").size - 1)
+        assertEquals(1, text.split("STATUS:TENTATIVE").size - 1)
+        assertEquals(3, runBlocking { exporter.tripCount() })
+    }
+
+    @Test
+    fun `with granted days off the file is as before whatever is stored`() {
+        land()
+        twoTrips()
+        runBlocking { repository.setGranted((15..17).map { date("2027-03-$it") }, true) }
+
+        runBlocking { exporter.save(Uri.fromFile(file), IcsLanguage.GERMAN) }
+
+        val text = file.readText()
+        assertEquals(2, text.split("BEGIN:VEVENT").size - 1)
+        assertTrue(!text.contains("STATUS"))
+    }
 }

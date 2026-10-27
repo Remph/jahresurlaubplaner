@@ -1,11 +1,14 @@
 package de.remph.urlaubsplaner.planner
 
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkStatus
+import de.remph.urlaubsplaner.core.balance.MarkedDays
 import de.remph.urlaubsplaner.core.balance.Trip
 import de.remph.urlaubsplaner.core.balance.VacationBalance
 import de.remph.urlaubsplaner.core.balance.VacationCalculator
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.YearEntitlement
+import de.remph.urlaubsplaner.core.balance.grantedPlanned
 import de.remph.urlaubsplaner.core.bridge.Bridge
 import de.remph.urlaubsplaner.core.bridge.BridgeFinder
 import de.remph.urlaubsplaner.core.bridge.BridgeGroup
@@ -32,6 +35,8 @@ class YearView(
     val entitlement: YearEntitlement?,
     /** Marks from the December before to the December after, so trips over New Year work. */
     val marks: Map<LocalDate, DayMark>,
+    /** The marked days the employer has granted, as stored; [grantedOn] and [status] apply the setting. */
+    private val granted: Set<LocalDate> = emptySet(),
     private val calculator: VacationCalculator?,
     private val schoolData: SchoolHolidayData,
     private val bridgeFinder: BridgeFinder? = null,
@@ -101,6 +106,35 @@ class YearView(
     ): List<SchoolHoliday> = schoolHolidays.filter { it.overlaps(from, to) }
 
     fun markOn(date: LocalDate): DayMark? = marks[date]
+
+    /** Whether the granted days setting is on; off hides every trace of granted days. */
+    val grantedEnabled: Boolean get() = settings.grantedDays
+
+    private val markedDays =
+        MarkedDays(
+            marks,
+            if (grantedEnabled) {
+                granted.filterTo(mutableSetOf()) {
+                    it in marks
+                }
+            } else {
+                emptySet()
+            },
+        )
+
+    /** Taken, granted or planned, null when [date] is not marked. Never granted while the setting is off. */
+    fun statusOn(date: LocalDate): MarkStatus? = markedDays.statusOn(date, today)
+
+    /** The granted flag [date] has, for the day sheet's switch; false while the setting is off. */
+    fun isGranted(date: LocalDate): Boolean = date in markedDays.granted
+
+    /** The part of [VacationBalance.planned] that is granted, for the overview; zero while off. */
+    val grantedPlanned: VacationDays =
+        if (grantedEnabled && calculator != null) {
+            calculator.grantedPlanned(year, markedDays, today)
+        } else {
+            VacationDays.ZERO
+        }
 
     /**
      * The vacation days marked in [month], split at today: up to and including today they are

@@ -118,6 +118,7 @@ fun YearGrid(
                     val fill =
                         when {
                             look.taken -> colors.taken
+                            look.granted -> colors.granted
                             look.holiday -> colors.holiday
                             look.school -> colors.school
                             !look.workDay -> faint

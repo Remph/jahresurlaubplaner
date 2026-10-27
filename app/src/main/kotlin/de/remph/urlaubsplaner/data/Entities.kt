@@ -24,6 +24,8 @@ data class SettingsEntity(
     val specialDays: String,
     /** Added in version 2; rows from version 1 get 0 (off). */
     @ColumnInfo(defaultValue = "0") val suggestCarryOver: Boolean = false,
+    /** Added in version 4; rows from version 3 get 0 (off). */
+    @ColumnInfo(defaultValue = "0") val grantedDays: Boolean = false,
 ) {
     companion object {
         const val SETTINGS_ID = 1
@@ -45,4 +47,6 @@ data class YearEntitlementEntity(
 data class MarkedDayEntity(
     @PrimaryKey val date: String,
     val mark: String,
+    /** Added in version 4; rows from version 3 get 0 (planned, not yet granted). */
+    @ColumnInfo(defaultValue = "0") val granted: Boolean = false,
 )

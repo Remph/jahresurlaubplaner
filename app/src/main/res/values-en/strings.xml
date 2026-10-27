@@ -192,6 +192,7 @@
     <string name="legend_school">School holidays</string>
     <string name="legend_taken">Taken</string>
     <string name="legend_planned">Planned</string>
+    <string name="legend_granted">Granted</string>
     <string name="day_holiday">Public holiday: %1$s</string>
     <string name="day_school_holiday">School holidays</string>
     <string name="day_taken">Vacation taken</string>
@@ -200,6 +201,8 @@
     <string name="day_bridge">possible bridge day</string>
     <string name="legend_bridge">Bridge day</string>
     <string name="day_planned_half">Half vacation day planned</string>
+    <string name="day_granted">Vacation granted</string>
+    <string name="day_granted_half">Half vacation day granted</string>
     <string name="bridges_title">Bridge days</string>
     <string name="bridge_anchor">%1$s, %2$s</string>
     <string name="bridge_before">before: take %1$s, %2$s</string>
@@ -232,6 +235,14 @@
         <item quantity="other">Costs %1$s vacation days</item>
     </plurals>
     <string name="sheet_costs_and_left">%1$s, %2$s left afterwards</string>
+    <string name="sheet_granted">Granted</string>
+    <string name="sheet_granted_support">Your employer has agreed.</string>
+    <plurals name="overview_granted">
+        <item quantity="one">Of those, granted: %1$s day</item>
+        <item quantity="other">Of those, granted: %1$s days</item>
+    </plurals>
+    <string name="granted_days">Granted vacation days</string>
+    <string name="granted_days_support">Shows which planned days your employer has already granted: in the calendar, on the overview and in the calendar export. Turned off, everything stays stored but is not shown.</string>
 
     <!-- Public holidays -->
     <string name="holiday_neujahr">New Year\'s Day</string>

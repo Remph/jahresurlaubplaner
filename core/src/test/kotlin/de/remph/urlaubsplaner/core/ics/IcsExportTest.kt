@@ -1,6 +1,7 @@
 package de.remph.urlaubsplaner.core.ics
 
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkedDays
 import de.remph.urlaubsplaner.core.balance.VacationCalculator
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -28,6 +29,16 @@ class IcsExportTest {
     ): Map<LocalDate, DayMark> = (0L..4L).associate { from.plusDays(it) to mark }
 
     private fun lines(text: String) = text.split("\r\n")
+
+    // Most tests do not care about granted days: a plain map means none are granted.
+    private fun IcsExport.encode(
+        marks: Map<LocalDate, DayMark>,
+        language: IcsLanguage,
+    ) = encode(MarkedDays(marks), language)
+
+    private fun IcsExport.tripCount(marks: Map<LocalDate, DayMark>) = tripCount(MarkedDays(marks))
+
+    private fun events(text: String) = text.split("BEGIN:VEVENT").drop(1).map { lines(it) }
 
     @Test
     fun `a week is one all-day event that ends the day after the last marked day`() {
@@ -154,6 +165,83 @@ class IcsExportTest {
         val withHoliday = IcsExport(clock, VacationCalculator(clock) { it == holiday })
         val text = withHoliday.encode(week(), IcsLanguage.GERMAN)
         assertTrue("DESCRIPTION:4 Urlaubstage" in lines(text))
+    }
+
+    @Test
+    fun `planned days are tentative and granted days are confirmed`() {
+        val planned = export.encode(week(), IcsLanguage.GERMAN)
+        assertTrue("STATUS:TENTATIVE" in lines(planned))
+        assertFalse("STATUS:CONFIRMED" in lines(planned))
+
+        val granted = export.encode(MarkedDays(week(), week().keys), IcsLanguage.GERMAN)
+        assertTrue("STATUS:CONFIRMED" in lines(granted))
+        assertFalse("STATUS:TENTATIVE" in lines(granted))
+    }
+
+    @Test
+    fun `with the granted days setting off the file has no status and no split`() {
+        val days = MarkedDays(week() + week(from = day(4, 19)), week().keys)
+
+        val text = export.encode(days, IcsLanguage.GERMAN, withStatus = false)
+
+        assertFalse("STATUS" in text)
+        assertEquals(1, events(text).size)
+        assertEquals(1, export.tripCount(days, withStatus = false))
+    }
+
+    @Test
+    fun `days up to today are confirmed whatever the granted flag says`() {
+        // Today is Wednesday 10 March 2027; the week from Monday 8 March is taken only in part.
+        val marks = week(from = day(3, 8))
+        val events = events(export.encode(MarkedDays(marks), IcsLanguage.GERMAN))
+
+        assertEquals(2, events.size)
+        assertTrue("STATUS:CONFIRMED" in events[0])
+        assertTrue("DTSTART;VALUE=DATE:20270308" in events[0])
+        assertTrue("DTEND;VALUE=DATE:20270311" in events[0])
+        assertTrue("STATUS:TENTATIVE" in events[1])
+        assertTrue("DTSTART;VALUE=DATE:20270311" in events[1])
+        assertTrue("DTEND;VALUE=DATE:20270313" in events[1])
+    }
+
+    @Test
+    fun `a trip splits where the status changes and each part counts its own days`() {
+        // Monday to Wednesday granted (the Wednesday half), Thursday and Friday only planned.
+        val marks = week().toMutableMap().apply { put(day(4, 14), DayMark.HALF) }
+        val days = MarkedDays(marks, setOf(day(4, 12), day(4, 13), day(4, 14)))
+        val events = events(export.encode(days, IcsLanguage.GERMAN))
+
+        assertEquals(2, events.size)
+        assertEquals(2, export.tripCount(days))
+        assertTrue("STATUS:CONFIRMED" in events[0])
+        assertTrue("DTEND;VALUE=DATE:20270415" in events[0])
+        assertTrue("DESCRIPTION:2\\,5 Urlaubstage\\, davon 1 halber Tag" in events[0])
+        assertTrue("UID:urlaubsplaner-2027-04-12@de.remph.urlaubsplaner" in events[0])
+        assertTrue("STATUS:TENTATIVE" in events[1])
+        assertTrue("DTSTART;VALUE=DATE:20270415" in events[1])
+        assertTrue("DESCRIPTION:2 Urlaubstage" in events[1])
+        assertTrue("UID:urlaubsplaner-2027-04-15@de.remph.urlaubsplaner" in events[1])
+    }
+
+    @Test
+    fun `a weekend between runs of different status belongs to neither`() {
+        val days = MarkedDays(week() + week(from = day(4, 19)), week().keys)
+        val events = events(export.encode(days, IcsLanguage.GERMAN))
+
+        assertEquals(2, events.size)
+        assertTrue("DTEND;VALUE=DATE:20270417" in events[0])
+        assertTrue("DTSTART;VALUE=DATE:20270419" in events[1])
+    }
+
+    @Test
+    fun `a trip of one status stays one event over its weekend`() {
+        val days =
+            MarkedDays(
+                week() + week(from = day(4, 19)),
+                week().keys + week(from = day(4, 19)).keys,
+            )
+
+        assertEquals(1, export.tripCount(days))
     }
 
     @Test

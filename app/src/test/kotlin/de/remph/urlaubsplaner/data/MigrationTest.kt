@@ -79,10 +79,11 @@ class MigrationTest {
             val marks =
                 runBlocking {
                     UserDataRepository(database)
-                        .observeMarks(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31))
+                        .observeMarkedDays(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31))
                         .first()
                 }
-            assertEquals(mapOf(LocalDate.of(2026, 8, 14) to DayMark.HALF), marks)
+            assertEquals(mapOf(LocalDate.of(2026, 8, 14) to DayMark.HALF), marks.marks)
+            assertTrue(marks.granted.isEmpty())
         } finally {
             database.close()
         }
@@ -159,6 +160,60 @@ class MigrationTest {
             runBlocking { repository.saveEntitlement(entitlement!!.copy(carryOverExpiryYears = 1)) }
             val later = runBlocking { repository.observeEntitlement(2026).first() }
             assertEquals(1, later?.carryOverExpiryYears)
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
+    fun `version 3 marks migrate as planned and the granted days setting as off`() {
+        helper.createDatabase(TEST_DB, 3).apply {
+            execSQL("INSERT INTO marked_day (date, mark) VALUES ('2026-08-14', 'HALF')")
+            execSQL("INSERT INTO marked_day (date, mark) VALUES ('2026-08-17', 'FULL')")
+            execSQL(
+                "INSERT INTO settings " +
+                    "(id, land, workingDays, regionalExtras, optOuts, specialDays, " +
+                    "suggestCarryOver) VALUES (1, 'BY', 'MONDAY', '', '', '', 1)",
+            )
+            close()
+        }
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val database =
+            Room
+                .databaseBuilder(context, UrlaubsplanerDatabase::class.java, TEST_DB)
+                .addMigrations(*UrlaubsplanerDatabase.MIGRATIONS.toTypedArray())
+                .build()
+        try {
+            val repository = UserDataRepository(database)
+            val days =
+                runBlocking {
+                    repository
+                        .observeMarkedDays(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31))
+                        .first()
+                }
+            assertEquals(
+                mapOf(
+                    LocalDate.of(2026, 8, 14) to DayMark.HALF,
+                    LocalDate.of(2026, 8, 17) to DayMark.FULL,
+                ),
+                days.marks,
+            )
+            assertTrue(days.granted.isEmpty())
+
+            val settings = runBlocking { repository.observeSettings().first() }
+            assertFalse(settings.grantedDays)
+            assertTrue(settings.suggestCarryOver)
+
+            runBlocking {
+                repository.setGranted(listOf(LocalDate.of(2026, 8, 14)), true)
+                repository.saveSettings(settings.copy(grantedDays = true))
+            }
+            assertEquals(
+                setOf(LocalDate.of(2026, 8, 14)),
+                runBlocking { repository.readAll() }.granted,
+            )
+            assertTrue(runBlocking { repository.observeSettings().first() }.grantedDays)
         } finally {
             database.close()
         }

@@ -85,6 +85,7 @@ fun CalendarScreen(
                 MonthCard(shown, month, locale)
                 Legend(
                     showBridge = shown.bridgeDays.any { YearMonth.from(it) == month },
+                    showGranted = shown.grantedEnabled,
                     compact = true,
                 )
             } else {
@@ -101,7 +102,10 @@ fun CalendarScreen(
                     )
                     YearRowsHandle(rowsExpanded) { viewModel.expandYearRows(!rowsExpanded) }
                 }
-                Legend(showBridge = shown.bridgeDays.isNotEmpty())
+                Legend(
+                    showBridge = shown.bridgeDays.isNotEmpty(),
+                    showGranted = shown.grantedEnabled,
+                )
                 SchoolHolidaysUnknownNote(
                     shown,
                     LocalDate.of(shown.year, 1, 1),

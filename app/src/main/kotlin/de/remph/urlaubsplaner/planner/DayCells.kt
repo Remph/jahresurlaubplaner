@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkStatus
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -55,6 +56,8 @@ class DayLook(
     val school: Boolean,
     val mark: DayMark?,
     val taken: Boolean,
+    /** Planned and granted by the employer; only while the granted days setting is on. */
+    val granted: Boolean,
     val today: Boolean,
     val workDay: Boolean,
     /** A day to take for a possible Brückentag that is not marked yet. */
@@ -69,6 +72,7 @@ fun YearView.look(date: LocalDate): DayLook {
         school = schoolHolidaysOn(date).isNotEmpty(),
         mark = mark,
         taken = mark != null && !date.isAfter(today),
+        granted = mark != null && statusOn(date) == MarkStatus.GRANTED,
         today = date == today,
         workDay = settings.schedule.workingValue(date) > VacationDays.ZERO,
         bridge = mark == null && date in bridgeDays,
@@ -147,6 +151,7 @@ private fun DayCell(
     val fillTarget =
         when {
             look.taken -> colors.taken
+            look.granted -> colors.granted
             look.holiday -> colors.holiday
             look.school -> colors.school
             else -> MaterialTheme.colorScheme.surfaceContainerLow
@@ -154,6 +159,7 @@ private fun DayCell(
     val textTarget =
         when {
             look.taken -> colors.onTaken
+            look.granted -> colors.onGranted
             look.holiday -> colors.onHoliday
             !look.workDay -> colors.weekend
             else -> MaterialTheme.colorScheme.onSurface
@@ -210,7 +216,12 @@ private fun DayCell(
             if (look.mark == DayMark.HALF) {
                 Text(
                     text = "½",
-                    color = if (look.taken) colors.onTaken else colors.planned,
+                    color =
+                        when {
+                            look.taken -> colors.onTaken
+                            look.granted -> colors.grantedHalf
+                            else -> colors.planned
+                        },
                     fontSize = 11.sp,
                     modifier = Modifier.align(Alignment.TopEnd).padding(end = 5.dp, top = 2.dp),
                 )
@@ -255,11 +266,34 @@ fun dayDescription(
     }
     if (look.school) parts += stringResource(R.string.day_school_holiday)
     when {
-        look.mark == null -> Unit
-        look.mark == DayMark.HALF && look.taken -> parts += stringResource(R.string.day_taken_half)
-        look.mark == DayMark.HALF -> parts += stringResource(R.string.day_planned_half)
-        look.taken -> parts += stringResource(R.string.day_taken)
-        else -> parts += stringResource(R.string.day_planned)
+        look.mark == null -> {
+            Unit
+        }
+
+        look.mark == DayMark.HALF && look.taken -> {
+            parts += stringResource(R.string.day_taken_half)
+        }
+
+        look.mark == DayMark.HALF && look.granted -> {
+            parts +=
+                stringResource(R.string.day_granted_half)
+        }
+
+        look.mark == DayMark.HALF -> {
+            parts += stringResource(R.string.day_planned_half)
+        }
+
+        look.taken -> {
+            parts += stringResource(R.string.day_taken)
+        }
+
+        look.granted -> {
+            parts += stringResource(R.string.day_granted)
+        }
+
+        else -> {
+            parts += stringResource(R.string.day_planned)
+        }
     }
     if (look.bridge) parts += stringResource(R.string.day_bridge)
     if (look.today) parts += stringResource(R.string.day_today)
@@ -272,6 +306,7 @@ fun dayDescription(
 fun Legend(
     modifier: Modifier = Modifier,
     showBridge: Boolean = false,
+    showGranted: Boolean = false,
     compact: Boolean = false,
 ) {
     val colors = dayColors()
@@ -293,6 +328,14 @@ fun Legend(
         }
         LegendItem(R.string.legend_planned, size, compact) {
             Modifier.border(BorderStroke(2.dp, colors.planned), shape)
+        }
+        if (showGranted) {
+            // The same swatch as a granted day: the lighter fill inside the planned outline.
+            LegendItem(R.string.legend_granted, size, compact) {
+                Modifier
+                    .background(colors.granted, shape)
+                    .border(BorderStroke(2.dp, colors.planned), shape)
+            }
         }
         if (showBridge) {
             LegendItem(R.string.legend_bridge, size, compact) {

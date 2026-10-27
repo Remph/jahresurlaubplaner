@@ -68,12 +68,41 @@ class BackupFileTest {
                     LocalDate.of(2026, 7, 2) to DayMark.HALF,
                     LocalDate.of(2027, 1, 4) to DayMark.FULL,
                 ),
+            granted = setOf(LocalDate.of(2026, 7, 2), LocalDate.of(2027, 1, 4)),
         )
 
     private fun roundTrip(data: BackupData) = BackupFile.decode(BackupFile.encode(data, exportedOn))
 
-    /** A version 1 file written by hand: the names in it are the format, so renaming code must not change them. */
+    /** A version 2 file written by hand: the names in it are the format, so renaming code must not change them. */
     private val fixture =
+        """
+        {
+          "app": "urlaubsplaner",
+          "formatVersion": 2,
+          "exportedOn": "2026-10-25",
+          "settings": {
+            "land": "BY",
+            "regionalExtras": ["augsburger-friedensfest"],
+            "regionalOptOuts": ["mariae-himmelfahrt-bayern"],
+            "workingDays": ["MONDAY", "TUESDAY", "THURSDAY"],
+            "specialDays": [{"day": "--12-24", "halfDays": 1}, {"day": "--12-31", "halfDays": 0}],
+            "suggestCarryOver": true
+          },
+          "entitlements": [
+            {"year": 2026, "halfDays": 60, "carryOverHalfDays": 5, "carryOverExpiry": "--04-30"},
+            {"year": 2027, "halfDays": 56, "carryOverHalfDays": 6, "carryOverExpiry": "--03-31",
+             "carryOverExpiryYears": 1}
+          ],
+          "markedDays": [
+            {"date": "2026-07-01", "mark": "full", "granted": false},
+            {"date": "2026-07-02", "mark": "half", "granted": true},
+            {"date": "2027-01-04", "mark": "full", "granted": true}
+          ]
+        }
+        """.trimIndent()
+
+    /** A version 1 file written by hand, as 0.9.x wrote it: it must keep reading, with every day not granted. */
+    private val fixtureV1 =
         """
         {
           "app": "urlaubsplaner",
@@ -139,7 +168,7 @@ class BackupFileTest {
         val text = BackupFile.encode(everything, exportedOn)
 
         assertTrue(text.contains("\"app\": \"urlaubsplaner\""))
-        assertTrue(text.contains("\"formatVersion\": 1"))
+        assertTrue(text.contains("\"formatVersion\": 2"))
         assertTrue(text.contains("\"exportedOn\": \"2026-10-25\""))
     }
 
@@ -325,10 +354,10 @@ class BackupFileTest {
     fun `a newer version is refused with both version numbers`() {
         val e =
             refused<BackupException.NewerVersion>(
-                withEdit("\"formatVersion\": 1", "\"formatVersion\": 2"),
+                withEdit("\"formatVersion\": 2", "\"formatVersion\": 3"),
             )
 
-        assertEquals(2, e.found)
+        assertEquals(3, e.found)
         assertEquals(BackupFile.VERSION, e.supported)
     }
 
@@ -345,11 +374,11 @@ class BackupFileTest {
     @Test
     fun `a missing, zero or non-numeric version is damaged`() {
         refused<BackupException.Damaged>("""{"app": "urlaubsplaner"}""")
-        refused<BackupException.Damaged>(withEdit("\"formatVersion\": 1", "\"formatVersion\": 0"))
+        refused<BackupException.Damaged>(withEdit("\"formatVersion\": 2", "\"formatVersion\": 0"))
         refused<BackupException.Damaged>(
-            withEdit("\"formatVersion\": 1", "\"formatVersion\": \"1\""),
+            withEdit("\"formatVersion\": 2", "\"formatVersion\": \"2\""),
         )
-        refused<BackupException.Damaged>(withEdit("\"formatVersion\": 1", "\"formatVersion\": 1.5"))
+        refused<BackupException.Damaged>(withEdit("\"formatVersion\": 2", "\"formatVersion\": 1.5"))
     }
 
     @Test
@@ -397,7 +426,10 @@ class BackupFileTest {
             """.trimIndent(),
         )
         refused<BackupException.Damaged>(
-            withEdit("{\"date\": \"2026-07-01\", \"mark\": \"full\"}", "\"2026-07-01\""),
+            withEdit(
+                "{\"date\": \"2026-07-01\", \"mark\": \"full\", \"granted\": false}",
+                "\"2026-07-01\"",
+            ),
         )
 
         val bad =
@@ -474,6 +506,42 @@ class BackupFileTest {
             )
 
         assertEquals(everything, data)
+    }
+
+    @Test
+    fun `a version 1 file still reads, with every marked day not granted`() {
+        val data = BackupFile.decode(fixtureV1)
+
+        assertEquals(everything.copy(granted = emptySet()), data)
+        assertTrue(data.granted.isEmpty())
+    }
+
+    @Test
+    fun `a version 1 file is not changed by a granted key it never had`() {
+        val data =
+            BackupFile.decode(
+                fixtureV1.replace("\"mark\": \"half\"", "\"mark\": \"half\", \"granted\": true"),
+            )
+
+        assertTrue(data.granted.isEmpty())
+    }
+
+    @Test
+    fun `granted is written for every marked day`() {
+        val text = BackupFile.encode(everything, exportedOn)
+
+        assertEquals(3, Regex("\"granted\": (true|false)").findAll(text).count())
+        assertEquals(2, Regex("\"granted\": true").findAll(text).count())
+    }
+
+    @Test
+    fun `in version 2 granted is required and must be true or false`() {
+        refused<BackupException.Damaged>(withEdit(", \"granted\": false", ""))
+        for (bad in listOf("1", "\"true\"", "null")) {
+            refused<BackupException.Damaged>(withEdit("\"granted\": false", "\"granted\": $bad"))
+        }
+        val missing = refused<BackupException.Damaged>(withEdit(", \"granted\": false", ""))
+        assertTrue(missing.message!!.contains("markedDays[0].granted"))
     }
 
     @Test

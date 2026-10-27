@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import de.remph.urlaubsplaner.core.backup.BackupData
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.WorkSchedule
@@ -172,5 +173,69 @@ class UserDataRepositoryTest {
 
             assertEquals(setOf("marked_day"), withTimeout(5_000) { seen.receive() })
             watcher.cancel()
+        }
+
+    private suspend fun granted() =
+        repository.observeMarkedDays(year2026.start, year2026.endInclusive).first().granted
+
+    @Test
+    fun `a new mark is not granted and a day can be granted and un-granted`() =
+        runBlocking {
+            val day = LocalDate.of(2026, 7, 6)
+            repository.mark(day, DayMark.FULL)
+            assertEquals(emptySet<LocalDate>(), granted())
+
+            repository.setGranted(listOf(day), true)
+            assertEquals(setOf(day), granted())
+
+            repository.setGranted(listOf(day), false)
+            assertEquals(emptySet<LocalDate>(), granted())
+        }
+
+    @Test
+    fun `granting a day that is not marked marks nothing`() =
+        runBlocking {
+            repository.setGranted(listOf(LocalDate.of(2026, 7, 6)), true)
+
+            assertEquals(BackupData().marks, repository.readAll().marks)
+            assertEquals(emptySet<LocalDate>(), granted())
+        }
+
+    @Test
+    fun `marking again replaces the flag, unless the caller keeps it`() =
+        runBlocking {
+            val monday = LocalDate.of(2026, 7, 6)
+            val tuesday = LocalDate.of(2026, 7, 7)
+            repository.markAll(listOf(monday, tuesday), DayMark.FULL, granted = true)
+
+            repository.markAllKeepingGranted(listOf(monday, LocalDate.of(2026, 7, 8)), DayMark.HALF)
+
+            // Monday keeps its flag with the new mark, a new day starts as planned.
+            assertEquals(setOf(monday, tuesday), granted())
+            assertEquals(DayMark.HALF, marks().getValue(monday))
+            assertEquals(DayMark.FULL, marks().getValue(tuesday))
+
+            repository.markAll(listOf(monday), DayMark.FULL, granted = false)
+            assertEquals(setOf(tuesday), granted())
+        }
+
+    @Test
+    fun `removing a marked day removes its flag with it`() =
+        runBlocking {
+            val day = LocalDate.of(2026, 7, 6)
+            repository.mark(day, DayMark.FULL, granted = true)
+
+            repository.unmark(day)
+            repository.mark(day, DayMark.FULL)
+
+            assertEquals(emptySet<LocalDate>(), granted())
+        }
+
+    @Test
+    fun `the granted days setting is saved with the other settings`() =
+        runBlocking {
+            repository.saveSettings(UserSettings(land = Bundesland.HAMBURG, grantedDays = true))
+
+            assertEquals(true, repository.observeSettings().first().grantedDays)
         }
 }

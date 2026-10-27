@@ -498,4 +498,38 @@ class SettingsScreenTest {
         compose.onNodeWithText("Clear").assertIsDisplayed()
         compose.onNodeWithText("Cancel").assertIsDisplayed()
     }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the granted days option shows in German, is off by default and can be turned on`() {
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
+
+        compose
+            .onNodeWithText("Genehmigte Urlaubstage")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertIsOff()
+            .performClick()
+
+        compose.waitUntil(5_000) {
+            runBlocking { repository.observeSettings().first() }.grantedDays
+        }
+        compose.onNodeWithText("Genehmigte Urlaubstage").performScrollTo().assertIsOn()
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the granted days option shows in English`() {
+        show("Settings")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "North Rhine-Westphalia")
+        openRow("Vacation 2027")
+
+        compose
+            .onNodeWithText("Granted vacation days")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertIsOff()
+    }
 }
