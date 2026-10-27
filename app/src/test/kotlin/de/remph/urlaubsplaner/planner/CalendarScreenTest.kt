@@ -2,12 +2,15 @@ package de.remph.urlaubsplaner.planner
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
@@ -23,7 +26,10 @@ import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.holidays.Bundesland
@@ -31,6 +37,7 @@ import de.remph.urlaubsplaner.core.settings.UserSettings
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -54,9 +61,17 @@ class CalendarScreenTest {
     @After
     fun close() = fixture.close()
 
-    private fun show(waitFor: String = "März 2027") {
+    private fun show(
+        waitFor: String = "März 2027",
+        fontScale: Float = 1f,
+    ) {
         compose.setContent {
-            CalendarScreen(fixture.viewModel(), PaddingValues(), onOpenSettings = {})
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(density.density, fontScale = fontScale),
+            ) {
+                CalendarScreen(fixture.viewModel(), PaddingValues(), onOpenSettings = {})
+            }
         }
         waitForText(waitFor)
     }
@@ -367,8 +382,8 @@ class CalendarScreenTest {
     private fun yearGrid() =
         compose.onNode(hasContentDescription("Jahresübersicht 2027", substring = true))
 
-    private fun showYear() {
-        show()
+    private fun showYear(fontScale: Float = 1f) {
+        show(fontScale = fontScale)
         compose.onNodeWithText("Jahr").performClick()
         waitForText("Jan")
     }
@@ -384,7 +399,7 @@ class CalendarScreenTest {
             .performScrollTo()
             .performClick()
         compose.mainClock.advanceTimeBy(ANIMATION_MILLIS)
-        yearGrid().assertHeightIsEqualTo(YearRowsExpanded * 12)
+        yearGrid().assertHeightIsEqualTo(YearRowsMin * 12)
 
         compose
             .onNodeWithContentDescription("Jahresübersicht kleiner anzeigen")
@@ -401,7 +416,7 @@ class CalendarScreenTest {
 
         yearGrid().performTouchInput { swipeDown() }
         compose.waitForIdle()
-        yearGrid().assertHeightIsEqualTo(YearRowsExpanded * 12)
+        assertExpanded()
 
         yearGrid().performTouchInput { swipeUp() }
         compose.waitForIdle()
@@ -421,7 +436,142 @@ class CalendarScreenTest {
         yearGrid().performTouchInput { swipeUp() }
         compose.waitForIdle()
 
-        yearGrid().assertHeightIsEqualTo(YearRowsExpanded * 12)
+        yearGrid().assertHeightIsEqualTo(YearRowsMin * 12)
+    }
+
+    private fun gridHeight() = yearGrid().getBoundsInRoot().height
+
+    /** More than compact, and within what the expanded rows may be. */
+    private fun assertExpanded() {
+        val height = gridHeight()
+        assertTrue("$height", height > YearRowsCompact * 12)
+        assertTrue("$height", height >= YearRowsMin * 12 && height <= YearRowsMax * 12)
+    }
+
+    private fun expandRows() {
+        compose
+            .onNodeWithContentDescription("Jahresübersicht größer anzeigen")
+            .performScrollTo()
+            .performClick()
+        compose.waitForIdle()
+    }
+
+    /** Where the page ends and where the screen does, to see whether the page scrolls. */
+    private fun assertPageFillsScreenWithoutScrolling() {
+        val legendBottom = compose.onNodeWithText("Geplant").getBoundsInRoot().bottom
+        val screen = compose.onRoot().getBoundsInRoot().height
+        // 16 dp frame padding below the legend; the rows are whole dp, so up to 12 dp are left.
+        assertTrue("$legendBottom of $screen", legendBottom <= screen - 16.dp)
+        assertTrue("$legendBottom of $screen", legendBottom >= screen - 16.dp - 13.dp)
+    }
+
+    @Test
+    @Config(qualifiers = "de-w411dp-h900dp")
+    fun `the expanded rows fill the screen and the page does not scroll`() {
+        showYear()
+        expandRows()
+
+        assertExpanded()
+        assertTrue(gridHeight() > YearRowsMin * 12 && gridHeight() < YearRowsMax * 12)
+        assertPageFillsScreenWithoutScrolling()
+    }
+
+    @Test
+    @Config(qualifiers = "de-w411dp-h900dp")
+    fun `the legend entry for granted days takes room from the rows`() {
+        turnGrantedDaysOn()
+        showYear()
+        expandRows()
+
+        assertExpanded()
+        assertPageFillsScreenWithoutScrolling()
+    }
+
+    @Test
+    @Config(qualifiers = "de-w411dp-h900dp")
+    fun `a larger font gives the rows less room but the page still fits`() {
+        showYear(fontScale = 1.3f)
+        expandRows()
+
+        assertExpanded()
+        assertPageFillsScreenWithoutScrolling()
+    }
+
+    @Test
+    @Config(qualifiers = "de-w360dp-h640dp")
+    fun `on a small phone the rows stop at the minimum and the page scrolls`() {
+        showYear()
+        expandRows()
+
+        yearGrid().assertHeightIsEqualTo(YearRowsMin * 12)
+    }
+
+    @Test
+    @Config(qualifiers = "de-w800dp-h360dp")
+    fun `in landscape the rows stop at the minimum`() {
+        showYear()
+        expandRows()
+
+        yearGrid().assertHeightIsEqualTo(YearRowsMin * 12)
+    }
+
+    @Test
+    @Config(qualifiers = "de-w411dp-h2400dp")
+    fun `on a tall screen the rows stop at the maximum`() {
+        showYear()
+        expandRows()
+
+        yearGrid().assertHeightIsEqualTo(YearRowsMax * 12)
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `after a step the old month is gone and the new one is drawn`() {
+        show()
+
+        compose.onNodeWithContentDescription("Nächster Monat").performClick()
+        waitForText("April 2027")
+        compose.waitForIdle()
+
+        compose.onAllNodesWithText("März 2027").assertCountEquals(0)
+        compose.onAllNodesWithText("Karfreitag").assertCountEquals(0)
+        compose.onNodeWithText("Osterferien").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `stepping between years with and without vacation days never mixes their pages`() {
+        showYear()
+        compose.mainClock.autoAdvance = false
+
+        // 2027 has Urlaubstage, 2028 does not: the other year's empty state must not show under
+        // this year's title, in either direction.
+        for (button in listOf("Nächstes Jahr", "Vorheriges Jahr")) {
+            compose.onNodeWithContentDescription(button).performClick()
+            repeat(80) {
+                Thread.sleep(5)
+                compose.mainClock.advanceTimeByFrame()
+                assertEmptyStatesMatchTitles()
+            }
+        }
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        assertEmptyStatesMatchTitles()
+        compose.onAllNodesWithText("Für 2028", substring = true).assertCountEquals(0)
+    }
+
+    private fun assertEmptyStatesMatchTitles() {
+        for (year in 2026..2028) {
+            val empty =
+                compose
+                    .onAllNodesWithText("Für $year sind noch keine", substring = true)
+                    .fetchSemanticsNodes()
+            val title = compose.onAllNodesWithText("$year").fetchSemanticsNodes()
+            assertTrue(
+                "the empty state of $year without its title",
+                empty.isEmpty() || title.isNotEmpty(),
+            )
+        }
     }
 
     private companion object {
