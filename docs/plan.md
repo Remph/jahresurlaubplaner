@@ -379,10 +379,16 @@ clickable mock-up are in the project folder `design/review-m3/` and `design/revi
   and school holiday bar inside a cell stay as they are.
 - Month view: under the grid a card with the days taken (up to today) and planned (after it) in
   that month, then the month's holidays and school holidays; the legend is one small row.
-- Year grid: 28 dp rows; swipe down expands them to 48 dp, swipe up makes them compact (like the
+- Year grid: 28 dp rows; swipe down expands them to what fits the screen without scrolling, at
+  least 36 dp and at most 64 dp (the maintainer, 2026-10-27; `expandedRowHeight`, measured from the
+  page's other parts, so it follows the font size and the legend), swipe up makes them compact (like the
   stock calendar app of some phones). A handle under the grid does the same by tap and for TalkBack. The swipe is
   only watched, so the page still scrolls: on a short screen a swipe up scrolls first and makes the
   rows compact only when the page is already at its end. The state lives in `PlannerViewModel`.
+- A step (swipe or arrow) slides the title and the body a short way with a fade, like the tabs, in
+  month and year view (the maintainer, 2026-10-27; `AnimatedContent` keyed on `CalendarPageKey`, no
+  slide when animations are off). Header and body are drawn from one `CalendarPage`, which keeps the
+  old year's page until the new year's view has arrived (no empty-state flash).
 - Swipe sideways in the calendar (the maintainer, 2026-10-26): left shows the next month (month view) or
   year (year view), right the previous one; 64 dp or more counts (`Modifier.swipeToStep`). It does
   not switch between month and year view (the segmented button does that). The arrow buttons stay
