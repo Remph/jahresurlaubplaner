@@ -125,13 +125,24 @@ class PlannerViewModel(
         return target in firstMonth..lastMonth
     }
 
-    /** Marks every day in [dates]; a range is turned into its costly days by the caller. */
+    /**
+     * Marks every day in [dates]; a range is turned into its costly days by the caller. [granted]
+     * is what the day sheet's switch says; null (the switch is not shown: the setting is off, or
+     * the days are not in the future) keeps the flag a day already has.
+     */
     fun mark(
         dates: Collection<LocalDate>,
         mark: DayMark,
+        granted: Boolean? = null,
     ) {
         if (dates.isEmpty()) return
-        viewModelScope.launch { repository.markAll(dates, mark) }
+        viewModelScope.launch {
+            if (granted == null) {
+                repository.markAllKeepingGranted(dates, mark)
+            } else {
+                repository.markAll(dates, mark, granted)
+            }
+        }
     }
 
     fun unmark(dates: Collection<LocalDate>) {
@@ -145,19 +156,20 @@ class PlannerViewModel(
                 combine(
                     repository.observeSettings(),
                     repository.observeEntitlement(year),
-                    repository.observeMarks(
+                    repository.observeMarkedDays(
                         LocalDate.of(year - 1, 12, 1).coerceAtLeast(LocalDate.of(firstYear, 1, 1)),
                         LocalDate.of(year + 1, 12, 31),
                     ),
                     today,
-                ) { settings, entitlement, marks, now ->
+                ) { settings, entitlement, marked, now ->
                     val check = settings.publicHolidayCheck()
                     YearView(
                         year = year,
                         today = now,
                         settings = settings,
                         entitlement = entitlement,
-                        marks = marks,
+                        marks = marked.marks,
+                        granted = marked.granted,
                         calculator =
                             check?.let {
                                 VacationCalculator(

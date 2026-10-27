@@ -62,6 +62,7 @@ class BackupRestoreTest {
                     LocalDate.of(2026, 7, 1) to DayMark.FULL,
                     LocalDate.of(2026, 7, 2) to DayMark.HALF,
                 ),
+            granted = setOf(LocalDate.of(2026, 7, 2)),
         )
 
     @Before
@@ -193,14 +194,14 @@ class BackupRestoreTest {
     fun `a backup from a newer version is refused and the data stays`() =
         runBlocking {
             repository.replaceAll(data)
-            file.writeText("""{"app": "urlaubsplaner", "formatVersion": 2}""")
+            file.writeText("""{"app": "urlaubsplaner", "formatVersion": 3}""")
 
             val e =
                 assertThrows(
                     BackupException.NewerVersion::class.java,
                 ) { runBlocking { store.read(uri) } }
 
-            assertEquals(2, e.found)
+            assertEquals(3, e.found)
             assertEquals(data, repository.readAll())
         }
 

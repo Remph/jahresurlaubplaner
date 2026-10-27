@@ -640,4 +640,18 @@ class SettingsViewModelTest {
         assertNull(vm.await().notice)
         assertEquals(1, runBlocking { repository.readAll() }.marks.size)
     }
+
+    @Test
+    fun `granted days are off until turned on, and the choice is stored`() {
+        val vm = viewModel()
+        assertFalse(vm.await { true }.settings.grantedDays)
+
+        vm.setGrantedDays(true)
+        vm.await { it.settings.grantedDays }
+        assertTrue(runBlocking { repository.observeSettings().first() }.grantedDays)
+
+        vm.setGrantedDays(false)
+        vm.await { !it.settings.grantedDays }
+        assertFalse(runBlocking { repository.observeSettings().first() }.grantedDays)
+    }
 }

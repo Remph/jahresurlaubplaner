@@ -6,7 +6,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -21,6 +25,10 @@ import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.holidays.Bundesland
+import de.remph.urlaubsplaner.core.settings.UserSettings
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -418,5 +426,121 @@ class CalendarScreenTest {
 
     private companion object {
         const val ANIMATION_MILLIS = 1_000L
+    }
+
+    private fun grantedSwitch() = compose.onNode(hasText("Genehmigt") and isToggleable())
+
+    private fun turnGrantedDaysOn() =
+        runBlocking {
+            fixture.repository.saveSettings(
+                UserSettings(land = Bundesland.NORDRHEIN_WESTFALEN, grantedDays = true),
+            )
+        }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `with granted days off there is no switch, no legend entry and no words for it`() {
+        runBlocking { fixture.repository.setGranted(listOf(fixture.date("2027-03-15")), true) }
+        show()
+        waitForText("Karfreitag")
+
+        day("Montag, 15. März 2027, Urlaub geplant").performClick()
+
+        compose.onNodeWithText("Ändern").assertIsDisplayed()
+        compose.onNode(hasText("Genehmigt")).assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `with granted days on a granted day says so in words and the legend has the entry`() {
+        runBlocking { fixture.repository.setGranted(listOf(fixture.date("2027-03-15")), true) }
+        turnGrantedDaysOn()
+        show()
+        waitForText("Karfreitag")
+
+        day("Montag, 15. März 2027, Urlaub genehmigt").assertExists()
+        day("Dienstag, 16. März 2027, Urlaub geplant").assertExists()
+        compose.onNodeWithText("Genehmigt").assertExists()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `granting a planned day in the sheet stores it`() {
+        turnGrantedDaysOn()
+        show()
+        waitForText("Karfreitag")
+
+        day("Montag, 15. März 2027, Urlaub geplant").performClick()
+        grantedSwitch().assertIsOff().performClick()
+        compose.onNodeWithText("Ändern").performClick()
+
+        compose.waitUntil(5_000) {
+            compose
+                .onAllNodes(hasContentDescription("Montag, 15. März 2027, Urlaub genehmigt"))
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        assertEquals(
+            setOf(fixture.date("2027-03-15")),
+            runBlocking { fixture.repository.readAll() }.granted,
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the sheet starts with the flag the day has and a new mark starts as planned`() {
+        runBlocking { fixture.repository.setGranted(listOf(fixture.date("2027-03-15")), true) }
+        turnGrantedDaysOn()
+        show()
+        waitForText("Karfreitag")
+
+        day("Montag, 15. März 2027, Urlaub genehmigt").performClick()
+        grantedSwitch().assertIsOn()
+        compose.onNodeWithText("Entfernen").performScrollTo().performClick()
+        compose.waitUntil(5_000) {
+            compose
+                .onAllNodes(hasContentDescription("Montag, 15. März 2027, Urlaub genehmigt"))
+                .fetchSemanticsNodes()
+                .isEmpty()
+        }
+        // Marking the same day again must not bring the old flag back.
+        day("Montag, 15. März 2027").performClick()
+        grantedSwitch().assertIsOff()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a day that is taken has no granted switch`() {
+        turnGrantedDaysOn()
+        show()
+        waitForText("Karfreitag")
+
+        day("Montag, 8. März 2027, Urlaub genommen").performClick()
+
+        compose.onNodeWithText("Ändern").assertIsDisplayed()
+        grantedSwitch().assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `changing a granted day to a half day with the setting off keeps it granted`() {
+        runBlocking { fixture.repository.setGranted(listOf(fixture.date("2027-03-15")), true) }
+        show()
+        waitForText("Karfreitag")
+
+        day("Montag, 15. März 2027, Urlaub geplant").performClick()
+        compose.onNodeWithText("Halber Tag").performClick()
+        compose.onNodeWithText("Ändern").performClick()
+
+        compose.waitUntil(5_000) {
+            compose
+                .onAllNodes(
+                    hasContentDescription("Montag, 15. März 2027, Halber Urlaubstag geplant"),
+                ).fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        val stored = runBlocking { fixture.repository.readAll() }
+        assertEquals(DayMark.HALF, stored.marks.getValue(fixture.date("2027-03-15")))
+        assertEquals(setOf(fixture.date("2027-03-15")), stored.granted)
     }
 }

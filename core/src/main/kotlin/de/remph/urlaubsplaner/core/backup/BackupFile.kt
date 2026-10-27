@@ -31,13 +31,13 @@ import java.time.format.DateTimeParseException
  * The backup file: one JSON document, UTF-8, version [VERSION].
  *
  * ```
- * { "app": "urlaubsplaner", "formatVersion": 1, "exportedOn": "2026-10-25",
+ * { "app": "urlaubsplaner", "formatVersion": 2, "exportedOn": "2026-10-25",
  *   "settings": { "land": "BY" or null, "regionalExtras": [...], "regionalOptOuts": [...],
  *                 "workingDays": ["MONDAY", ...], "specialDays": [{"day": "--12-24", "halfDays": 1}],
- *                 "suggestCarryOver": false },
+ *                 "suggestCarryOver": false, "grantedDays": false },
  *   "entitlements": [{"year": 2026, "halfDays": 60, "carryOverHalfDays": 10, "carryOverExpiry": "--03-31",
  *                    "carryOverExpiryYears": 0}],
- *   "markedDays": [{"date": "2026-07-01", "mark": "full"}] }
+ *   "markedDays": [{"date": "2026-07-01", "mark": "full", "granted": false}] }
  * ```
  *
  * Amounts are counted in half days, like in the database. Every value has a name owned by this
@@ -45,15 +45,22 @@ import java.time.format.DateTimeParseException
  * renaming something in the app cannot break old backups. A change that an older app would lose
  * data on needs a new [VERSION].
  *
- * `suggestCarryOver` was added before the first release and is the one optional key: a file
- * without it reads as off, so files written before it still restore. Everything else is required.
+ * Version 2 (0.10.0) added `granted` to every marked day: the employer has approved that day. A
+ * 0.9.x app would drop the key silently, so the version went up and 0.9.x refuses these files.
+ * Version 1 files are still read; their marked days are all not granted (`granted` is required in
+ * version 2 and ignored in version 1, which never had it).
+ *
+ * `suggestCarryOver` was added before the first release and `grantedDays` (the setting that shows
+ * granted days) in version 2; they are the optional keys: a file without one reads as off, so
+ * files written before them still restore. The per-day `granted` is not optional in version 2,
+ * and the other keys are required.
  *
  * Reading is strict: a newer version, or one value that is missing or not understood, refuses the
  * whole file with a [BackupException] before anything is changed. Dropping part of someone's
  * vacation data without saying so is worse than not restoring.
  */
 object BackupFile {
-    const val VERSION = 1
+    const val VERSION = 2
     const val MIME_TYPE = "application/json"
 
     /**
@@ -112,6 +119,7 @@ object BackupFile {
                             buildJsonObject {
                                 put("date", date.toString())
                                 put("mark", mark.backupName())
+                                put("granted", date in data.granted)
                             }
                         },
                     ),
@@ -167,10 +175,12 @@ object BackupFile {
         if (version < 1) damaged("formatVersion is $version")
 
         try {
+            val (marks, granted) = decodeMarks(root.array("markedDays", "markedDays"), version)
             return BackupData(
                 settings = decodeSettings(root.obj("settings", "settings")),
                 entitlements = decodeEntitlements(root.array("entitlements", "entitlements")),
-                marks = decodeMarks(root.array("markedDays", "markedDays")),
+                marks = marks,
+                granted = granted,
             )
         } catch (e: IllegalArgumentException) {
             // The domain types check their own rules (no negative entitlement, special days between
@@ -213,6 +223,7 @@ object BackupFile {
                 ),
             )
             put("suggestCarryOver", settings.suggestCarryOver)
+            put("grantedDays", settings.grantedDays)
         }
 
     private fun decodeSettings(settings: JsonObject): UserSettings {
@@ -255,6 +266,7 @@ object BackupFile {
                     specialDays = specialDays.toMap(),
                 ),
             suggestCarryOver = settings.optionalBoolean("suggestCarryOver", "settings"),
+            grantedDays = settings.optionalBoolean("grantedDays", "settings"),
         )
     }
 
@@ -276,8 +288,12 @@ object BackupFile {
         return entitlements
     }
 
-    private fun decodeMarks(array: JsonArray): Map<LocalDate, DayMark> {
+    private fun decodeMarks(
+        array: JsonArray,
+        version: Int,
+    ): Pair<Map<LocalDate, DayMark>, Set<LocalDate>> {
         val marks = mutableMapOf<LocalDate, DayMark>()
+        val granted = mutableSetOf<LocalDate>()
         array.forEachIndexed { index, element ->
             val path = "markedDays[$index]"
             val entry = element.obj(path)
@@ -287,8 +303,10 @@ object BackupFile {
                 DayMark.entries.find { it.backupName() == name }
                     ?: damaged("$path.mark: unknown mark \"$name\"")
             if (marks.put(date, mark) != null) damaged("markedDays lists $date twice")
+            // Version 1 has no such key; from version 2 on a missing one is damage, not "planned".
+            if (version >= 2 && entry.requiredBoolean("granted", path)) granted += date
         }
-        return marks
+        return marks to granted
     }
 
     // The names below are part of the file format; the fixture in BackupFileTest pins them.
@@ -364,6 +382,14 @@ object BackupFile {
         }
         return primitive.content.toBooleanStrictOrNull()
             ?: damaged("$path.$key must be true or false")
+    }
+
+    private fun JsonObject.requiredBoolean(
+        key: String,
+        path: String,
+    ): Boolean {
+        field(key, path)
+        return optionalBoolean(key, path)
     }
 
     private fun JsonObject.obj(

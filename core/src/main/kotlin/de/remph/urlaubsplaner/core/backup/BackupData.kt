@@ -13,7 +13,13 @@ data class BackupData(
     val settings: UserSettings = UserSettings(),
     val entitlements: List<YearEntitlement> = emptyList(),
     val marks: Map<LocalDate, DayMark> = emptyMap(),
+    /** The marked days the employer has granted; a subset of the keys of [marks]. */
+    val granted: Set<LocalDate> = emptySet(),
 ) {
+    init {
+        require(marks.keys.containsAll(granted)) { "A granted day must be a marked day" }
+    }
+
     fun summary() =
         BackupSummary(
             landChosen = settings.land != null,

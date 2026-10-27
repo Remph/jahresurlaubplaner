@@ -155,7 +155,28 @@ class MappersTest {
                 LocalDate.of(2026, 12, 24) to DayMark.HALF,
                 LocalDate.of(2026, 12, 28) to DayMark.FULL,
             ),
-            rows.toMarks(),
+            rows.toMarkedDays().marks,
         )
+    }
+
+    @Test
+    fun `the granted flag survives a round trip and a bad row takes its flag with it`() {
+        val rows =
+            listOf(
+                markedDayEntity(LocalDate.of(2026, 12, 24), DayMark.HALF, granted = true),
+                markedDayEntity(LocalDate.of(2026, 12, 28), DayMark.FULL),
+                MarkedDayEntity(date = "tomorrow", mark = "FULL", granted = true),
+                MarkedDayEntity(date = "2026-12-29", mark = "QUARTER", granted = true),
+            )
+
+        assertEquals(setOf(LocalDate.of(2026, 12, 24)), rows.toMarkedDays().granted)
+    }
+
+    @Test
+    fun `the granted days setting is stored and a missing row means off`() {
+        assertEquals(true, UserSettings(grantedDays = true).toEntity().grantedDays)
+        assertEquals(true, UserSettings(grantedDays = true).toEntity().toUserSettings().grantedDays)
+        assertEquals(false, UserSettings().toEntity().toUserSettings().grantedDays)
+        assertEquals(false, (null as SettingsEntity?).toUserSettings().grantedDays)
     }
 }

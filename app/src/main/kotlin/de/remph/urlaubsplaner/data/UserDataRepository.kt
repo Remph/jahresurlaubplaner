@@ -3,6 +3,7 @@ package de.remph.urlaubsplaner.data
 import androidx.room.withTransaction
 import de.remph.urlaubsplaner.core.backup.BackupData
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkedDays
 import de.remph.urlaubsplaner.core.balance.YearEntitlement
 import de.remph.urlaubsplaner.core.settings.UserSettings
 import kotlinx.coroutines.flow.Flow
@@ -36,20 +37,30 @@ class UserDataRepository(
 
     suspend fun deleteEntitlement(year: Int) = entitlementDao.delete(year)
 
-    /** The marks from [from] to [to], both included. */
+    /** The marked days from [from] to [to], both included, with their granted flags. */
+    fun observeMarkedDays(
+        from: LocalDate,
+        to: LocalDate,
+    ): Flow<MarkedDays> =
+        markedDayDao.observeBetween(from.toString(), to.toString()).map {
+            it.toMarkedDays()
+        }
+
+    /** The same without the granted flags, for the balance and anything that does not show them. */
     fun observeMarks(
         from: LocalDate,
         to: LocalDate,
-    ): Flow<Map<LocalDate, DayMark>> =
-        markedDayDao.observeBetween(from.toString(), to.toString()).map {
-            it.toMarks()
-        }
+    ): Flow<Map<LocalDate, DayMark>> = observeMarkedDays(from, to).map { it.marks }
 
-    /** Marking a day that is already marked replaces the mark (full to half and back). */
+    /**
+     * Marking a day that is already marked replaces the mark (full to half and back) and its
+     * granted flag, so a caller that only changes the mark passes the flag the day has.
+     */
     suspend fun mark(
         date: LocalDate,
         mark: DayMark,
-    ) = markedDayDao.upsert(markedDayEntity(date, mark))
+        granted: Boolean = false,
+    ) = markedDayDao.upsert(markedDayEntity(date, mark, granted))
 
     suspend fun unmark(date: LocalDate) = markedDayDao.delete(date.toString())
 
@@ -57,7 +68,27 @@ class UserDataRepository(
     suspend fun markAll(
         dates: Collection<LocalDate>,
         mark: DayMark,
-    ) = markedDayDao.upsertAll(dates.map { markedDayEntity(it, mark) })
+        granted: Boolean = false,
+    ) = markedDayDao.upsertAll(dates.map { markedDayEntity(it, mark, granted) })
+
+    /**
+     * Marks all [dates] and keeps the granted flag each of them has (new marks are not granted).
+     * For callers that cannot see the flag: with the granted days setting off, changing a day to a
+     * half day must not quietly forget that it was granted.
+     */
+    suspend fun markAllKeepingGranted(
+        dates: Collection<LocalDate>,
+        mark: DayMark,
+    ) = database.withTransaction {
+        val granted = markedDayDao.grantedAmong(dates.map { it.toString() }).toSet()
+        markedDayDao.upsertAll(dates.map { markedDayEntity(it, mark, it.toString() in granted) })
+    }
+
+    /** Grants or un-grants days that are already marked; a day that is not marked stays so. */
+    suspend fun setGranted(
+        dates: Collection<LocalDate>,
+        granted: Boolean,
+    ) = markedDayDao.setGranted(dates.map { it.toString() }, granted)
 
     suspend fun unmarkAll(dates: Collection<LocalDate>) =
         markedDayDao.deleteDates(dates.map { it.toString() })
@@ -75,10 +106,12 @@ class UserDataRepository(
      */
     suspend fun readAll(): BackupData =
         database.withTransaction {
+            val days = markedDayDao.getAll().toMarkedDays()
             BackupData(
                 settings = settingsDao.get().toUserSettings(),
                 entitlements = entitlementDao.getAll().mapNotNull { it.toYearEntitlement() },
-                marks = markedDayDao.getAll().toMarks(),
+                marks = days.marks,
+                granted = days.granted,
             )
         }
 
@@ -93,6 +126,10 @@ class UserDataRepository(
             entitlementDao.deleteAll()
             entitlementDao.upsertAll(data.entitlements.map { it.toEntity() })
             markedDayDao.deleteAll()
-            markedDayDao.upsertAll(data.marks.map { (date, mark) -> markedDayEntity(date, mark) })
+            markedDayDao.upsertAll(
+                data.marks.map { (date, mark) ->
+                    markedDayEntity(date, mark, date in data.granted)
+                },
+            )
         }
 }

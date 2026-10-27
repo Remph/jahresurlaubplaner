@@ -71,9 +71,21 @@ class DayColorsTest {
     }
 
     // A Pixel "blue" wallpaper: the worst case, since taken and planned days take its primary.
-    private val blueLight = lightColorScheme(primary = Color(0xFF0061A4), onPrimary = Color.White)
+    // The containers are the ones a Pixel blue palette has; the baseline lavender would not be.
+    private val blueLight =
+        lightColorScheme(
+            primary = Color(0xFF0061A4),
+            onPrimary = Color.White,
+            primaryContainer = Color(0xFFD1E4FF),
+            onPrimaryContainer = Color(0xFF001D36),
+        )
     private val blueDark =
-        darkColorScheme(primary = Color(0xFF9FCAFF), onPrimary = Color(0xFF003258))
+        darkColorScheme(
+            primary = Color(0xFF9FCAFF),
+            onPrimary = Color(0xFF003258),
+            primaryContainer = Color(0xFF00497D),
+            onPrimaryContainer = Color(0xFFD1E4FF),
+        )
 
     @Test
     fun `weekend numbers can be read on the school holiday tile with a blue wallpaper`() {
@@ -97,6 +109,49 @@ class DayColorsTest {
     }
 
     @Test
+    fun `the number of a granted day can be read on its fill`() {
+        for (colors in colorsFor(FixedLight, FixedDark, blueLight, blueDark)) {
+            assertTrue(contrastRatio(colors.onGranted, colors.granted) >= MIN_TEXT_CONTRAST)
+        }
+    }
+
+    @Test
+    fun `the half day mark of a granted day can be read on its fill`() {
+        for (colors in colorsFor(FixedLight, FixedDark, blueLight, blueDark)) {
+            assertTrue(contrastRatio(colors.grantedHalf, colors.granted) >= MIN_TEXT_CONTRAST)
+        }
+    }
+
+    @Test
+    fun `a granted tile differs from the school holiday tile and the plain tile`() {
+        val schemes = listOf(FixedLight, FixedDark, blueLight, blueDark)
+        colorsFor(*schemes.toTypedArray()).zip(schemes).forEach { (colors, scheme) ->
+            assertTrue(
+                "granted vs school",
+                visiblyDifferent(colors.granted, colors.school),
+            )
+            assertTrue(
+                "granted vs plain",
+                visiblyDifferent(colors.granted, scheme.surfaceContainerLow),
+            )
+        }
+    }
+
+    @Test
+    fun `a granted tile differs from a taken one, which is the theme's primary`() {
+        for (colors in colorsFor(FixedLight, FixedDark, blueLight, blueDark)) {
+            assertTrue(contrastRatio(colors.granted, colors.taken) >= MIN_GRANTED_VS_TAKEN)
+        }
+    }
+
+    @Test
+    fun `the outline of a granted day can be seen on its fill`() {
+        for (colors in colorsFor(FixedLight, FixedDark, blueLight, blueDark)) {
+            assertTrue(contrastRatio(colors.planned, colors.granted) >= MIN_GRAPHIC_CONTRAST)
+        }
+    }
+
+    @Test
     fun `the school holiday bar can be seen on its tile`() {
         for (colors in colorsFor(FixedLight, FixedDark)) {
             assertTrue(contrastRatio(colors.schoolBar, colors.school) >= MIN_GRAPHIC_CONTRAST)
@@ -104,6 +159,20 @@ class DayColorsTest {
     }
 }
 
+/** Two tiles read as different when their lightness differs, or their hues do and both have a hue. */
+private fun visiblyDifferent(
+    a: Color,
+    b: Color,
+): Boolean =
+    contrastRatio(a, b) >= MIN_TILE_CONTRAST ||
+        (hasHue(a) && hasHue(b) && hueDistance(hueOf(a), hueOf(b)) >= MIN_HUE_GAP)
+
+private fun hasHue(color: Color): Boolean =
+    maxOf(color.red, color.green, color.blue) - minOf(color.red, color.green, color.blue) >= 0.05f
+
+// A light tint on a near white tile is at most about 1.2:1 with any wallpaper; the outline is the main cue.
+private const val MIN_TILE_CONTRAST = 1.15f
+private const val MIN_GRANTED_VS_TAKEN = 2f
 private val BLUE_HUES = 180f..250f
 private const val MIN_HUE_GAP = 30f
 private const val MIN_GRAPHIC_CONTRAST = 3f

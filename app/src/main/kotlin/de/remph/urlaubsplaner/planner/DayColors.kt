@@ -12,6 +12,10 @@ import androidx.compose.ui.graphics.luminance
  * Taken days use the theme's primary colour, so they follow the wallpaper. School holidays were
  * light blue until 0.9.1; with a blue wallpaper they looked like taken and planned days, so the
  * maintainer chose lilac over green, a thin stripe and a fixed taken colour (2026-10-26).
+ *
+ * A granted day (0.10.0) is a planned day with a lighter fill inside its outline: the theme's
+ * primary container, so like the taken days it follows the wallpaper (the maintainer chose "tinted
+ * fill + outline" over a check mark, 2026-10-26).
  */
 @Immutable
 class DayColors(
@@ -22,6 +26,11 @@ class DayColors(
     val taken: Color,
     val onTaken: Color,
     val planned: Color,
+    /** The fill of a granted day, inside the [planned] outline. */
+    val granted: Color,
+    val onGranted: Color,
+    /** The "½" of a granted half day: [planned] while it can be read on [granted], else [onGranted]. */
+    val grantedHalf: Color,
     val weekend: Color,
 )
 
@@ -38,6 +47,14 @@ fun dayColors(): DayColors {
         taken = scheme.primary,
         onTaken = scheme.onPrimary,
         planned = scheme.primary,
+        granted = scheme.primaryContainer,
+        onGranted = scheme.onPrimaryContainer,
+        grantedHalf =
+            if (contrastRatio(scheme.primary, scheme.primaryContainer) >= MIN_TEXT_CONTRAST) {
+                scheme.primary
+            } else {
+                scheme.onPrimaryContainer
+            },
         weekend =
             weekendTextColor(
                 scheme.onSurfaceVariant,

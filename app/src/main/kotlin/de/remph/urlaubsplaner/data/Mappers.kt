@@ -1,6 +1,7 @@
 package de.remph.urlaubsplaner.data
 
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkedDays
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.WorkSchedule
 import de.remph.urlaubsplaner.core.balance.YearEntitlement
@@ -43,6 +44,7 @@ internal fun UserSettings.toEntity() =
                 .sortedBy { it.key }
                 .joinToString(",") { (day, value) -> "$day:${value.halves()}" },
         suggestCarryOver = suggestCarryOver,
+        grantedDays = grantedDays,
     )
 
 /** No row yet means the defaults: no Land chosen, Monday to Friday, nothing else. */
@@ -58,6 +60,7 @@ internal fun SettingsEntity?.toUserSettings(): UserSettings {
                 specialDays = parseSpecialDays(specialDays),
             ),
         suggestCarryOver = suggestCarryOver,
+        grantedDays = grantedDays,
     )
 }
 
@@ -106,9 +109,22 @@ internal fun YearEntitlementEntity.toYearEntitlement(): YearEntitlement? =
 internal fun markedDayEntity(
     date: LocalDate,
     mark: DayMark,
-) = MarkedDayEntity(date = date.toString(), mark = mark.name)
+    granted: Boolean = false,
+) = MarkedDayEntity(date = date.toString(), mark = mark.name, granted = granted)
 
-internal fun List<MarkedDayEntity>.toMarks(): Map<LocalDate, DayMark> =
-    mapNotNull { row ->
-        parseOrNull { LocalDate.parse(row.date) to DayMark.valueOf(row.mark) }
-    }.toMap()
+internal fun List<MarkedDayEntity>.toMarkedDays(): MarkedDays {
+    val rows =
+        mapNotNull { row ->
+            parseOrNull {
+                Triple(
+                    LocalDate.parse(row.date),
+                    DayMark.valueOf(row.mark),
+                    row.granted,
+                )
+            }
+        }
+    return MarkedDays(
+        marks = rows.associate { (date, mark, _) -> date to mark },
+        granted = rows.filter { it.third }.map { it.first }.toSet(),
+    )
+}

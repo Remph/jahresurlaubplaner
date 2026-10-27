@@ -165,7 +165,7 @@ Backup (M2, third piece): design approved by the maintainer on 2026-10-25, inclu
 everything".
 
 - `:core.backup`: `BackupFile.encode/decode/writeTo/readFrom/fileName` and `BackupData` (settings,
-  entitlements, marked days). One UTF-8 JSON file with `app`, `formatVersion` (1) and `exportedOn`.
+  entitlements, marked days). One UTF-8 JSON file with `app`, `formatVersion` (1; 2 since 0.10.0, see "Granted days") and `exportedOn`.
   The file has its own stable names (a `when` per enum, so a new enum value does not compile until
   it has one) and counts amounts in half days. Not in it: the app language and the school holiday
   file. The format is documented in the `BackupFile` comment; a test reads a hand-written version 1
@@ -432,6 +432,44 @@ libraries and three licence texts shown in a dialog. The texts live in `app/src/
 with the APK. Dependency audit 2026-10-26 (`releaseRuntimeClasspath`): AndroidX, Kotlin, kotlinx and
 jspecify are Apache-2.0; only `glance-appwidget-external-protobuf` is BSD-3-Clause. Add a text when a
 dependency with another licence comes in. Screenshots: project folder `design/m6-about/`.
+
+### Granted days (0.10.0, parked item 21)
+
+A planned (future) day can be marked "genehmigt" / "granted": the employer has said yes. Decided
+with the maintainer on 2026-10-27; the look was decided on 2026-10-26 (tinted fill + outline).
+
+- **A setting, off by default** (Einstellungen > Urlaub, "Genehmigte Urlaubstage"; first chosen
+  "always on", changed to a setting the same day). Off hides everything granted (day sheet switch,
+  tiles, legend, overview line) and the ICS export is as in 0.9.x; the flags stay stored, so
+  turning it on again brings them back. Changing a day's mark (full to half) with the setting off
+  keeps its flag (`UserDataRepository.markAllKeepingGranted`).
+- **Rules in `:core`:** `MarkedDays(marks, granted)` and `MarkStatus` (TAKEN, GRANTED, PLANNED).
+  A day up to and including today is TAKEN whatever its flag; a granted flag only matters for
+  future days. The balance is unchanged: granted counts as planned (`VacationCalculator` takes only
+  the marks). `grantedPlanned(year, days, today)` is the granted share of "Geplant" for the overview.
+- **Room 3 to 4:** `marked_day.granted INTEGER NOT NULL DEFAULT 0` and `settings.grantedDays
+  INTEGER NOT NULL DEFAULT 0` (`MIGRATION_3_4`, `4.json`, migration test). Existing marks are
+  planned, the setting is off.
+- **Backup format 1 to 2:** every marked day has `"granted": true|false` (required in version 2,
+  absent in version 1 = not granted); the settings have the optional `grantedDays` (missing = off).
+  A version 1 file still restores; a version 3 file is refused. 0.9.x refuses a version 2 file
+  ("newer version") instead of dropping the flags, so a 0.10.0 backup cannot be restored in 0.9.x.
+- **Day sheet:** a "Genehmigt" switch (only for days after today, only with the setting on). It
+  starts as the day's flag (off for a new mark) and applies to every day the sheet saves, so a
+  "Bis" range is granted or planned together. Brückentage "Eintragen" marks as planned.
+- **Look:** `DayColors.granted` (`primaryContainer`), `onGranted`, `grantedHalf` (the "½" keeps
+  the planned colour while it has 4.5:1 on the fill, else `onGranted`); 2 dp `primary` outline in
+  the month, 1.5 dp in the year grid, no check or dot; legend entry "Genehmigt"; TalkBack says
+  "Urlaub genehmigt" / "Halber Urlaubstag genehmigt". Tests in `DayColorsTest` (contrast, differs
+  from the school and plain tile and from taken, blue wallpaper schemes).
+- **Overview:** one line "Davon genehmigt: N Tage" under the figures, only with the setting on and
+  at least one granted day to come.
+- **ICS:** with the setting on, an event is `STATUS:CONFIRMED` (taken or granted days) or
+  `STATUS:TENTATIVE` (planned days); a trip splits into one event per run of the same status, and a
+  weekend between two runs belongs to neither. With it off: one event per trip and no status.
+- **For the 0.10.0 changelog (release thread):** new optional setting "Genehmigte Urlaubstage"
+  (shows which planned days the employer has granted, also in the calendar export); backups made
+  with 0.10.0 cannot be restored in 0.9.x.
 
 Known snags:
 

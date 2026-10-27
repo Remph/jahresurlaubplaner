@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.VacationDays
+import de.remph.urlaubsplaner.settings.SwitchRow
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -62,6 +65,9 @@ fun DaySheet(
     val colors = dayColors()
     val existing = view.markOn(date)
     var mark by remember(date) { mutableStateOf(existing ?: DayMark.FULL) }
+    // The switch is for days still to come; today and the past are taken, whatever it says.
+    val showGranted = view.grantedEnabled && date.isAfter(view.today)
+    var granted by remember(date) { mutableStateOf(view.isGranted(date)) }
     var end by remember(date) { mutableStateOf(date) }
     var picking by remember { mutableStateOf(false) }
     val days = view.costlyDays(date, end)
@@ -73,10 +79,16 @@ fun DaySheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
-            Modifier.fillMaxWidth().navigationBarsPadding().padding(
-                horizontal = 24.dp,
-                vertical = 8.dp,
-            ),
+            // The granted switch made the sheet taller; on a small screen or with a large font it scrolls.
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(
+                    rememberScrollState(),
+                ).navigationBarsPadding()
+                .padding(
+                    horizontal = 24.dp,
+                    vertical = 8.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
@@ -100,6 +112,14 @@ fun DaySheet(
                         ) { Text(stringResource(label)) }
                     }
                 }
+                if (showGranted) {
+                    SwitchRow(
+                        label = stringResource(R.string.sheet_granted),
+                        support = stringResource(R.string.sheet_granted_support),
+                        checked = granted,
+                        onChange = { granted = it },
+                    )
+                }
                 OutlinedButton(onClick = { picking = true }, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.until, end.mediumText(locale)))
                 }
@@ -109,7 +129,7 @@ fun DaySheet(
                 )
                 Button(
                     onClick = {
-                        viewModel.mark(days, mark)
+                        viewModel.mark(days, mark, if (showGranted) granted else null)
                         onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth(),

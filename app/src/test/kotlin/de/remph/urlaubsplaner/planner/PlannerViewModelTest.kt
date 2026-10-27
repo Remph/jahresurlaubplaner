@@ -16,6 +16,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.LocalDate
 import java.time.YearMonth
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -180,6 +181,26 @@ class PlannerViewModelTest {
         assertEquals(fixture.date("2028-01-02"), next.today)
         assertEquals(2028, model.currentYear)
         assertEquals(2029, model.lastYear)
+    }
+
+    @Test
+    fun `marking with the switch stores the flag and without it keeps what the day has`() {
+        val model = viewModel()
+        fixture.fill()
+        val day = fixture.date("2027-03-22")
+
+        model.mark(listOf(day), DayMark.FULL, granted = true)
+        await(model.overview) { it.markOn(day) == DayMark.FULL }
+        assertEquals(setOf(day), runBlocking { fixture.repository.readAll() }.granted)
+
+        // No switch (the setting is off): changing to a half day does not forget the approval.
+        model.mark(listOf(day), DayMark.HALF)
+        await(model.overview) { it.markOn(day) == DayMark.HALF }
+        assertEquals(setOf(day), runBlocking { fixture.repository.readAll() }.granted)
+
+        model.mark(listOf(day), DayMark.FULL, granted = false)
+        await(model.overview) { it.markOn(day) == DayMark.FULL }
+        assertEquals(emptySet<LocalDate>(), runBlocking { fixture.repository.readAll() }.granted)
     }
 }
 

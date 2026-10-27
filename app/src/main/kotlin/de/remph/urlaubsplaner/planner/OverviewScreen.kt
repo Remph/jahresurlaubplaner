@@ -172,6 +172,20 @@ private fun Status(
         val total = balance.entitlement + balance.carryOver
         Figure(R.string.of_total, total, intro, locale, Modifier.weight(1f))
     }
+    // Only a share of "Geplant", so the numbers above still add up; hidden until a day is granted.
+    if (view.grantedPlanned > VacationDays.ZERO) {
+        Text(
+            text =
+                pluralStringResource(
+                    R.plurals.overview_granted,
+                    if (view.grantedPlanned == VacationDays.ONE) 1 else 2,
+                    view.grantedPlanned.text(locale),
+                ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.riseIn(intro, 1),
+        )
+    }
 
     val open = balance.carryOverOpen
     if (open > VacationDays.ZERO && !view.today.isAfter(balance.carryOverExpiry)) {
@@ -197,7 +211,7 @@ private fun Status(
             modifier = Modifier.semantics { heading() },
         )
         YearGrid(view, { onOpenMonth(it) })
-        Legend(showBridge = view.bridgeDays.isNotEmpty())
+        Legend(showBridge = view.bridgeDays.isNotEmpty(), showGranted = view.grantedEnabled)
         SchoolHolidaysUnknownNote(
             view,
             LocalDate.of(view.year, 1, 1),
