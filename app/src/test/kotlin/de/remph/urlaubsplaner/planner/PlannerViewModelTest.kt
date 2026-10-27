@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -54,6 +55,30 @@ class PlannerViewModelTest {
         // 30 + 10 carried over, 2 days taken, 5 planned.
         assertEquals(VacationDays.of(33), view.balance?.remaining)
         assertEquals(fixture.date("2027-03-15"), view.nextTrip?.start)
+    }
+
+    @Test
+    fun `the calendar is read once the overview is, before its tab opens`() {
+        fixture.fill()
+        val model = viewModel()
+        await(model.overview) { it.balance != null }
+
+        // Nothing collects the calendar here, as on the overview tab; its first value must come
+        // anyway, or the calendar's first visit draws nothing and then pops in during the slide.
+        // Read .value, not collect: collecting would itself start the calendar's flow.
+        val view =
+            runBlocking {
+                withTimeout(5_000) {
+                    var read = model.calendar.value
+                    while (read == null) {
+                        delay(10)
+                        read = model.calendar.value
+                    }
+                    read
+                }
+            }
+
+        assertEquals(2027, view?.year)
     }
 
     @Test

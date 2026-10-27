@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -69,6 +70,17 @@ class PlannerViewModel(
     val calendarMonth: StateFlow<YearMonth> = shownMonth
 
     val calendarMode: StateFlow<CalendarMode> = shownMode
+
+    init {
+        // Only a screen that collects the calendar starts reading its year, so the first visit to
+        // the calendar tab drew nothing, then built the whole page in the middle of the tab slide.
+        // Once the overview has its data (so the start of the app is not slowed) the calendar's
+        // year is read too and kept; it follows the month the user steps to.
+        viewModelScope.launch {
+            overview.first { it != null }
+            calendar.collect {}
+        }
+    }
 
     private val highlighted = MutableStateFlow<LocalDate?>(null)
 
