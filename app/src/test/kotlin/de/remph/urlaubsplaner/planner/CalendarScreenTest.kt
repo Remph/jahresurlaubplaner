@@ -560,6 +560,26 @@ class CalendarScreenTest {
         compose.onAllNodesWithText("Für 2028", substring = true).assertCountEquals(0)
     }
 
+    @Test
+    @Config(qualifiers = "de")
+    fun `switching between the year and the month view never shows both at once`() {
+        showYear()
+        compose.waitForIdle()
+        compose.mainClock.autoAdvance = false
+
+        compose.onNodeWithText("Monat").performClick()
+        compose.mainClock.advanceTimeByFrame()
+        // The first frame after the tap, where AnimatedContent used to keep the old page.
+        compose.onAllNodesWithText("2027").assertCountEquals(0)
+        compose.onAllNodesWithText("März 2027").assertCountEquals(1)
+        yearGrid().assertDoesNotExist()
+
+        compose.onNodeWithText("Jahr").performClick()
+        compose.mainClock.advanceTimeByFrame()
+        compose.onAllNodesWithText("März 2027").assertCountEquals(0)
+        compose.onAllNodesWithText("2027").assertCountEquals(1)
+    }
+
     private fun assertEmptyStatesMatchTitles() {
         for (year in 2026..2028) {
             val empty =

@@ -3,12 +3,8 @@ package de.remph.urlaubsplaner.planner
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -69,7 +65,8 @@ import kotlin.math.floor
  * day opens the day sheet to mark it. The month and the mode live in the ViewModel, so they
  * survive a tab change and a rotation.
  *
- * A step slides the title and the body a short way, like the tabs. Both are drawn from one
+ * A step slides the title and the body a short way, like the tabs (a switch to the year or month
+ * view swaps in place). Both are drawn from one
  * [CalendarPage], so the header and the body always belong to the same month.
  */
 @Composable
@@ -87,7 +84,7 @@ fun CalendarScreen(
     val page = rememberCalendarPage(view, month, mode) ?: return
     val shown = page.view
     val locale = currentLocale()
-    val transition = rememberPageTransition()
+    val motion = rememberPageMotion()
     var headerPx by remember { mutableIntStateOf(0) }
 
     BoxWithConstraints {
@@ -107,14 +104,14 @@ fun CalendarScreen(
             Header(
                 viewModel,
                 page,
-                transition,
+                motion,
                 locale,
                 Modifier.onSizeChanged { headerPx = it.height },
             )
             AnimatedContent(
                 page,
-                transitionSpec = transition,
-                contentKey = { it.key },
+                transitionSpec = motion.spec,
+                contentKey = motion.key,
                 label = "calendarPage",
             ) { shownPage ->
                 CalendarBody(
@@ -145,20 +142,25 @@ private typealias PageTransition =
 private val FramePadding = 16.dp
 private val FrameSpacing = 16.dp
 
-/** The slide of a step: the direction follows the date, a change of mode just swaps. */
+/**
+ * The slide of a step, the direction follows the date. With Android's animations off nothing
+ * slides and the key never changes, so the content swaps in place (see [CalendarPage.generation]).
+ */
+private class PageMotion(
+    val spec: PageTransition,
+    val key: (CalendarPage) -> Int,
+)
+
 @Composable
-private fun rememberPageTransition(): PageTransition {
+private fun rememberPageMotion(): PageMotion {
     val axis = rememberSharedAxis<CalendarPage>()
     val removed = rememberAnimationsRemoved()
-    return {
-        if (removed || initialState.key.mode != targetState.key.mode) {
-            EnterTransition.None togetherWith ExitTransition.None using
-                SizeTransform(clip = false) { _, _ -> snap() }
-        } else {
-            axis(targetState.key.month > initialState.key.month)
-                .using(SizeTransform(clip = false))
-        }
-    }
+    return PageMotion(
+        spec = {
+            axis(targetState.month > initialState.month).using(SizeTransform(clip = false))
+        },
+        key = { if (removed) 0 else it.generation },
+    )
 }
 
 @Composable
@@ -247,7 +249,7 @@ private fun CalendarBody(
 private fun Header(
     viewModel: PlannerViewModel,
     page: CalendarPage,
-    transition: PageTransition,
+    motion: PageMotion,
     locale: Locale,
     modifier: Modifier = Modifier,
 ) {
@@ -273,8 +275,8 @@ private fun Header(
             }
             AnimatedContent(
                 page,
-                transitionSpec = transition,
-                contentKey = { it.key },
+                transitionSpec = motion.spec,
+                contentKey = motion.key,
                 label = "calendarTitle",
             ) { shownPage ->
                 val month = shownPage.month

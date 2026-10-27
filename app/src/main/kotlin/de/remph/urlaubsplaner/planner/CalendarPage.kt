@@ -19,25 +19,30 @@ class CalendarPage(
     val view: YearView,
     val month: YearMonth,
     val mode: CalendarMode,
+    /**
+     * Counts the steps: it grows when the month (the year, in year mode) changes and stays when
+     * only the data or the mode changes. The screen slides when it changes; a switch between month
+     * and year view is no step and swaps in place, because AnimatedContent keeps the old content
+     * for one frame when its key changes, even with no animation, and that frame showed both
+     * titles and both bodies on top of each other.
+     */
+    val generation: Int = 0,
 ) {
-    /** Two pages with the same key are the same content (new data only redraws it, no slide). */
-    val key =
-        CalendarPageKey(
-            mode,
-            if (mode ==
-                CalendarMode.YEAR
-            ) {
-                YearMonth.of(month.year, 1)
-            } else {
-                month
-            },
-        )
-}
+    /** The month, or January of the year in year mode: what a step changes. */
+    private val position: YearMonth =
+        if (mode == CalendarMode.YEAR) YearMonth.of(month.year, 1) else month
 
-data class CalendarPageKey(
-    val mode: CalendarMode,
-    val month: YearMonth,
-)
+    /** The next page: a step if it shows another month (or year) in the same mode. */
+    fun next(
+        view: YearView,
+        month: YearMonth,
+        mode: CalendarMode,
+    ): CalendarPage {
+        val page = CalendarPage(view, month, mode, generation)
+        val step = mode == this.mode && page.position != position
+        return if (step) CalendarPage(view, month, mode, generation + 1) else page
+    }
+}
 
 /**
  * The page for [month] and [mode] once [view] is the view of that month's year; until then the
@@ -52,8 +57,10 @@ fun rememberCalendarPage(
     var page by remember { mutableStateOf<CalendarPage?>(null) }
     if (view != null && view.year == month.year) {
         val last = page
-        if (last == null || last.view !== view || last.month != month || last.mode != mode) {
+        if (last == null) {
             page = CalendarPage(view, month, mode)
+        } else if (last.view !== view || last.month != month || last.mode != mode) {
+            page = last.next(view, month, mode)
         }
     }
     return page

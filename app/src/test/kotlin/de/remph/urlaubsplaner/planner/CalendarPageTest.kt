@@ -78,15 +78,25 @@ class CalendarPageTest {
     }
 
     @Test
-    fun `in the year mode the key is the year and in the month mode the month`() {
+    fun `a step counts as a new generation but new data and a change of mode do not`() {
         val view = viewOf(2027)
+        val first = CalendarPage(view, YearMonth.of(2027, 5), CalendarMode.MONTH)
 
-        val year = CalendarPage(view, YearMonth.of(2027, 5), CalendarMode.YEAR)
-        val sameYear = CalendarPage(view, YearMonth.of(2027, 9), CalendarMode.YEAR)
-        val month = CalendarPage(view, YearMonth.of(2027, 5), CalendarMode.MONTH)
+        val nextMonth = first.next(view, YearMonth.of(2027, 6), CalendarMode.MONTH)
+        val newData = first.next(viewOf(2027), YearMonth.of(2027, 5), CalendarMode.MONTH)
+        val yearView = first.next(view, YearMonth.of(2027, 5), CalendarMode.YEAR)
+        val sameYear = yearView.next(view, YearMonth.of(2027, 9), CalendarMode.YEAR)
+        val nextYear = yearView.next(view, YearMonth.of(2028, 5), CalendarMode.YEAR)
+        val backToMonth = sameYear.next(view, YearMonth.of(2027, 9), CalendarMode.MONTH)
 
-        assertEquals(year.key, sameYear.key)
-        assertNotEquals(year.key, month.key)
+        assertEquals(0, first.generation)
+        assertEquals(1, nextMonth.generation)
+        assertEquals(0, newData.generation)
+        // The month or year view of the same place is the same content, swapped in place.
+        assertEquals(0, yearView.generation)
+        assertEquals(0, sameYear.generation)
+        assertEquals(1, nextYear.generation)
+        assertEquals(0, backToMonth.generation)
     }
 
     @Test
