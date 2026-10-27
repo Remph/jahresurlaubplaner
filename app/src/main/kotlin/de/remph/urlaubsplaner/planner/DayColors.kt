@@ -56,16 +56,7 @@ fun dayColors(): DayColors {
         taken = scheme.primary,
         onTaken = scheme.onPrimary,
         planned = scheme.primary,
-        granted =
-            if (dark) {
-                scheme.primaryContainer
-            } else {
-                lerp(
-                    scheme.primaryContainer,
-                    scheme.primary,
-                    GRANTED_LIGHT_DEPTH,
-                )
-            },
+        granted = granted,
         onGranted = scheme.onPrimaryContainer,
         grantedHalf =
             if (contrastRatio(scheme.primary, granted) >= MIN_TEXT_CONTRAST) {
