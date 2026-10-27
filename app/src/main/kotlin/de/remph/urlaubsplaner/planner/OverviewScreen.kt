@@ -5,6 +5,7 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,11 +13,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -32,9 +35,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -62,6 +67,7 @@ fun OverviewScreen(
     outerPadding: PaddingValues,
     onOpenSettings: () -> Unit,
     onOpenMonth: (YearMonth) -> Unit,
+    onShowDate: (LocalDate) -> Unit,
 ) {
     val view by viewModel.overview.collectAsStateWithLifecycle()
     val shown = view ?: return
@@ -84,7 +90,7 @@ fun OverviewScreen(
             }
 
             else -> {
-                Status(shown, viewModel, onOpenMonth)
+                Status(shown, viewModel, onOpenMonth, onShowDate)
             }
         }
     }
@@ -130,6 +136,7 @@ private fun Status(
     view: YearView,
     viewModel: PlannerViewModel,
     onOpenMonth: (YearMonth) -> Unit,
+    onShowDate: (LocalDate) -> Unit,
 ) {
     // The bridge is found again by its first day, so the sheet survives a turn of the phone.
     var sheetStart by rememberSaveable { mutableStateOf<LocalDate?>(null) }
@@ -199,7 +206,7 @@ private fun Status(
 
     Card(Modifier.riseIn(intro, 3)) {
         NextTrip(view, locale)
-        NextHoliday(view, locale)
+        NextHoliday(view, locale, onShowDate)
     }
 
     BridgesCard(view, Modifier.riseIn(intro, 4)) { sheetStart = it.leave.first() }
@@ -409,26 +416,48 @@ private fun NextTrip(
 private fun NextHoliday(
     view: YearView,
     locale: Locale,
+    onShow: (LocalDate) -> Unit,
 ) {
     val next = view.settings.nextPublicHoliday(view.today) ?: return
     val days = ChronoUnit.DAYS.between(view.today, next.date).toInt()
-    Column(Modifier.semantics(mergeDescendants = true) {}) {
-        Text(
-            stringResource(R.string.next_holiday),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(stringResource(next.holiday.labelRes()), style = MaterialTheme.typography.bodyLarge)
-        Text(
-            text =
-                if (days == 0) {
-                    stringResource(R.string.holiday_today)
-                } else {
-                    val date = next.date.mediumText(locale)
-                    pluralStringResource(R.plurals.holiday_in_days, days, date, days)
-                },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+    // The whole block is the button (opens the calendar on the holiday); the chevron says so.
+    Row(
+        Modifier
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(
+                onClickLabel = stringResource(R.string.next_holiday_show),
+                role = Role.Button,
+            ) { onShow(next.date) }
+            .heightIn(min = 48.dp)
+            .semantics(mergeDescendants = true) {},
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(R.string.next_holiday),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                stringResource(next.holiday.labelRes()),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Text(
+                text =
+                    if (days == 0) {
+                        stringResource(R.string.holiday_today)
+                    } else {
+                        val date = next.date.mediumText(locale)
+                        pluralStringResource(R.plurals.holiday_in_days, days, date, days)
+                    },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Icon(
+            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

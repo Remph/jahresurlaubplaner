@@ -70,6 +70,15 @@ class PlannerViewModel(
 
     val calendarMode: StateFlow<CalendarMode> = shownMode
 
+    private val highlighted = MutableStateFlow<LocalDate?>(null)
+
+    /**
+     * The day whose tile plays its highlight once, null when there is none (or it has played).
+     * Set by [showDate]; the tile clears it with [highlightDone], and so does the calendar when it
+     * leaves the screen, so a later visit does not play it again.
+     */
+    val highlight: StateFlow<LocalDate?> = highlighted
+
     private val yearRowsExpanded = MutableStateFlow(false)
 
     /** Whether the year grid shows tall rows (48 dp) instead of the compact ones (28 dp). */
@@ -91,6 +100,18 @@ class PlannerViewModel(
 
     fun showMode(mode: CalendarMode) {
         shownMode.value = mode
+    }
+
+    /** Opens the month of [date] in the month view and asks its tile for the highlight. */
+    fun showDate(date: LocalDate) {
+        showMode(CalendarMode.MONTH)
+        showMonth(YearMonth.from(date))
+        // Out of the calendar's range there is no tile to light up.
+        highlighted.value = date.takeIf { YearMonth.from(it) == shownMonth.value }
+    }
+
+    fun highlightDone() {
+        highlighted.value = null
     }
 
     /**

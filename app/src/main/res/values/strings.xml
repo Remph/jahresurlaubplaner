@@ -170,6 +170,7 @@
     <string name="trip_now">Du bist gerade im Urlaub.</string>
     <string name="date_range">%1$s bis %2$s</string>
     <string name="next_holiday">Nächster Feiertag</string>
+    <string name="next_holiday_show">Feiertag im Kalender zeigen</string>
     <string name="holiday_today">Heute</string>
     <plurals name="trip_costs">
         <item quantity="one">kostet %1$s Urlaubstag</item>

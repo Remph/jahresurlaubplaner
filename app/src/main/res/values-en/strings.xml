@@ -170,6 +170,7 @@
     <string name="trip_now">You are on vacation now.</string>
     <string name="date_range">%1$s to %2$s</string>
     <string name="next_holiday">Next public holiday</string>
+    <string name="next_holiday_show">Show holiday in the calendar</string>
     <string name="holiday_today">Today</string>
     <plurals name="trip_costs">
         <item quantity="one">costs %1$s vacation day</item>

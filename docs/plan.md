@@ -477,6 +477,19 @@ with the maintainer on 2026-10-27; the look was decided on 2026-10-26 (tinted fi
   (shows which planned days the employer has granted, also in the calendar export); backups made
   with 0.10.0 cannot be restored in 0.9.x.
 
+### Next holiday highlight (0.10.0, parked item 20)
+
+On the overview "Nächster Feiertag" is a button (the whole block, chevron at the end, click label
+"Feiertag im Kalender zeigen"). A tap opens the calendar in the month view on the holiday's month
+(`PlannerViewModel.showDate`) and its tile plays the highlight once: a ring grows out of the tile
+and fades, twice, and the tile swells by 10 % (`Highlight.kt`, drawn by `DayCell`). The maintainer
+chose it on 2026-10-27 over glow, bounce, flash and spotlight (mock-ups in the project folder
+`design/0-10-holiday-highlight/`). The ring is drawn outside the tile, so it reads on gold, lilac,
+taken and granted tiles, in light, dark and OLED. It starts 300 ms after the calendar opens (the tab
+slide) and takes 1.45 s. With Android's animations off the tile shows a still outline for 1.5 s.
+The highlight is consumed when it has played, when another month is shown and when the calendar
+leaves the screen, so a later visit does not light up an old day. No stored data changes.
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on

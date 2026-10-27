@@ -29,6 +29,8 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -79,8 +81,15 @@ fun CalendarScreen(
     val month by viewModel.calendarMonth.collectAsStateWithLifecycle()
     val mode by viewModel.calendarMode.collectAsStateWithLifecycle()
     val rowsExpanded by viewModel.calendarYearRowsExpanded.collectAsStateWithLifecycle()
+    val highlight by viewModel.highlight.collectAsStateWithLifecycle()
     val scroll = rememberScrollState()
     var sheetDate by rememberSaveable { mutableStateOf<LocalDate?>(null) }
+    // A highlight is for the moment the calendar opens: it goes when another month is shown and
+    // when the screen leaves, so a later visit does not light up an old day.
+    LaunchedEffect(highlight, month) {
+        if (highlight?.let { YearMonth.from(it) != month } == true) viewModel.highlightDone()
+    }
+    DisposableEffect(Unit) { onDispose { viewModel.highlightDone() } }
     val page = rememberCalendarPage(view, month, mode) ?: return
     val shown = page.view
     val locale = currentLocale()
@@ -126,6 +135,7 @@ fun CalendarScreen(
                     scroll,
                     locale,
                     viewModel,
+                    highlight,
                     onOpenSettings,
                     savedOthersPx = othersPx,
                     // Only the page that stays reports: the one sliding out has another year's size.
@@ -178,6 +188,7 @@ private fun CalendarBody(
     scroll: ScrollState,
     locale: Locale,
     viewModel: PlannerViewModel,
+    highlight: LocalDate?,
     onOpenSettings: () -> Unit,
     savedOthersPx: Int,
     onOthersPx: (Int) -> Unit,
@@ -211,7 +222,7 @@ private fun CalendarBody(
         verticalArrangement = Arrangement.spacedBy(FrameSpacing),
     ) {
         if (page.mode == CalendarMode.MONTH) {
-            MonthGrid(shown, month) { onDay(it) }
+            MonthGrid(shown, month, highlight, viewModel::highlightDone) { onDay(it) }
             MonthCard(shown, month, locale)
             Legend(
                 showBridge = shown.bridgeDays.any { YearMonth.from(it) == month },
