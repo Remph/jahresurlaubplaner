@@ -1,6 +1,7 @@
 package de.remph.urlaubsplaner.planner
 
 import android.content.Context
+import androidx.lifecycle.ViewModelStore
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import de.remph.urlaubsplaner.core.balance.DayMark
@@ -51,7 +52,15 @@ class PlannerFixture(
         repository = UserDataRepository(database)
     }
 
-    fun viewModel() = PlannerViewModel(repository, lazyOf(schoolHolidays), clock)
+    // Every view model is cleared in close(), before the database goes: one that is left running
+    // queries the closed database when Room's invalidation tracker fires, and the exception then
+    // fails whichever test runs next in the same JVM.
+    private val viewModels = ViewModelStore()
+
+    fun viewModel() =
+        PlannerViewModel(repository, lazyOf(schoolHolidays), clock).also {
+            viewModels.put("planner${viewModels.keys().size}", it)
+        }
 
     /** Nordrhein-Westfalen, 30 days and 10 carried over until 31 March 2027, a few marks. */
     fun fill() =
@@ -67,5 +76,8 @@ class PlannerFixture(
 
     fun date(text: String): LocalDate = LocalDate.parse(text)
 
-    fun close() = database.close()
+    fun close() {
+        viewModels.clear()
+        database.close()
+    }
 }

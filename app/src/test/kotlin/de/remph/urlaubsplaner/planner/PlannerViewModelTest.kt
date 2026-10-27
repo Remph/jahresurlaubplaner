@@ -65,15 +65,16 @@ class PlannerViewModelTest {
 
         // Nothing collects the calendar here, as on the overview tab; its first value must come
         // anyway, or the calendar's first visit draws nothing and then pops in during the slide.
+        // Read .value, not collect: collecting would itself start the calendar's flow.
         val view =
             runBlocking {
                 withTimeout(5_000) {
-                    while (model.calendar.value ==
-                        null
-                    ) {
+                    var read = model.calendar.value
+                    while (read == null) {
                         delay(10)
+                        read = model.calendar.value
                     }
-                    model.calendar.value
+                    read
                 }
             }
 
