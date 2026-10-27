@@ -1,0 +1,1 @@
+No visible changes: new automated tests for the widget, backup and database.

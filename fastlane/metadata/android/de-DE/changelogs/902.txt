@@ -1,0 +1,1 @@
+Keine sichtbaren Änderungen: neue automatische Tests für Widget, Datensicherung und Datenbank.
