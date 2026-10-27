@@ -396,7 +396,7 @@ clickable mock-up are in the project folder `design/review-m3/` and `design/revi
 - Swipe sideways in the calendar (the maintainer, 2026-10-26): left shows the next month (month view) or
   year (year view), right the previous one; 64 dp or more counts (`Modifier.swipeToStep`). It does
   not switch between month and year view (the segmented button does that). The arrow buttons stay
-  for TalkBack. No slide animation yet; the title just changes like with the arrows.
+  for TalkBack. The step slides, see above.
 - Weekend numbers: the theme's soft grey is kept where it has 4.5:1 on the normal and the school
   holiday tile, else a fixed stronger grey (dark 5.3:1, light 6.4:1 on school tiles).
   `weekendTextColor` and `contrastRatio` are unit-tested.
@@ -436,8 +436,8 @@ Designed with the maintainer on 2026-10-26 (card taps, one question at a time).
 AndroidJUnit4, Compose test rule). They cover what the JVM tests cannot see: the real SQLite, a
 real `ContentResolver`, the system's widget service and the Android 11 library. Written in the
 cloud, which has no emulator: they compile (`assembleDebugAndroidTest`) but **had not run** when
-they were merged into the plan; the first run on the API 30 and API 37 emulators is the
-maintainer's PC.
+they were merged into the plan; the first run on the API 30 and API 37 emulators is part of the
+0.10.0 release test on the maintainer's PC (see "0.10.0 release", below).
 
 | Class | What it checks |
 | --- | --- |
@@ -518,6 +518,23 @@ slide) and takes 1.45 s. With Android's animations off the tile shows a still ou
 The highlight is consumed when it has played, when another month is shown and when the calendar
 leaves the screen, so a later visit does not light up an old day. No stored data changes.
 
+### Clear a year (0.10.0, parked item 18)
+
+Einstellungen > Urlaub, last row of the year page: "Urlaubstage von 2027 löschen". It removes only
+the marked days of that year (`MarkedDayDao.deleteBetween`, `UserDataRepository.clearMarks`); the
+year's Urlaubstage, the Resturlaub and the settings stay. A dialog names the year and the number of
+days, says there is no undo and points to Datensicherung. The widgets redraw through Room's
+invalidation tracker. No stored data changes.
+
+### 0.10.0 release
+
+Version 0.10.0, `versionCode` 1000 (0 * 10000 + 10 * 100 + 0). 0.9.2 (902, the instrumented tests
+only) was never released; the maintainer skipped it on 2026-10-27 and its changelog files stay in
+`fastlane/`. For the changelog texts (`changelogs/1000.txt`): new optional setting, clear a year,
+holiday highlight, slide animation, year rows that fit, lilac school holidays; a backup made with
+0.10.0 (format 2) cannot be restored in 0.9.x, and the database moves from Room 3 to 4 on the first
+start, with no way back. The release steps and the test list are in `docs/milestone-0.10.0.md`.
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
@@ -530,7 +547,8 @@ Known snags:
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
 - [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (PR #12, merged 2026-10-25)
-- [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B); Brückentage (PR C, PR #18); design review changes (shapes, month card, year rows, weekend contrast)
+- [x] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B); Brückentage (PR C, PR #18); design review changes (shapes, month card, year rows, weekend contrast)
 - [x] M4 Export and widget: ICS export (PR #20, merged 2026-10-26); widget (PR #21, merged 2026-10-26; split into a small and a big widget, PR in review)
-- [ ] M5 Polish (animations, final UI review, tech debt review)
-- [ ] M6 Release prep: about screen (PR #29); signing, version 0.9.0, F-Droid texts and icon, `docs/release.md` (release-files PR); still the maintainer's: the key, the F-Droid merge request, the phone test
+- [x] M5 Polish (animations, final UI review, tech debt review)
+- [x] M6 Release prep (0.9.0 released on GitHub 2026-10-26; F-Droid postponed): about screen (PR #29); signing, version 0.9.0, F-Droid texts and icon, `docs/release.md` (release-files PR); still the maintainer's: the key, the F-Droid merge request, the phone test
+- [x] 0.10.0 (parked items 18 to 23) built on `release/0.10.0`: clear a year (PR #44), lilac school holidays (PR #45), granted days (PR #46), month slide and year rows that fit (PR #47), next holiday highlight (PR #49); release PR `feature/0-10-release`

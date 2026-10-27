@@ -1,0 +1,2 @@
+Neu: Genehmigte Urlaubstage (optional, Einstellungen > Urlaub), Urlaubstage eines Jahres löschen, Klick auf den nächsten Feiertag zeigt ihn im Kalender, Monate und Jahre gleiten beim Blättern, die Jahresansicht nutzt den Platz. Schulferien sind jetzt lila.
+Wichtig: Sicherungen aus 0.10.0 lassen sich in 0.9.x nicht wiederherstellen. Sichere vor dem Update.

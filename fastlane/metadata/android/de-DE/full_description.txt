@@ -11,6 +11,8 @@ Wähle dein Bundesland. Die Feiertage werden nach den Regeln des Landes berechne
 
 <b>Tage eintragen und Brückentage finden</b>
 • Einzelne Tage oder einen ganzen Zeitraum im Monatskalender markieren
+• Auf Wunsch zeigen, welche geplanten Tage dein Arbeitgeber schon genehmigt hat
+• Den nächsten Feiertag antippen: Der Kalender öffnet sich und zeigt ihn
 • Jahresübersicht mit Feiertagen, Schulferien und deinem Urlaub
 • Brückentage: Die App schlägt vor, an welchen Tagen sich ein Urlaubstag besonders lohnt
 
