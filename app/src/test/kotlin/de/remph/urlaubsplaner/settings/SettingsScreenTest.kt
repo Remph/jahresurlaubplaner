@@ -513,10 +513,11 @@ class SettingsScreenTest {
             .assertIsOff()
             .performClick()
 
+        // The switch follows Room a moment after the value is saved, so wait for the switch.
         compose.waitUntil(5_000) {
-            runBlocking { repository.observeSettings().first() }.grantedDays
+            runCatching { compose.onNodeWithText("Genehmigte Urlaubstage").assertIsOn() }.isSuccess
         }
-        compose.onNodeWithText("Genehmigte Urlaubstage").performScrollTo().assertIsOn()
+        assertTrue(runBlocking { repository.observeSettings().first() }.grantedDays)
     }
 
     @Test
