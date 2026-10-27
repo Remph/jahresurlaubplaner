@@ -170,8 +170,7 @@ private fun visiblyDifferent(
 private fun hasHue(color: Color): Boolean =
     maxOf(color.red, color.green, color.blue) - minOf(color.red, color.green, color.blue) >= 0.05f
 
-// A light tint on a near white tile is at most about 1.2:1 with any wallpaper; the outline is the main cue.
-private const val MIN_TILE_CONTRAST = 1.15f
+private const val MIN_TILE_CONTRAST = 1.3f
 private const val MIN_GRANTED_VS_TAKEN = 2f
 private val BLUE_HUES = 180f..250f
 private const val MIN_HUE_GAP = 30f

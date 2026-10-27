@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 
 /**
@@ -15,7 +16,9 @@ import androidx.compose.ui.graphics.luminance
  *
  * A granted day (0.10.0) is a planned day with a lighter fill inside its outline: the theme's
  * primary container, so like the taken days it follows the wallpaper (the maintainer chose "tinted
- * fill + outline" over a check mark, 2026-10-26).
+ * fill + outline" over a check mark, 2026-10-26). In the light theme the container is mixed a
+ * fifth of the way towards the primary colour: the plain container was too close to a plain tile,
+ * especially with a blue wallpaper (the maintainer, 2026-10-27).
  */
 @Immutable
 class DayColors(
@@ -39,6 +42,12 @@ fun dayColors(): DayColors {
     val scheme = MaterialTheme.colorScheme
     val dark = scheme.background.luminance() < 0.5f
     val school = if (dark) Color(0xFF3D3560) else Color(0xFFE6DFF7)
+    val granted =
+        if (dark) {
+            scheme.primaryContainer
+        } else {
+            lerp(scheme.primaryContainer, scheme.primary, GRANTED_LIGHT_DEPTH)
+        }
     return DayColors(
         holiday = if (dark) Color(0xFF6B5320) else Color(0xFFF7E3B5),
         onHoliday = if (dark) Color(0xFFF3D9A0) else Color(0xFF5A3C0A),
@@ -47,10 +56,19 @@ fun dayColors(): DayColors {
         taken = scheme.primary,
         onTaken = scheme.onPrimary,
         planned = scheme.primary,
-        granted = scheme.primaryContainer,
+        granted =
+            if (dark) {
+                scheme.primaryContainer
+            } else {
+                lerp(
+                    scheme.primaryContainer,
+                    scheme.primary,
+                    GRANTED_LIGHT_DEPTH,
+                )
+            },
         onGranted = scheme.onPrimaryContainer,
         grantedHalf =
-            if (contrastRatio(scheme.primary, scheme.primaryContainer) >= MIN_TEXT_CONTRAST) {
+            if (contrastRatio(scheme.primary, granted) >= MIN_TEXT_CONTRAST) {
                 scheme.primary
             } else {
                 scheme.onPrimaryContainer
@@ -63,6 +81,9 @@ fun dayColors(): DayColors {
             ),
     )
 }
+
+/** How far the light theme's granted fill moves from the primary container towards the primary colour. */
+private const val GRANTED_LIGHT_DEPTH = 0.2f
 
 /** The least contrast (WCAG AA) text needs against its background. */
 internal const val MIN_TEXT_CONTRAST = 4.5f
