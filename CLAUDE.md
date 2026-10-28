@@ -38,7 +38,8 @@ Local-first, no backend for the MVP. Gradle with `:core` and `:app`; the MVP fea
 
 ## What to read
 - `README.md`: what the app does and how to build it.
-- `docs/`: `plan.md` (layout, build settings, milestones), `data-sources.md`.
+- `docs/`: `plan.md` (layout, build settings, milestones), `data-sources.md`, `milestone-0.10.0.md`
+  (the 0.10.0 integration branch `release/0.10.0`: PR base, order, syncing `main` into it).
 - Check facts that change over time (store rules, data sources, API terms, Google's developer
   verification) with search and write the date next to what you found.
 
@@ -58,8 +59,12 @@ in the cloud container on 2026-10-25, except the instrumented tests:
 - `./gradlew :core:test --tests '*SomeTest'`: one class while working. Name the module: plain
   `test --tests` fails in a module that has no matching test.
 - `./gradlew -PcoreOnly :core:test`: only the rules module, no Android SDK needed.
-- `./gradlew connectedDebugAndroidTest`: instrumented tests, need an emulator or device. Not
-  possible in the cloud container: say "not run" in the PR and ask the maintainer to run it on their PC.
+- `./gradlew assembleDebugAndroidTest`: compiles the instrumented tests (`app/src/androidTest`);
+  works in the cloud. `./gradlew connectedDebugAndroidTest` runs them and needs an emulator, so it
+  is not possible in the cloud container: say "not run" in the PR and ask the maintainer to run it
+  on their PC. They empty the app's database and refuse to run on anything but an emulator (see
+  `docs/plan.md`, "Instrumented tests"). Names of test functions in backticks must not contain
+  commas or dots (dex cannot represent them).
 - On Windows one `:app` unit test is skipped (`assumeUnixPaths()` in `CalendarExporterTest`):
   androidx.core's `FileProvider` compares paths after a hard-coded '/'. It runs in the cloud.
 
