@@ -32,8 +32,7 @@ class PlacedWidget(
 
     init {
         // Binding needs a permission a launcher has; the shell may hand it to this package.
-        // `cmd appwidget` goes straight to the service, whether or not the image has a wrapper.
-        shell("cmd appwidget grantbind --package ${context.packageName}")
+        grantBind()
         val bound = manager.bindAppWidgetIdIfAllowed(id, ComponentName(context, receiver))
         check(bound) { "The system did not allow binding the widget ${receiver.simpleName}" }
         host.startListening()
@@ -77,7 +76,19 @@ class PlacedWidget(
     override fun close() {
         host.stopListening()
         host.deleteAppWidgetId(id)
+        revokeBind()
+    }
+
+    // Android 11 (our minSdk) has no `cmd appwidget`, only the old `appwidget` program; newer
+    // images may have it the other way round. The one that does not exist only prints a message.
+    private fun grantBind() {
+        shell("cmd appwidget grantbind --package ${context.packageName}")
+        shell("appwidget grantbind --package ${context.packageName}")
+    }
+
+    private fun revokeBind() {
         shell("cmd appwidget revokebind --package ${context.packageName}")
+        shell("appwidget revokebind --package ${context.packageName}")
     }
 
     private fun collect(

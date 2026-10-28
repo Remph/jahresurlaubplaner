@@ -78,6 +78,9 @@ place, so it is the one used here. Both can be installed side by side.
   from installing and then uninstalling the app on the phone. So name the emulator, even when the
   phone is unplugged: in PowerShell `$env:ANDROID_SERIAL = "emulator-5554"` (see the serial with
   `adb devices`), then `.\gradlew connectedDebugAndroidTest`; or pick the emulator in Android Studio.
+  If the install fails with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, an app signed with another key is on
+  the emulator: uninstall it there (`adb -s emulator-5554 uninstall de.remph.urlaubsplaner`) and run
+  again. Gradle still ends in BUILD SUCCESSFUL in that case, so read the test report.
   What they cover and what not is in the "Instrumented tests" section of
   [plan.md](plan.md#instrumented-tests-092).
 
