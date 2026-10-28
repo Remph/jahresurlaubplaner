@@ -152,6 +152,7 @@ dependencies {
 
     // Instrumented tests (src/androidTest): they run on an emulator or device, not in the cloud.
     androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.room.testing)

@@ -435,9 +435,11 @@ Designed with the maintainer on 2026-10-26 (card taps, one question at a time).
 `app/src/androidTest` holds the first tests that run on a device (`connectedDebugAndroidTest`,
 AndroidJUnit4, Compose test rule). They cover what the JVM tests cannot see: the real SQLite, a
 real `ContentResolver`, the system's widget service and the Android 11 library. Written in the
-cloud, which has no emulator: they compile (`assembleDebugAndroidTest`) but **had not run** when
-they were merged into the plan; the first run on the API 30 and API 37 emulators is part of the
-0.10.0 release test on the maintainer's PC (see "0.10.0 release", below).
+cloud, which has no emulator: the cloud only compiles them (`assembleDebugAndroidTest`). First run
+on the maintainer's PC, 2026-10-28: 14 of 14 pass on the API 30 and the API 37 emulator, after two
+fixes in the test setup: Android 11 only has the old `appwidget` shell program (not `cmd appwidget`),
+so `PlacedWidget` runs both for granting the widget bind permission; and Compose's test library
+brings Espresso 3.5.0, which breaks on Android 17, so `espresso-core` 3.7.0 is a test dependency.
 
 | Class | What it checks |
 | --- | --- |
