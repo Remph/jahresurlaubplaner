@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -41,8 +42,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkStatus
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -55,6 +58,8 @@ class DayLook(
     val school: Boolean,
     val mark: DayMark?,
     val taken: Boolean,
+    /** Planned and granted by the employer; only while the granted days setting is on. */
+    val granted: Boolean,
     val today: Boolean,
     val workDay: Boolean,
     /** A day to take for a possible Brückentag that is not marked yet. */
@@ -69,6 +74,7 @@ fun YearView.look(date: LocalDate): DayLook {
         school = schoolHolidaysOn(date).isNotEmpty(),
         mark = mark,
         taken = mark != null && !date.isAfter(today),
+        granted = mark != null && statusOn(date) == MarkStatus.GRANTED,
         today = date == today,
         workDay = settings.schedule.workingValue(date) > VacationDays.ZERO,
         bridge = mark == null && date in bridgeDays,
@@ -99,6 +105,8 @@ private val DayFade = tween<Color>(durationMillis = 150)
 fun MonthGrid(
     view: YearView,
     month: YearMonth,
+    highlight: LocalDate? = null,
+    onHighlightDone: () -> Unit = {},
     onDayClick: (LocalDate) -> Unit,
 ) {
     val locale = currentLocale()
@@ -108,7 +116,11 @@ fun MonthGrid(
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         WeekdayHeader(locale)
         for (row in 0 until rows) {
-            Row(Modifier.fillMaxWidth()) {
+            // The rings of the highlighted day reach into the rows around it, so its row is drawn last.
+            val highlightRow =
+                highlight != null && YearMonth.from(highlight) == month &&
+                    (highlight.dayOfMonth + blanks - 1) / 7 == row
+            Row(Modifier.fillMaxWidth().zIndex(if (highlightRow) 1f else 0f)) {
                 for (column in 0 until 7) {
                     val day = row * 7 + column - blanks + 1
                     if (day < 1 || day > month.lengthOfMonth()) {
@@ -117,7 +129,16 @@ fun MonthGrid(
                         // Keyed by date: a cell that appears with a new month starts at its colours
                         // instead of fading from the previous month's day at the same place.
                         key(month.atDay(day)) {
-                            DayCell(view, month.atDay(day), locale, onDayClick, Modifier.weight(1f))
+                            val date = month.atDay(day)
+                            DayCell(
+                                view,
+                                date,
+                                locale,
+                                onDayClick,
+                                Modifier.weight(1f),
+                                highlight = date == highlight,
+                                onHighlightDone = onHighlightDone,
+                            )
                         }
                     }
                 }
@@ -133,8 +154,11 @@ private fun DayCell(
     locale: Locale,
     onClick: (LocalDate) -> Unit,
     modifier: Modifier,
+    highlight: Boolean,
+    onHighlightDone: () -> Unit,
 ) {
     val colors = dayColors()
+    val clock = rememberHighlightClock(highlight, onHighlightDone)
     val look = view.look(date)
     val description = dayDescription(view, date, look, locale)
     // The theme's large step, the same as the cards (design review, the maintainer, 2026-10-25).
@@ -143,10 +167,11 @@ private fun DayCell(
     // Every day is a tile of its own, so the days stand out from the background (the maintainer,
     // 2026-10-25). The tile's colour is the strongest thing the day is; a school holiday under a
     // taken day or a holiday still shows as a bar along the bottom (in the text colour on a taken
-    // day, since the wallpaper's colour can be close to any fixed blue).
+    // day, since the wallpaper's colour can be close to the school holiday tile).
     val fillTarget =
         when {
             look.taken -> colors.taken
+            look.granted -> colors.granted
             look.holiday -> colors.holiday
             look.school -> colors.school
             else -> MaterialTheme.colorScheme.surfaceContainerLow
@@ -154,6 +179,7 @@ private fun DayCell(
     val textTarget =
         when {
             look.taken -> colors.onTaken
+            look.granted -> colors.onGranted
             look.holiday -> colors.onHoliday
             !look.workDay -> colors.weekend
             else -> MaterialTheme.colorScheme.onSurface
@@ -174,6 +200,8 @@ private fun DayCell(
         modifier =
             modifier
                 .height(52.dp)
+                .zIndex(if (highlight) 1f else 0f)
+                .highlightRings(clock, MaterialTheme.colorScheme.primary, shape, 2.dp)
                 .clickable { onClick(date) }
                 .semantics(mergeDescendants = true) { contentDescription = description },
     ) {
@@ -182,7 +210,11 @@ private fun DayCell(
                 Modifier
                     .fillMaxSize()
                     .padding(2.dp)
-                    .clip(shape)
+                    .graphicsLayer {
+                        val scale = popScale(clock.elapsed)
+                        scaleX = scale
+                        scaleY = scale
+                    }.clip(shape)
                     .background(fill)
                     .then(
                         when {
@@ -210,7 +242,12 @@ private fun DayCell(
             if (look.mark == DayMark.HALF) {
                 Text(
                     text = "½",
-                    color = if (look.taken) colors.onTaken else colors.planned,
+                    color =
+                        when {
+                            look.taken -> colors.onTaken
+                            look.granted -> colors.grantedHalf
+                            else -> colors.planned
+                        },
                     fontSize = 11.sp,
                     modifier = Modifier.align(Alignment.TopEnd).padding(end = 5.dp, top = 2.dp),
                 )
@@ -255,11 +292,34 @@ fun dayDescription(
     }
     if (look.school) parts += stringResource(R.string.day_school_holiday)
     when {
-        look.mark == null -> Unit
-        look.mark == DayMark.HALF && look.taken -> parts += stringResource(R.string.day_taken_half)
-        look.mark == DayMark.HALF -> parts += stringResource(R.string.day_planned_half)
-        look.taken -> parts += stringResource(R.string.day_taken)
-        else -> parts += stringResource(R.string.day_planned)
+        look.mark == null -> {
+            Unit
+        }
+
+        look.mark == DayMark.HALF && look.taken -> {
+            parts += stringResource(R.string.day_taken_half)
+        }
+
+        look.mark == DayMark.HALF && look.granted -> {
+            parts +=
+                stringResource(R.string.day_granted_half)
+        }
+
+        look.mark == DayMark.HALF -> {
+            parts += stringResource(R.string.day_planned_half)
+        }
+
+        look.taken -> {
+            parts += stringResource(R.string.day_taken)
+        }
+
+        look.granted -> {
+            parts += stringResource(R.string.day_granted)
+        }
+
+        else -> {
+            parts += stringResource(R.string.day_planned)
+        }
     }
     if (look.bridge) parts += stringResource(R.string.day_bridge)
     if (look.today) parts += stringResource(R.string.day_today)
@@ -272,6 +332,7 @@ fun dayDescription(
 fun Legend(
     modifier: Modifier = Modifier,
     showBridge: Boolean = false,
+    showGranted: Boolean = false,
     compact: Boolean = false,
 ) {
     val colors = dayColors()
@@ -293,6 +354,14 @@ fun Legend(
         }
         LegendItem(R.string.legend_planned, size, compact) {
             Modifier.border(BorderStroke(2.dp, colors.planned), shape)
+        }
+        if (showGranted) {
+            // The same swatch as a granted day: the lighter fill inside the planned outline.
+            LegendItem(R.string.legend_granted, size, compact) {
+                Modifier
+                    .background(colors.granted, shape)
+                    .border(BorderStroke(2.dp, colors.planned), shape)
+            }
         }
         if (showBridge) {
             LegendItem(R.string.legend_bridge, size, compact) {

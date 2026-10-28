@@ -51,6 +51,7 @@ class BridgesScreenTest {
                 PaddingValues(),
                 onOpenSettings = {},
                 onOpenMonth = {},
+                onShowDate = {},
             )
         }
         waitForText(waitFor)
@@ -74,8 +75,9 @@ class BridgesScreenTest {
     private fun marks() =
         runBlocking {
             fixture.repository
-                .observeMarks(fixture.date("2027-01-01"), fixture.date("2027-12-31"))
+                .observeMarkedDays(fixture.date("2027-01-01"), fixture.date("2027-12-31"))
                 .first()
+                .marks
         }
 
     @Test

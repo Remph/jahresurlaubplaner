@@ -26,6 +26,12 @@ data class UserSettings(
      * from the year before as Resturlaub. Only a suggestion, the employer's figure still wins.
      */
     val suggestCarryOver: Boolean = false,
+    /**
+     * Off by default (the maintainer, 2026-10-27): when on, a planned day can be marked "granted"
+     * (the employer has said yes) and the screens, the overview and the calendar export show the
+     * difference. Turning it off only hides it; the granted flags stay stored.
+     */
+    val grantedDays: Boolean = false,
 ) {
     /** The public holidays of [year] for this user; none while no Land is chosen. */
     fun publicHolidays(year: Int): List<PublicHoliday> =

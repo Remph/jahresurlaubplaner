@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -16,6 +17,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.LocalDate
 import java.time.YearMonth
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -53,6 +55,30 @@ class PlannerViewModelTest {
         // 30 + 10 carried over, 2 days taken, 5 planned.
         assertEquals(VacationDays.of(33), view.balance?.remaining)
         assertEquals(fixture.date("2027-03-15"), view.nextTrip?.start)
+    }
+
+    @Test
+    fun `the calendar is read once the overview is, before its tab opens`() {
+        fixture.fill()
+        val model = viewModel()
+        await(model.overview) { it.balance != null }
+
+        // Nothing collects the calendar here, as on the overview tab; its first value must come
+        // anyway, or the calendar's first visit draws nothing and then pops in during the slide.
+        // Read .value, not collect: collecting would itself start the calendar's flow.
+        val view =
+            runBlocking {
+                withTimeout(5_000) {
+                    var read = model.calendar.value
+                    while (read == null) {
+                        delay(10)
+                        read = model.calendar.value
+                    }
+                    read
+                }
+            }
+
+        assertEquals(2027, view?.year)
     }
 
     @Test
@@ -180,6 +206,51 @@ class PlannerViewModelTest {
         assertEquals(fixture.date("2028-01-02"), next.today)
         assertEquals(2028, model.currentYear)
         assertEquals(2029, model.lastYear)
+    }
+
+    @Test
+    fun `marking with the switch stores the flag and without it keeps what the day has`() {
+        val model = viewModel()
+        fixture.fill()
+        val day = fixture.date("2027-03-22")
+
+        model.mark(listOf(day), DayMark.FULL, granted = true)
+        await(model.overview) { it.markOn(day) == DayMark.FULL }
+        assertEquals(setOf(day), runBlocking { fixture.repository.readAll() }.granted)
+
+        // No switch (the setting is off): changing to a half day does not forget the approval.
+        model.mark(listOf(day), DayMark.HALF)
+        await(model.overview) { it.markOn(day) == DayMark.HALF }
+        assertEquals(setOf(day), runBlocking { fixture.repository.readAll() }.granted)
+
+        model.mark(listOf(day), DayMark.FULL, granted = false)
+        await(model.overview) { it.markOn(day) == DayMark.FULL }
+        assertEquals(emptySet<LocalDate>(), runBlocking { fixture.repository.readAll() }.granted)
+    }
+
+    @Test
+    fun `showing a date opens its month and asks for the highlight`() {
+        val model = viewModel()
+        model.showMode(CalendarMode.YEAR)
+
+        model.showDate(fixture.date("2027-03-26"))
+
+        assertEquals(YearMonth.of(2027, 3), model.calendarMonth.value)
+        assertEquals(CalendarMode.MONTH, model.calendarMode.value)
+        assertEquals(fixture.date("2027-03-26"), model.highlight.value)
+
+        model.highlightDone()
+
+        assertNull(model.highlight.value)
+    }
+
+    @Test
+    fun `a date outside the calendar opens nothing to highlight`() {
+        val model = viewModel()
+
+        model.showDate(fixture.date("2018-12-25"))
+
+        assertNull(model.highlight.value)
     }
 }
 

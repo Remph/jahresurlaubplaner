@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import de.remph.urlaubsplaner.core.backup.BackupData
 import de.remph.urlaubsplaner.core.balance.DayMark
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.WorkSchedule
@@ -11,8 +12,12 @@ import de.remph.urlaubsplaner.core.balance.YearEntitlement
 import de.remph.urlaubsplaner.core.holidays.Bundesland
 import de.remph.urlaubsplaner.core.holidays.RegionalOptOut
 import de.remph.urlaubsplaner.core.settings.UserSettings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -113,5 +118,124 @@ class UserDataRepositoryTest {
             repository.unmark(day)
             repository.unmark(day)
             assertEquals(emptyMap<LocalDate, DayMark>(), marks())
+        }
+
+    @Test
+    fun `clearing a year removes its marks, ends included, and nothing else`() =
+        runBlocking {
+            val kept =
+                listOf(
+                    LocalDate.of(2025, 12, 31),
+                    LocalDate.of(2027, 1, 1),
+                    LocalDate.of(2027, 6, 1),
+                )
+            kept.forEach { repository.mark(it, DayMark.FULL) }
+            listOf(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 7, 7), LocalDate.of(2026, 12, 31))
+                .forEach { repository.mark(it, DayMark.HALF) }
+            repository.saveEntitlement(YearEntitlement(2026, VacationDays.of(30)))
+            repository.saveSettings(UserSettings(land = Bundesland.BAYERN))
+
+            repository.clearMarks(2026)
+
+            assertEquals(emptyMap<LocalDate, DayMark>(), marks())
+            val rest =
+                repository
+                    .observeMarks(LocalDate.of(2025, 1, 1), LocalDate.of(2027, 12, 31))
+                    .first()
+            assertEquals(kept.toSet(), rest.keys)
+            assertEquals(VacationDays.of(30), repository.observeEntitlement(2026).first()?.days)
+            assertEquals(Bundesland.BAYERN, repository.observeSettings().first().land)
+        }
+
+    @Test
+    fun `clearing a year with no marks is harmless`() =
+        runBlocking {
+            repository.mark(LocalDate.of(2027, 3, 3), DayMark.FULL)
+
+            repository.clearMarks(2026)
+
+            assertEquals(1, repository.readAll().marks.size)
+        }
+
+    @Test
+    fun `clearing a year is seen by whoever watches the table, like the widget`() =
+        runBlocking {
+            repository.mark(LocalDate.of(2026, 5, 5), DayMark.FULL)
+            // The widget refresher listens to the table through the invalidation tracker.
+            val seen = Channel<Set<String>>(Channel.UNLIMITED)
+            val watcher =
+                launch(Dispatchers.Default) {
+                    database.invalidationTracker.createFlow("marked_day").collect { seen.send(it) }
+                }
+            withTimeout(5_000) { seen.receive() }
+
+            repository.clearMarks(2026)
+
+            assertEquals(setOf("marked_day"), withTimeout(5_000) { seen.receive() })
+            watcher.cancel()
+        }
+
+    private suspend fun granted() =
+        repository.observeMarkedDays(year2026.start, year2026.endInclusive).first().granted
+
+    @Test
+    fun `a new mark is not granted and a day can be granted and un-granted`() =
+        runBlocking {
+            val day = LocalDate.of(2026, 7, 6)
+            repository.mark(day, DayMark.FULL)
+            assertEquals(emptySet<LocalDate>(), granted())
+
+            repository.setGranted(listOf(day), true)
+            assertEquals(setOf(day), granted())
+
+            repository.setGranted(listOf(day), false)
+            assertEquals(emptySet<LocalDate>(), granted())
+        }
+
+    @Test
+    fun `granting a day that is not marked marks nothing`() =
+        runBlocking {
+            repository.setGranted(listOf(LocalDate.of(2026, 7, 6)), true)
+
+            assertEquals(BackupData().marks, repository.readAll().marks)
+            assertEquals(emptySet<LocalDate>(), granted())
+        }
+
+    @Test
+    fun `marking again replaces the flag, unless the caller keeps it`() =
+        runBlocking {
+            val monday = LocalDate.of(2026, 7, 6)
+            val tuesday = LocalDate.of(2026, 7, 7)
+            repository.markAll(listOf(monday, tuesday), DayMark.FULL, granted = true)
+
+            repository.markAllKeepingGranted(listOf(monday, LocalDate.of(2026, 7, 8)), DayMark.HALF)
+
+            // Monday keeps its flag with the new mark, a new day starts as planned.
+            assertEquals(setOf(monday, tuesday), granted())
+            assertEquals(DayMark.HALF, marks().getValue(monday))
+            assertEquals(DayMark.FULL, marks().getValue(tuesday))
+
+            repository.markAll(listOf(monday), DayMark.FULL, granted = false)
+            assertEquals(setOf(tuesday), granted())
+        }
+
+    @Test
+    fun `removing a marked day removes its flag with it`() =
+        runBlocking {
+            val day = LocalDate.of(2026, 7, 6)
+            repository.mark(day, DayMark.FULL, granted = true)
+
+            repository.unmark(day)
+            repository.mark(day, DayMark.FULL)
+
+            assertEquals(emptySet<LocalDate>(), granted())
+        }
+
+    @Test
+    fun `the granted days setting is saved with the other settings`() =
+        runBlocking {
+            repository.saveSettings(UserSettings(land = Bundesland.HAMBURG, grantedDays = true))
+
+            assertEquals(true, repository.observeSettings().first().grantedDays)
         }
 }

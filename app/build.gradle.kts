@@ -44,10 +44,10 @@ android {
                 .get()
                 .toInt()
         targetSdk = 37
-        // versionCode = major * 10000 + minor * 100 + patch (0.9.2 is 902, 1.0.0 is 10000). F-Droid
+        // versionCode = major * 10000 + minor * 100 + patch (0.10.0 is 1000, 1.0.0 is 10000). F-Droid
         // names the changelog after it: fastlane/metadata/android/*/changelogs/<versionCode>.txt.
-        versionCode = 902
-        versionName = "0.9.2"
+        versionCode = 1000
+        versionName = "0.10.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -152,6 +152,7 @@ dependencies {
 
     // Instrumented tests (src/androidTest): they run on an emulator or device, not in the cloud.
     androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.room.testing)

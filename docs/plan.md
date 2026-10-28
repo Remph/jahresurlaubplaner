@@ -169,7 +169,7 @@ Backup (M2, third piece): design approved by the maintainer on 2026-10-25, inclu
 everything".
 
 - `:core.backup`: `BackupFile.encode/decode/writeTo/readFrom/fileName` and `BackupData` (settings,
-  entitlements, marked days). One UTF-8 JSON file with `app`, `formatVersion` (1) and `exportedOn`.
+  entitlements, marked days). One UTF-8 JSON file with `app`, `formatVersion` (1; 2 since 0.10.0, see "Granted days") and `exportedOn`.
   The file has its own stable names (a `when` per enum, so a new enum value does not compile until
   it has one) and counts amounts in half days. Not in it: the app language and the school holiday
   file. The format is documented in the `BackupFile` comment; a test reads a hand-written version 1
@@ -286,7 +286,7 @@ and PR C (Brückentage).
   next public holiday, and the year grid (12 rows, 31 columns; a tap opens that month).
   Without a Land or without the year's numbers it points to the settings instead of zeros.
 - Kalender: month grid (Monday first) or the year grid. Gold = Feiertag, solid teal = taken,
-  outlined teal = planned, light blue band = school holidays; half days carry a "½". Holiday and
+  outlined teal = planned, lilac band = school holidays; half days carry a "½". Holiday and
   school colours are fixed (not from the wallpaper), taken follows the theme. Under the month the
   holidays and school holidays are listed by name, and a month outside the school holiday
   file says "noch keine Schulferien".
@@ -383,14 +383,20 @@ clickable mock-up are in the project folder `design/review-m3/` and `design/revi
   and school holiday bar inside a cell stay as they are.
 - Month view: under the grid a card with the days taken (up to today) and planned (after it) in
   that month, then the month's holidays and school holidays; the legend is one small row.
-- Year grid: 28 dp rows; swipe down expands them to 48 dp, swipe up makes them compact (like the
+- Year grid: 28 dp rows; swipe down expands them to what fits the screen without scrolling, at
+  least 36 dp and at most 64 dp (the maintainer, 2026-10-27; `expandedRowHeight`, measured from the
+  page's other parts, so it follows the font size and the legend), swipe up makes them compact (like the
   stock calendar app of some phones). A handle under the grid does the same by tap and for TalkBack. The swipe is
   only watched, so the page still scrolls: on a short screen a swipe up scrolls first and makes the
   rows compact only when the page is already at its end. The state lives in `PlannerViewModel`.
+- A step (swipe or arrow) slides the title and the body a short way with a fade, like the tabs, in
+  month and year view (the maintainer, 2026-10-27; `AnimatedContent` keyed on `CalendarPageKey`, no
+  slide when animations are off). Header and body are drawn from one `CalendarPage`, which keeps the
+  old year's page until the new year's view has arrived (no empty-state flash).
 - Swipe sideways in the calendar (the maintainer, 2026-10-26): left shows the next month (month view) or
   year (year view), right the previous one; 64 dp or more counts (`Modifier.swipeToStep`). It does
   not switch between month and year view (the segmented button does that). The arrow buttons stay
-  for TalkBack. No slide animation yet; the title just changes like with the arrows.
+  for TalkBack. The step slides, see above.
 - Weekend numbers: the theme's soft grey is kept where it has 4.5:1 on the normal and the school
   holiday tile, else a fixed stronger grey (dark 5.3:1, light 6.4:1 on school tiles).
   `weekendTextColor` and `contrastRatio` are unit-tested.
@@ -429,9 +435,11 @@ Designed with the maintainer on 2026-10-26 (card taps, one question at a time).
 `app/src/androidTest` holds the first tests that run on a device (`connectedDebugAndroidTest`,
 AndroidJUnit4, Compose test rule). They cover what the JVM tests cannot see: the real SQLite, a
 real `ContentResolver`, the system's widget service and the Android 11 library. Written in the
-cloud, which has no emulator: they compile (`assembleDebugAndroidTest`) but **had not run** when
-they were merged into the plan; the first run on the API 30 and API 37 emulators is the
-maintainer's PC.
+cloud, which has no emulator: the cloud only compiles them (`assembleDebugAndroidTest`). First run
+on the maintainer's PC, 2026-10-28: 14 of 14 pass on the API 30 and the API 37 emulator, after two
+fixes in the test setup: Android 11 only has the old `appwidget` shell program (not `cmd appwidget`),
+so `PlacedWidget` runs both for granting the widget bind permission; and Compose's test library
+brings Espresso 3.5.0, which breaks on Android 17, so `espresso-core` 3.7.0 is a test dependency.
 
 | Class | What it checks |
 | --- | --- |
@@ -461,6 +469,74 @@ with the APK. Dependency audit 2026-10-26 (`releaseRuntimeClasspath`): AndroidX,
 jspecify are Apache-2.0; only `glance-appwidget-external-protobuf` is BSD-3-Clause. Add a text when a
 dependency with another licence comes in. Screenshots: project folder `design/m6-about/`.
 
+### Granted days (0.10.0, parked item 21)
+
+A planned (future) day can be marked "genehmigt" / "granted": the employer has said yes. Decided
+with the maintainer on 2026-10-27; the look was decided on 2026-10-26 (tinted fill + outline).
+
+- **A setting, off by default** (Einstellungen > Urlaub, "Genehmigte Urlaubstage"; first chosen
+  "always on", changed to a setting the same day). Off hides everything granted (day sheet switch,
+  tiles, legend, overview line) and the ICS export is as in 0.9.x; the flags stay stored, so
+  turning it on again brings them back. Changing a day's mark (full to half) with the setting off
+  keeps its flag (`UserDataRepository.markAllKeepingGranted`).
+- **Rules in `:core`:** `MarkedDays(marks, granted)` and `MarkStatus` (TAKEN, GRANTED, PLANNED).
+  A day up to and including today is TAKEN whatever its flag; a granted flag only matters for
+  future days. The balance is unchanged: granted counts as planned (`VacationCalculator` takes only
+  the marks). `grantedPlanned(year, days, today)` is the granted share of "Geplant" for the overview.
+- **Room 3 to 4:** `marked_day.granted INTEGER NOT NULL DEFAULT 0` and `settings.grantedDays
+  INTEGER NOT NULL DEFAULT 0` (`MIGRATION_3_4`, `4.json`, migration test). Existing marks are
+  planned, the setting is off.
+- **Backup format 1 to 2:** every marked day has `"granted": true|false` (required in version 2,
+  absent in version 1 = not granted); the settings have the optional `grantedDays` (missing = off).
+  A version 1 file still restores; a version 3 file is refused. 0.9.x refuses a version 2 file
+  ("newer version") instead of dropping the flags, so a 0.10.0 backup cannot be restored in 0.9.x.
+- **Day sheet:** a "Genehmigt" switch (only for days after today, only with the setting on). It
+  starts as the day's flag (off for a new mark) and applies to every day the sheet saves, so a
+  "Bis" range is granted or planned together. Brückentage "Eintragen" marks as planned.
+- **Look:** `DayColors.granted` (`primaryContainer`; in the light theme mixed 20 % towards `primary` so it stands out from a plain tile, Nick 2026-10-27), `onGranted`, `grantedHalf` (the "½" keeps
+  the planned colour while it has 4.5:1 on the fill, else `onGranted`); 2 dp `primary` outline in
+  the month, 1.5 dp in the year grid, no check or dot; legend entry "Genehmigt"; TalkBack says
+  "Urlaub genehmigt" / "Halber Urlaubstag genehmigt". Tests in `DayColorsTest` (contrast, differs
+  from the school and plain tile and from taken, blue wallpaper schemes).
+- **Overview:** one line "Davon genehmigt: N Tage" under the figures, only with the setting on and
+  at least one granted day to come.
+- **ICS:** with the setting on, an event is `STATUS:CONFIRMED` (taken or granted days) or
+  `STATUS:TENTATIVE` (planned days); a trip splits into one event per run of the same status, and a
+  weekend between two runs belongs to neither. With it off: one event per trip and no status.
+- **For the 0.10.0 changelog (release thread):** new optional setting "Genehmigte Urlaubstage"
+  (shows which planned days the employer has granted, also in the calendar export); backups made
+  with 0.10.0 cannot be restored in 0.9.x.
+
+### Next holiday highlight (0.10.0, parked item 20)
+
+On the overview "Nächster Feiertag" is a button (the whole block, chevron at the end, click label
+"Feiertag im Kalender zeigen"). A tap opens the calendar in the month view on the holiday's month
+(`PlannerViewModel.showDate`) and its tile plays the highlight once: a ring grows out of the tile
+and fades, twice, and the tile swells by 10 % (`Highlight.kt`, drawn by `DayCell`). The maintainer
+chose it on 2026-10-27 over glow, bounce, flash and spotlight (mock-ups in the project folder
+`design/0-10-holiday-highlight/`). The ring is drawn outside the tile, so it reads on gold, lilac,
+taken and granted tiles, in light, dark and OLED. It starts 300 ms after the calendar opens (the tab
+slide) and takes 1.45 s. With Android's animations off the tile shows a still outline for 1.5 s.
+The highlight is consumed when it has played, when another month is shown and when the calendar
+leaves the screen, so a later visit does not light up an old day. No stored data changes.
+
+### Clear a year (0.10.0, parked item 18)
+
+Einstellungen > Urlaub, last row of the year page: "Urlaubstage von 2027 löschen". It removes only
+the marked days of that year (`MarkedDayDao.deleteBetween`, `UserDataRepository.clearMarks`); the
+year's Urlaubstage, the Resturlaub and the settings stay. A dialog names the year and the number of
+days, says there is no undo and points to Datensicherung. The widgets redraw through Room's
+invalidation tracker. No stored data changes.
+
+### 0.10.0 release
+
+Version 0.10.0, `versionCode` 1000 (0 * 10000 + 10 * 100 + 0). 0.9.2 (902, the instrumented tests
+only) was never released; the maintainer skipped it on 2026-10-27 and its changelog files stay in
+`fastlane/`. For the changelog texts (`changelogs/1000.txt`): new optional setting, clear a year,
+holiday highlight, slide animation, year rows that fit, lilac school holidays; a backup made with
+0.10.0 (format 2) cannot be restored in 0.9.x, and the database moves from Room 3 to 4 on the first
+start, with no way back. The release steps and the test list are in `docs/milestone-0.10.0.md`.
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
@@ -473,7 +549,8 @@ Known snags:
 - [x] M0 Skeleton (PR #3, merged 2026-10-25)
 - [x] M1 Rules in `:core`: public holidays (PR #5), vacation balance (PR #7), Brückentage (PR #8, merged 2026-10-25), Bayern Mariä Himmelfahrt opt-out (PR #9, merged 2026-10-25)
 - [x] M2 Data and storage: Room (PR #10), school holiday file and loader (PR #11), both merged 2026-10-25; backup export/import (PR #12, merged 2026-10-25)
-- [ ] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B); Brückentage (PR C, PR #18); design review changes (shapes, month card, year rows, weekend contrast)
+- [x] M3 Screens: settings page and backup screen (PR #13, merged 2026-10-25); tabs, settings list and Darstellung (PR #14); home status, year/month view, marking (PR B); Brückentage (PR C, PR #18); design review changes (shapes, month card, year rows, weekend contrast)
 - [x] M4 Export and widget: ICS export (PR #20, merged 2026-10-26); widget (PR #21, merged 2026-10-26; split into a small and a big widget, PR in review)
-- [ ] M5 Polish (animations, final UI review, tech debt review)
-- [ ] M6 Release prep: about screen (PR #29); signing, version 0.9.0, F-Droid texts and icon, `docs/release.md` (release-files PR); still the maintainer's: the key, the F-Droid merge request, the phone test
+- [x] M5 Polish (animations, final UI review, tech debt review)
+- [x] M6 Release prep (0.9.0 released on GitHub 2026-10-26; F-Droid postponed): about screen (PR #29); signing, version 0.9.0, F-Droid texts and icon, `docs/release.md` (release-files PR); still the maintainer's: the key, the F-Droid merge request, the phone test
+- [x] 0.10.0 (parked items 18 to 23) built on `release/0.10.0`: clear a year (PR #44), lilac school holidays (PR #45), granted days (PR #46), month slide and year rows that fit (PR #47), next holiday highlight (PR #49); release PR `feature/0-10-release`

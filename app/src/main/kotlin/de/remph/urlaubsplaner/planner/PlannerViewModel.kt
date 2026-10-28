@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -70,6 +71,26 @@ class PlannerViewModel(
 
     val calendarMode: StateFlow<CalendarMode> = shownMode
 
+    init {
+        // Only a screen that collects the calendar starts reading its year, so the first visit to
+        // the calendar tab drew nothing, then built the whole page in the middle of the tab slide.
+        // Once the overview has its data (so the start of the app is not slowed) the calendar's
+        // year is read too and kept; it follows the month the user steps to.
+        viewModelScope.launch {
+            overview.first { it != null }
+            calendar.collect {}
+        }
+    }
+
+    private val highlighted = MutableStateFlow<LocalDate?>(null)
+
+    /**
+     * The day whose tile plays its highlight once, null when there is none (or it has played).
+     * Set by [showDate]; the tile clears it with [highlightDone], and so does the calendar when it
+     * leaves the screen, so a later visit does not play it again.
+     */
+    val highlight: StateFlow<LocalDate?> = highlighted
+
     private val yearRowsExpanded = MutableStateFlow(false)
 
     /** Whether the year grid shows tall rows (48 dp) instead of the compact ones (28 dp). */
@@ -91,6 +112,18 @@ class PlannerViewModel(
 
     fun showMode(mode: CalendarMode) {
         shownMode.value = mode
+    }
+
+    /** Opens the month of [date] in the month view and asks its tile for the highlight. */
+    fun showDate(date: LocalDate) {
+        showMode(CalendarMode.MONTH)
+        showMonth(YearMonth.from(date))
+        // Out of the calendar's range there is no tile to light up.
+        highlighted.value = date.takeIf { YearMonth.from(it) == shownMonth.value }
+    }
+
+    fun highlightDone() {
+        highlighted.value = null
     }
 
     /**
@@ -125,13 +158,24 @@ class PlannerViewModel(
         return target in firstMonth..lastMonth
     }
 
-    /** Marks every day in [dates]; a range is turned into its costly days by the caller. */
+    /**
+     * Marks every day in [dates]; a range is turned into its costly days by the caller. [granted]
+     * is what the day sheet's switch says; null (the switch is not shown: the setting is off, or
+     * the days are not in the future) keeps the flag a day already has.
+     */
     fun mark(
         dates: Collection<LocalDate>,
         mark: DayMark,
+        granted: Boolean? = null,
     ) {
         if (dates.isEmpty()) return
-        viewModelScope.launch { repository.markAll(dates, mark) }
+        viewModelScope.launch {
+            if (granted == null) {
+                repository.markAllKeepingGranted(dates, mark)
+            } else {
+                repository.markAll(dates, mark, granted)
+            }
+        }
     }
 
     fun unmark(dates: Collection<LocalDate>) {
@@ -145,19 +189,20 @@ class PlannerViewModel(
                 combine(
                     repository.observeSettings(),
                     repository.observeEntitlement(year),
-                    repository.observeMarks(
+                    repository.observeMarkedDays(
                         LocalDate.of(year - 1, 12, 1).coerceAtLeast(LocalDate.of(firstYear, 1, 1)),
                         LocalDate.of(year + 1, 12, 31),
                     ),
                     today,
-                ) { settings, entitlement, marks, now ->
+                ) { settings, entitlement, marked, now ->
                     val check = settings.publicHolidayCheck()
                     YearView(
                         year = year,
                         today = now,
                         settings = settings,
                         entitlement = entitlement,
-                        marks = marks,
+                        marks = marked.marks,
+                        granted = marked.granted,
                         calculator =
                             check?.let {
                                 VacationCalculator(

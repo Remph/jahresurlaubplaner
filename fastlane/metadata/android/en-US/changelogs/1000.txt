@@ -1,0 +1,2 @@
+New: granted vacation days (optional, Settings > Vacation), clear a year's vacation days, tap the next holiday to see it in the calendar, months and years slide when you page, the year view fills the screen. School holidays are lilac now.
+Note: backups made with 0.10.0 cannot be restored in 0.9.x. Back up before updating.

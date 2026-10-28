@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.core.backup.BackupData
 import de.remph.urlaubsplaner.core.backup.BackupFile
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkedDays
 import de.remph.urlaubsplaner.core.balance.VacationCalculator
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.YearEntitlement
@@ -73,9 +74,15 @@ class AllLaenderOnDeviceTest {
             )
 
             val export = IcsExport(clock, calculator)
-            assertEquals("$land: the marked week is one trip", 1, export.tripCount(summerWeek))
+            assertEquals(
+                "$land: the marked week is one trip",
+                1,
+                export.tripCount(MarkedDays(summerWeek)),
+            )
             for (language in IcsLanguage.entries) {
-                assertTrue(export.encode(summerWeek, language).startsWith("BEGIN:VCALENDAR"))
+                assertTrue(
+                    export.encode(MarkedDays(summerWeek), language).startsWith("BEGIN:VCALENDAR"),
+                )
             }
 
             val data =
@@ -83,6 +90,7 @@ class AllLaenderOnDeviceTest {
                     settings,
                     listOf(YearEntitlement(2027, VacationDays.of(30))),
                     summerWeek,
+                    granted = setOf(LocalDate.of(2027, 7, 9)),
                 )
             val bytes =
                 ByteArrayOutputStream().also {

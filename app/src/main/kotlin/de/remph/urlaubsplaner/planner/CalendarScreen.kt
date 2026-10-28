@@ -1,9 +1,15 @@
 package de.remph.urlaubsplaner.planner
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,32 +29,47 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.settings.daysWithUnit
+import de.remph.urlaubsplaner.ui.rememberAnimationsRemoved
+import de.remph.urlaubsplaner.ui.rememberSharedAxis
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.math.floor
 
 /**
  * The calendar: one month with every day tappable, or the whole year at a glance. Tapping a
  * day opens the day sheet to mark it. The month and the mode live in the ViewModel, so they
  * survive a tab change and a rotation.
+ *
+ * A step slides the title and the body a short way, like the tabs (a switch to the year or month
+ * view swaps in place). Both are drawn from one
+ * [CalendarPage], so the header and the body always belong to the same month.
  */
 @Composable
 fun CalendarScreen(
@@ -60,61 +81,68 @@ fun CalendarScreen(
     val month by viewModel.calendarMonth.collectAsStateWithLifecycle()
     val mode by viewModel.calendarMode.collectAsStateWithLifecycle()
     val rowsExpanded by viewModel.calendarYearRowsExpanded.collectAsStateWithLifecycle()
+    val highlight by viewModel.highlight.collectAsStateWithLifecycle()
     val scroll = rememberScrollState()
-    val rowHeight by animateDpAsState(
-        if (rowsExpanded) YearRowsExpanded else YearRowsCompact,
-        label = "yearRowHeight",
-    )
     var sheetDate by rememberSaveable { mutableStateOf<LocalDate?>(null) }
-    val shown = view ?: return
+    // A highlight is for the moment the calendar opens: it goes when another month is shown and
+    // when the screen leaves, so a later visit does not light up an old day.
+    LaunchedEffect(highlight, month) {
+        if (highlight?.let { YearMonth.from(it) != month } == true) viewModel.highlightDone()
+    }
+    DisposableEffect(Unit) { onDispose { viewModel.highlightDone() } }
+    val page = rememberCalendarPage(view, month, mode) ?: return
+    val shown = page.view
     val locale = currentLocale()
+    val motion = rememberPageMotion()
+    var headerPx by remember { mutableIntStateOf(0) }
+    // What the year page takes besides its grid, kept for the page that slides in (it has no
+    // measure of its own yet and would start at the least row height and grow) and over a tab change.
+    var othersPx by rememberSaveable { mutableIntStateOf(-1) }
 
-    ScreenFrame(outerPadding, scroll, Modifier.swipeToStep(viewModel::step)) {
-        if (!shown.hasLand) {
-            EmptyState(
-                stringResource(R.string.overview_no_land),
-                R.string.go_to_settings,
-                onOpenSettings,
-            )
-            return@ScreenFrame
-        }
-        Header(viewModel, month, mode, locale)
-        if (shown.year == month.year) {
-            if (mode == CalendarMode.MONTH) {
-                MonthGrid(shown, month) { sheetDate = it }
-                MonthCard(shown, month, locale)
-                Legend(
-                    showBridge = shown.bridgeDays.any { YearMonth.from(it) == month },
-                    compact = true,
+    BoxWithConstraints {
+        // What the page can fill without scrolling: the screen without the bars and the frame.
+        val visible =
+            maxHeight - outerPadding.calculateTopPadding() -
+                outerPadding.calculateBottomPadding() - FramePadding * 2
+        ScreenFrame(outerPadding, scroll, Modifier.swipeToStep(viewModel::step)) {
+            if (!shown.hasLand) {
+                EmptyState(
+                    stringResource(R.string.overview_no_land),
+                    R.string.go_to_settings,
+                    onOpenSettings,
                 )
-            } else {
-                Column {
-                    YearGrid(
-                        shown,
-                        { viewModel.showMonth(it).also { viewModel.showMode(CalendarMode.MONTH) } },
-                        Modifier.expandBySwipe(
-                            rowsExpanded,
-                            pageAtEnd = { scroll.value >= scroll.maxValue },
-                            onChange = viewModel::expandYearRows,
-                        ),
-                        rowHeight = rowHeight,
-                    )
-                    YearRowsHandle(rowsExpanded) { viewModel.expandYearRows(!rowsExpanded) }
-                }
-                Legend(showBridge = shown.bridgeDays.isNotEmpty())
-                SchoolHolidaysUnknownNote(
-                    shown,
-                    LocalDate.of(shown.year, 1, 1),
-                    LocalDate.of(shown.year, 12, 31),
+                return@ScreenFrame
+            }
+            Header(
+                viewModel,
+                page,
+                motion,
+                locale,
+                Modifier.onSizeChanged { headerPx = it.height },
+            )
+            AnimatedContent(
+                page,
+                transitionSpec = motion.spec,
+                contentKey = motion.key,
+                label = "calendarPage",
+            ) { shownPage ->
+                CalendarBody(
+                    shownPage,
+                    rowsExpanded,
+                    // The header and the gap under it are above the body.
+                    with(LocalDensity.current) { headerPx.toDp() } + FrameSpacing,
+                    visible,
+                    scroll,
+                    locale,
+                    viewModel,
+                    highlight,
+                    onOpenSettings,
+                    savedOthersPx = othersPx,
+                    // Only the page that stays reports: the one sliding out has another year's size.
+                    onOthersPx = { if (shownPage.generation == page.generation) othersPx = it },
+                    onDay = { sheetDate = it },
                 )
             }
-        }
-        if (shown.entitlement == null) {
-            EmptyState(
-                stringResource(R.string.overview_no_entitlement, shown.year),
-                R.string.enter_vacation_days,
-                onOpenSettings,
-            )
         }
     }
 
@@ -124,20 +152,129 @@ fun CalendarScreen(
     }
 }
 
+private typealias PageTransition =
+    AnimatedContentTransitionScope<CalendarPage>.() -> ContentTransform
+
+private val FramePadding = 16.dp
+private val FrameSpacing = 16.dp
+
+/**
+ * The slide of a step, the direction follows the date. With Android's animations off nothing
+ * slides and the key never changes, so the content swaps in place (see [CalendarPage.generation]).
+ */
+private class PageMotion(
+    val spec: PageTransition,
+    val key: (CalendarPage) -> Int,
+)
+
+@Composable
+private fun rememberPageMotion(): PageMotion {
+    val axis = rememberSharedAxis<CalendarPage>()
+    val removed = rememberAnimationsRemoved()
+    return PageMotion(
+        spec = {
+            axis(targetState.month > initialState.month).using(SizeTransform(clip = false))
+        },
+        key = { if (removed) 0 else it.generation },
+    )
+}
+
+@Composable
+private fun CalendarBody(
+    page: CalendarPage,
+    rowsExpanded: Boolean,
+    above: Dp,
+    visible: Dp,
+    scroll: ScrollState,
+    locale: Locale,
+    viewModel: PlannerViewModel,
+    highlight: LocalDate?,
+    onOpenSettings: () -> Unit,
+    savedOthersPx: Int,
+    onOthersPx: (Int) -> Unit,
+    onDay: (LocalDate) -> Unit,
+) {
+    val shown = page.view
+    val month = page.month
+    val density = LocalDensity.current
+    // The expanded rows are what is left of the screen once the rest of the page has its height.
+    // That rest is measured (the page minus the grid) while the year is shown. Until then, and
+    // after a switch from the month view (whose sizes are not the year's), the last one counts.
+    var bodyPx by remember(page.mode) { mutableIntStateOf(0) }
+    var gridPx by remember(page.mode) { mutableIntStateOf(0) }
+    val measured = if (bodyPx > 0 && gridPx > 0) bodyPx - gridPx else -1
+    SideEffect { if (measured >= 0) onOthersPx(measured) }
+    val othersPx = if (measured >= 0) measured else savedOthersPx
+    val expanded =
+        if (othersPx < 0) {
+            YearRowsMin
+        } else {
+            val others = with(density) { othersPx.toDp() } + above
+            // Whole dp, rounded down, so the page never ends a pixel too long and scrolls.
+            floor(expandedRowHeight(visible, others).value).dp
+        }
+    val rowHeight by animateDpAsState(
+        if (rowsExpanded) expanded else YearRowsCompact,
+        label = "yearRowHeight",
+    )
+    Column(
+        Modifier.fillMaxWidth().onSizeChanged { bodyPx = it.height },
+        verticalArrangement = Arrangement.spacedBy(FrameSpacing),
+    ) {
+        if (page.mode == CalendarMode.MONTH) {
+            MonthGrid(shown, month, highlight, viewModel::highlightDone) { onDay(it) }
+            MonthCard(shown, month, locale)
+            Legend(
+                showBridge = shown.bridgeDays.any { YearMonth.from(it) == month },
+                showGranted = shown.grantedEnabled,
+                compact = true,
+            )
+        } else {
+            Column {
+                YearGrid(
+                    shown,
+                    { viewModel.showMonth(it).also { viewModel.showMode(CalendarMode.MONTH) } },
+                    Modifier
+                        .onSizeChanged { gridPx = it.height }
+                        .expandBySwipe(
+                            rowsExpanded,
+                            pageAtEnd = { scroll.value >= scroll.maxValue },
+                            onChange = viewModel::expandYearRows,
+                        ),
+                    rowHeight = rowHeight,
+                )
+                YearRowsHandle(rowsExpanded) { viewModel.expandYearRows(!rowsExpanded) }
+            }
+            Legend(
+                showBridge = shown.bridgeDays.isNotEmpty(),
+                showGranted = shown.grantedEnabled,
+            )
+            SchoolHolidaysUnknownNote(
+                shown,
+                LocalDate.of(shown.year, 1, 1),
+                LocalDate.of(shown.year, 12, 31),
+            )
+        }
+        if (shown.entitlement == null) {
+            EmptyState(
+                stringResource(R.string.overview_no_entitlement, shown.year),
+                R.string.enter_vacation_days,
+                onOpenSettings,
+            )
+        }
+    }
+}
+
 @Composable
 private fun Header(
     viewModel: PlannerViewModel,
-    month: YearMonth,
-    mode: CalendarMode,
+    page: CalendarPage,
+    motion: PageMotion,
     locale: Locale,
+    modifier: Modifier = Modifier,
 ) {
-    val title =
-        if (mode == CalendarMode.MONTH) {
-            month.month.getDisplayName(TextStyle.FULL_STANDALONE, locale) + " " + month.year
-        } else {
-            month.year.toString()
-        }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val mode = page.mode
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
             Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -148,9 +285,7 @@ private fun Header(
                     Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                     contentDescription =
                         stringResource(
-                            if (mode ==
-                                CalendarMode.MONTH
-                            ) {
+                            if (mode == CalendarMode.MONTH) {
                                 R.string.month_previous
                             } else {
                                 R.string.year_previous
@@ -158,23 +293,35 @@ private fun Header(
                         ),
                 )
             }
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                modifier =
-                    Modifier.semantics {
-                        heading()
-                        liveRegion = LiveRegionMode.Polite
-                    },
-            )
+            AnimatedContent(
+                page,
+                transitionSpec = motion.spec,
+                contentKey = motion.key,
+                label = "calendarTitle",
+            ) { shownPage ->
+                val month = shownPage.month
+                Text(
+                    text =
+                        if (shownPage.mode == CalendarMode.MONTH) {
+                            month.month.getDisplayName(TextStyle.FULL_STANDALONE, locale) +
+                                " " + month.year
+                        } else {
+                            month.year.toString()
+                        },
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier =
+                        Modifier.semantics {
+                            heading()
+                            liveRegion = LiveRegionMode.Polite
+                        },
+                )
+            }
             IconButton(onClick = { viewModel.step(1) }, enabled = viewModel.canStep(1)) {
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription =
                         stringResource(
-                            if (mode ==
-                                CalendarMode.MONTH
-                            ) {
+                            if (mode == CalendarMode.MONTH) {
                                 R.string.month_next
                             } else {
                                 R.string.year_next

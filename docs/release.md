@@ -119,7 +119,7 @@ Quick Start Guide). `f-droid.org` itself is not reachable from the cloud, `gitla
 
 **What is ready in this repo** (`fastlane/metadata/android/`): `de-DE` and `en-US` with `title.txt`,
 `short_description.txt` (under 80 characters, no trailing dot), `full_description.txt`,
-`changelogs/<versionCode>.txt` (900, 901, 902), `images/icon.png` (512 px) and four screenshots in `images/phoneScreenshots/`.
+`changelogs/<versionCode>.txt` (900, 901, 902, 1000), `images/icon.png` (512 px) and four screenshots in `images/phoneScreenshots/`.
 F-Droid requires `en-US`; `de-DE` is extra. Descriptions use only the HTML tags F-Droid allows.
 
 **What F-Droid checks**: free licence (GPL-3.0), only free dependencies and tools (no Google Play
@@ -205,10 +205,11 @@ with a recommendation.
 
 - **512 px icon:** `python3 tools/render-store-icon.py` redraws it from the launcher icon's numbers
   into both locales (Pillow needed). Run it again whenever the launcher icon changes.
-- **Screenshots:** four per language (overview, month, year, settings), 411 x 891 dp, light, the
-  app's own teal scheme, fixed date 10 March 2027, Nordrhein-Westfalen, a few marked days. They were
-  made in the cloud with a throwaway Robolectric test (`AppRoot` inside `UrlaubsplanerTheme`,
-  `captureToImage`, not kept in the repo), not on a phone. Replace them with phone screenshots
-  whenever the maintainer likes; the file names `1.png` to `4.png` set the order.
+- **Screenshots:** four per language (overview, month, year, settings), 1080 x 2400, light, the
+  app's own teal scheme, Nordrhein-Westfalen, sample data and a few marked days. They are real
+  screenshots of the signed release APK on the API 37 emulator (PR #39): the sample data comes from
+  a hand-made backup file, the emulator clock is set to 20 April 2026 and the status bar is in demo
+  mode. Redo them on the emulator whenever screens change (0.10.0 changed the colours and the year
+  view); the file names `1.png` to `4.png` set the order.
 - **Texts:** `fastlane/metadata/android/<locale>/`. German first. A text that promises a feature
   must match the app: check the descriptions when a feature is added or removed.

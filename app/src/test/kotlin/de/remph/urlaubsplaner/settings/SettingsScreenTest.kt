@@ -46,6 +46,7 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneOffset
 
 /**
@@ -107,6 +108,12 @@ class SettingsScreenTest {
         runBlocking { repository.saveSettings(UserSettings(land = land)) }
         waitForText(shownAs)
     }
+
+    /** The marked days arrive from Room a moment after the page shows. */
+    private fun waitForEnabled(text: String) =
+        compose.waitUntil(timeoutMillis = 5_000) {
+            runCatching { compose.onNodeWithText(text).assertIsEnabled() }.isSuccess
+        }
 
     private fun openRow(title: String) {
         compose.onNodeWithText(title).performScrollTo().performClick()
@@ -393,5 +400,137 @@ class SettingsScreenTest {
         waitForText("No vacation entered yet", substring = true)
         compose.onNodeWithText("Open in calendar").assertIsNotEnabled()
         compose.onNodeWithText("Save as file").assertIsNotEnabled()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the clear action is off while the year has no marked days`() {
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
+
+        compose
+            .onNodeWithText(
+                "Urlaubstage von 2027 löschen",
+            ).performScrollTo()
+            .assertIsNotEnabled()
+        compose
+            .onNodeWithText(
+                "Für 2027 sind keine Tage markiert.",
+            ).performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `clearing a year in German asks with the count, then deletes and confirms`() {
+        runBlocking {
+            repository.mark(LocalDate.of(2027, 1, 4), DayMark.FULL)
+            repository.mark(LocalDate.of(2027, 8, 2), DayMark.HALF)
+            repository.mark(LocalDate.of(2026, 8, 3), DayMark.FULL)
+        }
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
+
+        compose.onNodeWithText("Urlaubstage von 2027 löschen").performScrollTo().assertIsEnabled()
+        waitForEnabled("Urlaubstage von 2027 löschen")
+        compose.onNodeWithText("Urlaubstage von 2027 löschen").performScrollTo().performClick()
+
+        compose.onNodeWithText("Urlaubstage von 2027 löschen?").assertIsDisplayed()
+        compose
+            .onNodeWithText("Alle 2 markierten Tage von 2027 werden gelöscht.", substring = true)
+            .assertIsDisplayed()
+        compose
+            .onNodeWithText(
+                "Speichere vorher eine Sicherung",
+                substring = true,
+            ).assertIsDisplayed()
+        // Nothing is gone until the confirmation.
+        assertEquals(3, runBlocking { repository.readAll() }.marks.size)
+
+        compose.onNodeWithText("Löschen").performClick()
+
+        compose.waitUntil(timeoutMillis = 5_000) {
+            runBlocking { repository.readAll() }.marks.size == 1
+        }
+        compose.onNodeWithText("Urlaubstage von 2027 löschen?").assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `cancelling the clear dialog keeps the marked days`() {
+        runBlocking { repository.mark(LocalDate.of(2027, 1, 4), DayMark.FULL) }
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
+        waitForEnabled("Urlaubstage von 2027 löschen")
+        compose.onNodeWithText("Urlaubstage von 2027 löschen").performScrollTo().performClick()
+        compose
+            .onNodeWithText("Der markierte Tag von 2027 wird gelöscht.", substring = true)
+            .assertIsDisplayed()
+
+        compose.onNodeWithText("Abbrechen").performClick()
+
+        compose.onNodeWithText("Urlaubstage von 2027 löschen?").assertDoesNotExist()
+        assertEquals(1, runBlocking { repository.readAll() }.marks.size)
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the clear dialog has the English texts`() {
+        runBlocking {
+            repository.mark(LocalDate.of(2027, 1, 4), DayMark.FULL)
+            repository.mark(LocalDate.of(2027, 1, 5), DayMark.FULL)
+        }
+        show("Settings")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "North Rhine-Westphalia")
+        openRow("Vacation 2027")
+        waitForEnabled("Clear vacation days of 2027")
+
+        compose.onNodeWithText("Clear vacation days of 2027").performScrollTo().performClick()
+
+        compose.onNodeWithText("Clear vacation days of 2027?").assertIsDisplayed()
+        compose
+            .onNodeWithText("All 2 marked days of 2027 will be deleted.", substring = true)
+            .assertIsDisplayed()
+        compose.onNodeWithText("This cannot be undone.", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Clear").assertIsDisplayed()
+        compose.onNodeWithText("Cancel").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the granted days option shows in German, is off by default and can be turned on`() {
+        show("Einstellungen")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "Nordrhein-Westfalen")
+        openRow("Urlaub 2027")
+
+        compose
+            .onNodeWithText("Genehmigte Urlaubstage")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertIsOff()
+            .performClick()
+
+        // The switch follows Room a moment after the value is saved, so wait for the switch.
+        compose.waitUntil(5_000) {
+            runCatching { compose.onNodeWithText("Genehmigte Urlaubstage").assertIsOn() }.isSuccess
+        }
+        assertTrue(runBlocking { repository.observeSettings().first() }.grantedDays)
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the granted days option shows in English`() {
+        show("Settings")
+        chooseLand(Bundesland.NORDRHEIN_WESTFALEN, "North Rhine-Westphalia")
+        openRow("Vacation 2027")
+
+        compose
+            .onNodeWithText("Granted vacation days")
+            .performScrollTo()
+            .assertIsDisplayed()
+            .assertIsOff()
     }
 }

@@ -2,6 +2,7 @@ package de.remph.urlaubsplaner.planner
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkStatus
 import de.remph.urlaubsplaner.core.balance.VacationCalculator
 import de.remph.urlaubsplaner.core.balance.VacationDays
 import de.remph.urlaubsplaner.core.balance.YearEntitlement
@@ -38,12 +39,14 @@ class YearViewTest {
             ),
         entitlement: YearEntitlement? = this.entitlement,
         settings: UserSettings = this.settings,
+        granted: Set<LocalDate> = emptySet(),
     ) = YearView(
         year = 2027,
         today = fixture.date("2027-03-10"),
         settings = settings,
         entitlement = entitlement,
         marks = marks,
+        granted = granted,
         calculator =
             settings.publicHolidayCheck()?.let {
                 VacationCalculator(fixture.clock, settings.schedule, it)
@@ -54,6 +57,67 @@ class YearViewTest {
                 BridgeFinder(fixture.clock, settings.schedule, it)
             },
     )
+
+    // Today is 10 March 2027: the 8th is taken, the 15th and the 16th are planned.
+    private val grantedSettings = settings.copy(grantedDays = true)
+    private val marks =
+        mapOf(
+            fixture.date("2027-03-08") to DayMark.FULL,
+            fixture.date("2027-03-15") to DayMark.FULL,
+            fixture.date("2027-03-16") to DayMark.HALF,
+        )
+    private val grantedDays =
+        setOf(fixture.date("2027-03-08"), fixture.date("2027-03-16"))
+
+    @Test
+    fun `with the setting on a future granted day is granted and a past one stays taken`() {
+        val view = view(marks, settings = grantedSettings, granted = grantedDays)
+
+        assertEquals(MarkStatus.TAKEN, view.statusOn(fixture.date("2027-03-08")))
+        assertEquals(MarkStatus.PLANNED, view.statusOn(fixture.date("2027-03-15")))
+        assertEquals(MarkStatus.GRANTED, view.statusOn(fixture.date("2027-03-16")))
+        assertNull(view.statusOn(fixture.date("2027-03-17")))
+        assertTrue(view.look(fixture.date("2027-03-16")).granted)
+        assertFalse(view.look(fixture.date("2027-03-15")).granted)
+        assertFalse(view.look(fixture.date("2027-03-08")).granted)
+    }
+
+    @Test
+    fun `with the setting off nothing is granted, though the flags are kept`() {
+        val view = view(marks, granted = grantedDays)
+
+        assertFalse(view.grantedEnabled)
+        assertEquals(MarkStatus.PLANNED, view.statusOn(fixture.date("2027-03-16")))
+        assertFalse(view.look(fixture.date("2027-03-16")).granted)
+        assertFalse(view.isGranted(fixture.date("2027-03-16")))
+        assertEquals(VacationDays.ZERO, view.grantedPlanned)
+    }
+
+    @Test
+    fun `the granted share counts only future granted days and the balance is the same`() {
+        val withFlags = view(marks, settings = grantedSettings, granted = grantedDays)
+        val without = view(marks, settings = grantedSettings)
+
+        assertEquals(VacationDays.HALF, withFlags.grantedPlanned)
+        assertEquals(VacationDays.ZERO, without.grantedPlanned)
+        assertEquals(without.balance, withFlags.balance)
+        assertEquals(VacationDays.of(1.5), withFlags.balance?.planned)
+    }
+
+    @Test
+    fun `a granted flag on a day that costs nothing does not light the tile`() {
+        // Saturday 13 March: a mark there costs nothing, so the tile shows nothing.
+        val saturday = fixture.date("2027-03-13")
+        val view =
+            view(
+                mapOf(saturday to DayMark.FULL),
+                settings = grantedSettings,
+                granted = setOf(saturday),
+            )
+
+        assertFalse(view.look(saturday).granted)
+        assertEquals(VacationDays.ZERO, view.grantedPlanned)
+    }
 
     @Test
     fun `NRW 2027 has the Fridays after Himmelfahrt and Fronleichnam as bridges`() {

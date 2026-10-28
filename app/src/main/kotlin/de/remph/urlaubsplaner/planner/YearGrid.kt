@@ -118,6 +118,7 @@ fun YearGrid(
                     val fill =
                         when {
                             look.taken -> colors.taken
+                            look.granted -> colors.granted
                             look.holiday -> colors.holiday
                             look.school -> colors.school
                             !look.workDay -> faint
@@ -160,9 +161,8 @@ fun YearGrid(
     }
 }
 
-/** The row height of the year grid when it is compact and when it is expanded. */
+/** The row height of the year grid when it is compact; expanded it fits the screen, see [expandedRowHeight]. */
 val YearRowsCompact = 28.dp
-val YearRowsExpanded = 48.dp
 
 /**
  * Swipe down on the grid to expand its rows, swipe up to make them compact again, like the

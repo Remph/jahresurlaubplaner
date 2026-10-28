@@ -53,6 +53,17 @@ interface MarkedDayDao {
     @Query("DELETE FROM marked_day WHERE date = :date")
     suspend fun delete(date: String)
 
+    /** The days among [dates] that are marked and granted. */
+    @Query("SELECT date FROM marked_day WHERE granted = 1 AND date IN (:dates)")
+    suspend fun grantedAmong(dates: List<String>): List<String>
+
+    /** Sets the granted flag of the marked days among [dates]; dates that are not marked are ignored. */
+    @Query("UPDATE marked_day SET granted = :granted WHERE date IN (:dates)")
+    suspend fun setGranted(
+        dates: List<String>,
+        granted: Boolean,
+    )
+
     @Query("DELETE FROM marked_day WHERE date IN (:dates)")
     suspend fun deleteDates(dates: List<String>)
 
@@ -64,4 +75,11 @@ interface MarkedDayDao {
 
     @Query("DELETE FROM marked_day")
     suspend fun deleteAll()
+
+    /** [from] and [to] are ISO dates, both ends are included. */
+    @Query("DELETE FROM marked_day WHERE date BETWEEN :from AND :to")
+    suspend fun deleteBetween(
+        from: String,
+        to: String,
+    )
 }

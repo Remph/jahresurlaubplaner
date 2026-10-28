@@ -98,6 +98,18 @@
     <string name="notice_newer_version">Diese Sicherung stammt aus einer neueren Version der App (Format %1$d, diese App liest bis Format %2$d). Bitte die App aktualisieren. Es wurde nichts geändert.</string>
     <string name="notice_damaged">Die Sicherung ist beschädigt und wurde nicht geladen. Es wurde nichts geändert.\n\nGenauer (auf Englisch): %1$s</string>
 
+    <!-- Jahr leeren -->
+    <string name="clear_year_action">Urlaubstage von %1$d löschen</string>
+    <string name="clear_year_none">Für %1$d sind keine Tage markiert.</string>
+    <string name="clear_year_title">Urlaubstage von %1$d löschen?</string>
+    <plurals name="clear_year_body">
+        <item quantity="one">Der markierte Tag von %2$d wird gelöscht. Urlaubsanspruch und Resturlaub bleiben.</item>
+        <item quantity="other">Alle %1$d markierten Tage von %2$d werden gelöscht. Urlaubsanspruch und Resturlaub bleiben.</item>
+    </plurals>
+    <string name="clear_year_hint">Das lässt sich nicht rückgängig machen. Speichere vorher eine Sicherung unter Datensicherung.</string>
+    <string name="clear_year_confirm">Löschen</string>
+    <string name="notice_year_cleared">Urlaubstage von %1$d gelöscht.</string>
+
     <!-- Kalender-Export -->
     <string name="section_calendar_export">Kalender-Export</string>
     <string name="calendar_export_row_value">Urlaub als Kalenderdatei</string>
@@ -158,6 +170,7 @@
     <string name="trip_now">Du bist gerade im Urlaub.</string>
     <string name="date_range">%1$s bis %2$s</string>
     <string name="next_holiday">Nächster Feiertag</string>
+    <string name="next_holiday_show">Feiertag im Kalender zeigen</string>
     <string name="holiday_today">Heute</string>
     <plurals name="trip_costs">
         <item quantity="one">kostet %1$s Urlaubstag</item>
@@ -180,12 +193,15 @@
     <string name="legend_school">Schulferien</string>
     <string name="legend_taken">Genommen</string>
     <string name="legend_planned">Geplant</string>
+    <string name="legend_granted">Genehmigt</string>
     <string name="day_holiday">Feiertag: %1$s</string>
     <string name="day_school_holiday">Schulferien</string>
     <string name="day_taken">Urlaub genommen</string>
     <string name="day_taken_half">Halber Urlaubstag genommen</string>
     <string name="day_planned">Urlaub geplant</string>
     <string name="day_planned_half">Halber Urlaubstag geplant</string>
+    <string name="day_granted">Urlaub genehmigt</string>
+    <string name="day_granted_half">Halber Urlaubstag genehmigt</string>
     <string name="day_today">heute</string>
     <string name="bridges_title">Brückentage</string>
     <string name="bridge_anchor">%1$s, %2$s</string>
@@ -220,6 +236,14 @@
         <item quantity="other">Kostet %1$s Urlaubstage</item>
     </plurals>
     <string name="sheet_costs_and_left">%1$s, danach noch %2$s übrig</string>
+    <string name="sheet_granted">Genehmigt</string>
+    <string name="sheet_granted_support">Dein Arbeitgeber hat zugestimmt.</string>
+    <plurals name="overview_granted">
+        <item quantity="one">Davon genehmigt: %1$s Tag</item>
+        <item quantity="other">Davon genehmigt: %1$s Tage</item>
+    </plurals>
+    <string name="granted_days">Genehmigte Urlaubstage</string>
+    <string name="granted_days_support">Zeigt, welche geplanten Tage dein Arbeitgeber schon genehmigt hat: im Kalender, in der Übersicht und im Kalenderexport. Ausgeschaltet bleibt alles gespeichert, nur nicht sichtbar.</string>
 
     <!-- Feiertage -->
     <string name="holiday_neujahr">Neujahr</string>
