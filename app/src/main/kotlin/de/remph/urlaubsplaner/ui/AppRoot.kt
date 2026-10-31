@@ -171,8 +171,6 @@ private fun RemovalUndo(
     val undo = stringResource(R.string.undo)
     LaunchedEffect(removed) {
         val days = removed ?: return@LaunchedEffect
-        // Handled from the moment it shows, so a rotation does not offer it a second time.
-        viewModel.removalShown()
         val count = days.marks.size
         val text = resources.getQuantityString(R.plurals.removed_days, count, count)
         scope.launch {
@@ -180,6 +178,9 @@ private fun RemovalUndo(
             snackbar.currentSnackbarData?.dismiss()
             val result =
                 snackbar.showSnackbar(text, actionLabel = undo, duration = SnackbarDuration.Long)
+            // Only once it is over: a rotation cancels this scope first, and the new screen then
+            // offers the undo again instead of losing it.
+            viewModel.removalDone(days)
             if (result == SnackbarResult.ActionPerformed) viewModel.undoRemoval(days)
         }
     }

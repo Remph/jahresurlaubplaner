@@ -22,6 +22,10 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.MonthDay
 import java.time.ZoneOffset
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * An in-memory database, a fixed clock and a small school holiday file, for the tests of the
@@ -33,6 +37,11 @@ class PlannerFixture(
 ) {
     val clock: Clock = Clock.fixed(Instant.parse("${today}T10:00:00Z"), ZoneOffset.UTC)
     val database: UrlaubsplanerDatabase
+
+    // Room's reads run here, so close() can wait for one that is still running: a test that ends
+    // right after a write (the undo) left a cancelled view model's read on the closed database.
+    private val queries = DrainableExecutor()
+
     val repository: UserDataRepository
     val schoolHolidays =
         SchoolHolidayData.parse(
@@ -48,7 +57,11 @@ class PlannerFixture(
     init {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         val context = ApplicationProvider.getApplicationContext<Context>()
-        database = Room.inMemoryDatabaseBuilder(context, UrlaubsplanerDatabase::class.java).build()
+        database =
+            Room
+                .inMemoryDatabaseBuilder(context, UrlaubsplanerDatabase::class.java)
+                .setQueryExecutor(queries)
+                .build()
         repository = UserDataRepository(database)
     }
 
@@ -78,6 +91,37 @@ class PlannerFixture(
 
     fun close() {
         viewModels.clear()
+        queries.awaitIdle()
         database.close()
+        queries.shutdown()
     }
+}
+
+/** A small thread pool that can wait until none of its tasks is running or waiting. */
+private class DrainableExecutor : Executor {
+    private val pool = Executors.newFixedThreadPool(4)
+    private val pending = AtomicInteger()
+
+    override fun execute(task: Runnable) {
+        pending.incrementAndGet()
+        try {
+            pool.execute {
+                try {
+                    task.run()
+                } finally {
+                    pending.decrementAndGet()
+                }
+            }
+        } catch (e: RejectedExecutionException) {
+            pending.decrementAndGet()
+            throw e
+        }
+    }
+
+    fun awaitIdle(timeoutMillis: Long = 5_000) {
+        val until = System.currentTimeMillis() + timeoutMillis
+        while (pending.get() > 0 && System.currentTimeMillis() < until) Thread.sleep(5)
+    }
+
+    fun shutdown() = pool.shutdown()
 }

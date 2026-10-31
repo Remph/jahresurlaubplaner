@@ -2,6 +2,8 @@ package de.remph.urlaubsplaner.ui
 
 import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.Role
@@ -52,6 +54,9 @@ class AppRootTest {
     // What the widget asks for through MainActivity.
     private var request by mutableStateOf<TabRequest?>(null)
 
+    // A new value builds AppRoot afresh with the same ViewModels, as after a rotation.
+    private var screen by mutableIntStateOf(0)
+
     @Before
     fun open() {
         fixture = PlannerFixture()
@@ -65,7 +70,7 @@ class AppRootTest {
             )
         val appearance = AppearanceStore(context.getSharedPreferences("app-root-test", 0))
         planner = fixture.viewModel()
-        compose.setContent { AppRoot(settings, planner, appearance, request) }
+        compose.setContent { key(screen) { AppRoot(settings, planner, appearance, request) } }
     }
 
     @After
@@ -308,6 +313,29 @@ class AppRootTest {
         compose.onNodeWithText("Rückgängig").performClick()
 
         compose.waitUntil(5_000) { marked() == before }
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a rotation while the undo is offered offers it again`() {
+        fixture.fill()
+        compose.onNode(tab("Kalender")).performClick()
+        waitForText("Karfreitag")
+        planner.unmark(listOf(fixture.date("2027-03-15")))
+        waitForText("1 Tag entfernt")
+
+        screen++
+        compose.waitForIdle()
+
+        waitForText("1 Tag entfernt")
+        compose.onNodeWithText("Rückgängig").performClick()
+        compose.waitUntil(5_000) { fixture.date("2027-03-15") in marked().marks }
+        // Let the screens read the restored day before the database closes after the test.
+        compose.waitUntil(5_000) {
+            planner.calendar.value?.markOn(fixture.date("2027-03-15")) !=
+                null
+        }
+        waitUntilGone("1 Tag entfernt")
     }
 
     @Test

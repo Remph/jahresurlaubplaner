@@ -254,7 +254,7 @@ class PlannerViewModelTest {
     }
 
     @Test
-    fun `removing days offers them for the undo once, and the undo puts back mark and flag`() {
+    fun `removing days offers them for the undo, and the undo puts back mark and flag`() {
         val model = viewModel()
         fixture.fill()
         val granted = fixture.date("2027-03-22")
@@ -272,7 +272,7 @@ class PlannerViewModelTest {
         val removed = await(model.removed)
         assertEquals(mapOf(granted to DayMark.FULL, half to DayMark.HALF), removed.marks)
         assertEquals(setOf(granted), removed.granted)
-        model.removalShown()
+        model.removalDone(removed)
         assertNull(model.removed.value)
 
         model.undoRemoval(removed)
@@ -283,6 +283,28 @@ class PlannerViewModelTest {
                 fixture.repository.observeMarkedDays(granted, half).first()
             }
         assertEquals(removed, back)
+    }
+
+    @Test
+    fun `an older undo offer that ends leaves a newer removal waiting`() {
+        val model = viewModel()
+        fixture.fill()
+        val first = fixture.date("2027-03-22")
+        val second = fixture.date("2027-03-23")
+        runBlocking {
+            fixture.repository.mark(first, DayMark.FULL)
+            fixture.repository.mark(second, DayMark.HALF)
+        }
+        model.unmark(listOf(first))
+        val older = await(model.removed)
+
+        // The second removal replaces the first offer; its snackbar ends only afterwards.
+        model.unmark(listOf(second))
+        val newer = await(model.removed) { it != older }
+        model.removalDone(older)
+
+        assertEquals(newer, model.removed.value)
+        assertEquals(mapOf(second to DayMark.HALF), newer.marks)
     }
 
     @Test

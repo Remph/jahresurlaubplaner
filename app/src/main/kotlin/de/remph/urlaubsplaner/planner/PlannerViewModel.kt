@@ -182,8 +182,8 @@ class PlannerViewModel(
     private val lastRemoved = MutableStateFlow<MarkedDays?>(null)
 
     /**
-     * What the last [unmark] removed, until the screen has offered to undo it ([removalShown]).
-     * Null when nothing is waiting, also when the days were not marked at all.
+     * What the last [unmark] removed, until the offer to undo it is over ([removalDone]). Null when
+     * nothing is waiting, also when the days were not marked at all.
      */
     val removed: StateFlow<MarkedDays?> = lastRemoved
 
@@ -195,9 +195,13 @@ class PlannerViewModel(
         }
     }
 
-    /** The undo is on screen; a second visit or a rotation must not offer it again. */
-    fun removalShown() {
-        lastRemoved.value = null
+    /**
+     * The offer to undo [days] is over (taken, timed out or replaced). Until then it stays here, so a
+     * rotation, which takes the snackbar with the old screen, offers it again. An older offer that
+     * ends after a newer removal leaves the newer one waiting.
+     */
+    fun removalDone(days: MarkedDays) {
+        lastRemoved.compareAndSet(days, null)
     }
 
     /** Puts back what an [unmark] removed: each day with its mark and its granted flag. */
