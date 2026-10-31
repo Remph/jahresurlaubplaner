@@ -10,6 +10,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -18,18 +19,25 @@ import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import de.remph.urlaubsplaner.appearance.AppearanceStore
+import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkedDays
 import de.remph.urlaubsplaner.data.BackupFileStore
 import de.remph.urlaubsplaner.data.CalendarFileStore
 import de.remph.urlaubsplaner.planner.PlannerFixture
+import de.remph.urlaubsplaner.planner.PlannerViewModel
 import de.remph.urlaubsplaner.settings.CalendarExporter
 import de.remph.urlaubsplaner.settings.SettingsViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import java.time.YearMonth
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -38,6 +46,8 @@ class AppRootTest {
     val compose = createComposeRule()
 
     private lateinit var fixture: PlannerFixture
+    private lateinit var settings: SettingsViewModel
+    private lateinit var planner: PlannerViewModel
 
     // What the widget asks for through MainActivity.
     private var request by mutableStateOf<TabRequest?>(null)
@@ -46,7 +56,7 @@ class AppRootTest {
     fun open() {
         fixture = PlannerFixture()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val settings =
+        settings =
             SettingsViewModel(
                 fixture.repository,
                 BackupFileStore(context.contentResolver),
@@ -54,7 +64,8 @@ class AppRootTest {
                 fixture.clock,
             )
         val appearance = AppearanceStore(context.getSharedPreferences("app-root-test", 0))
-        compose.setContent { AppRoot(settings, fixture.viewModel(), appearance, request) }
+        planner = fixture.viewModel()
+        compose.setContent { AppRoot(settings, planner, appearance, request) }
     }
 
     @After
@@ -218,5 +229,97 @@ class AppRootTest {
 
         compose.onNodeWithText("Bundesland wählen").assertDoesNotExist()
         compose.onNodeWithText("Sicherung wiederherstellen").assertExists()
+    }
+
+    private fun waitUntilGone(text: String) =
+        compose.waitUntil(15_000) {
+            compose.onAllNodesWithText(text).fetchSemanticsNodes().isEmpty()
+        }
+
+    private fun marked(): MarkedDays =
+        runBlocking {
+            fixture.repository
+                .observeMarkedDays(fixture.date("2027-01-01"), fixture.date("2027-12-31"))
+                .first()
+        }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a settings message stays when the tab is left and does not come back`() {
+        fixture.fill()
+        compose.onNode(tab("Einstellungen")).performClick()
+        waitForText("Datensicherung")
+
+        settings.clearYear(2027)
+        waitForText("Urlaubstage von 2027 gelöscht.")
+        compose.mainClock.advanceTimeBy(500)
+        compose.onNode(tab("Übersicht")).performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Urlaubstage von 2027 gelöscht.").assertIsDisplayed()
+
+        waitUntilGone("Urlaubstage von 2027 gelöscht.")
+        compose.onNode(tab("Einstellungen")).performClick()
+        compose.waitForIdle()
+        compose.mainClock.advanceTimeBy(500)
+
+        compose.onAllNodesWithText("Urlaubstage von 2027 gelöscht.").assertCountEquals(0)
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `Entfernen says how many days went and Rückgängig puts the day back`() {
+        fixture.fill()
+        compose.onNode(tab("Kalender")).performClick()
+        waitForText("Karfreitag")
+
+        compose
+            .onNode(
+                hasContentDescription("Montag, 15. März 2027", substring = true),
+            ).performClick()
+        compose.onNodeWithText("Entfernen").performClick()
+
+        waitForText("1 Tag entfernt")
+        compose.waitUntil(5_000) { fixture.date("2027-03-15") !in marked().marks }
+        compose.onNodeWithText("Rückgängig").performClick()
+
+        compose.waitUntil(5_000) { fixture.date("2027-03-15") in marked().marks }
+        assertEquals(DayMark.FULL, marked().marks[fixture.date("2027-03-15")])
+        waitUntilGone("1 Tag entfernt")
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the undo restores each mark and flag, also when another month is shown`() {
+        fixture.fill()
+        runBlocking {
+            fixture.repository.mark(fixture.date("2027-03-22"), DayMark.FULL, granted = true)
+            fixture.repository.mark(fixture.date("2027-03-23"), DayMark.HALF)
+        }
+        val before = marked()
+        compose.onNode(tab("Kalender")).performClick()
+        waitForText("Karfreitag")
+
+        // Removed in March (as a range would), then the user steps on to June before the undo.
+        planner.unmark((15..23).map { fixture.date("2027-03-%02d".format(it)) })
+        waitForText("7 Tage entfernt")
+        planner.showMonth(YearMonth.of(2027, 6))
+        waitForText("Juni 2027")
+        compose.onNodeWithText("Rückgängig").performClick()
+
+        compose.waitUntil(5_000) { marked() == before }
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the English undo message counts the days`() {
+        fixture.fill()
+        compose.onNode(tab("Calendar")).performClick()
+        waitForText("Good Friday")
+
+        planner.unmark((15..16).map { fixture.date("2027-03-$it") })
+
+        waitForText("2 days removed")
+        compose.onNodeWithText("Undo").assertIsDisplayed()
     }
 }

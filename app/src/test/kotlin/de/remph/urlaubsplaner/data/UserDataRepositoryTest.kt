@@ -238,4 +238,28 @@ class UserDataRepositoryTest {
 
             assertEquals(true, repository.observeSettings().first().grantedDays)
         }
+
+    @Test
+    fun `removing days returns what they were and restoring puts exactly that back`() =
+        runBlocking {
+            val monday = LocalDate.of(2026, 7, 6)
+            val tuesday = LocalDate.of(2026, 7, 7)
+            val wednesday = LocalDate.of(2026, 7, 8)
+            val other = LocalDate.of(2026, 7, 20)
+            repository.mark(monday, DayMark.FULL, granted = true)
+            repository.mark(tuesday, DayMark.HALF)
+            repository.mark(other, DayMark.FULL, granted = true)
+            val before = repository.readAll()
+
+            // Wednesday is not marked: it is not in what was removed and not marked by the undo.
+            val removed = repository.removeAll(listOf(monday, tuesday, wednesday))
+
+            assertEquals(mapOf(monday to DayMark.FULL, tuesday to DayMark.HALF), removed.marks)
+            assertEquals(setOf(monday), removed.granted)
+            assertEquals(mapOf(other to DayMark.FULL), marks())
+
+            repository.restore(removed)
+
+            assertEquals(before, repository.readAll())
+        }
 }

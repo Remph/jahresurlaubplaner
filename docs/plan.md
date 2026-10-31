@@ -537,6 +537,31 @@ holiday highlight, slide animation, year rows that fit, lilac school holidays; a
 0.10.0 (format 2) cannot be restored in 0.9.x, and the database moves from Room 3 to 4 on the first
 start, with no way back. The release steps and the test list are in `docs/milestone-0.10.0.md`.
 
+### 0.10.1 (performance and feel)
+
+Version 0.10.1, `versionCode` 1001, one PR into `main` (`feature/0-10-1-perf-feel`), from the
+performance and feel review of 0.10.0 (2026-10-31). Fixes only, no stored data changes:
+
+- Messages (snackbars) run in `AppRoot`'s scope: a settings notice is marked handled when it is
+  handed over, so it stays when the tab is left and does not show again on return.
+- The day sheet and the bridge sheet close through `sheetState.hide()` (`SheetClose`), so every
+  button slides the sheet down like a swipe does; while it slides it keeps showing what was tapped.
+- The overview's start animation is read inside `graphicsLayer {}` and small count-up texts, so
+  the status no longer composes in every frame of the intro (a test counts it).
+- `android:windowBackground` is the app's light or dark background (`values`, `values-night`), so
+  the splash and the first frames are not AppCompat grey.
+- The day tile's press ripple is drawn on the rounded tile; the touch area stays the whole cell.
+- Haptic ticks through `LocalHapticFeedback` (follows Android's touch feedback setting): Confirm
+  after Eintragen/Ändern/Entfernen in the day sheet and Eintragen in the bridge sheet, SegmentTick
+  when a swipe steps the month or year, Reject when a swipe hits the end of the calendar. The arrow
+  buttons do not tick. Below Android 14 androidx.core maps SegmentTick to a context click.
+- Undo after Entfernen only (the maintainer, 2026-10-31): `UserDataRepository.removeAll` returns
+  what it removed, `PlannerViewModel.removed` hands it to `AppRoot`, whose snackbar ("3 Tage
+  entfernt", Rückgängig) calls `restore` with each day's mark and granted flag. Marking says nothing.
+
+Left for later: R8 (1.0.0), an app baseline profile and holding the splash until the data is read
+(both need a measurement on the PC).
+
 Known snags:
 
 - School holiday data: openholidaysapi.org and kmk.org were reachable from the cloud on
@@ -554,3 +579,4 @@ Known snags:
 - [x] M5 Polish (animations, final UI review, tech debt review)
 - [x] M6 Release prep (0.9.0 released on GitHub 2026-10-26; F-Droid postponed): about screen (PR #29); signing, version 0.9.0, F-Droid texts and icon, `docs/release.md` (release-files PR); still the maintainer's: the key, the F-Droid merge request, the phone test
 - [x] 0.10.0 (parked items 18 to 23) built on `release/0.10.0`: clear a year (PR #44), lilac school holidays (PR #45), granted days (PR #46), month slide and year rows that fit (PR #47), next holiday highlight (PR #49); release PR `feature/0-10-release`
+- [ ] 0.10.1 performance and feel fixes (`feature/0-10-1-perf-feel`, PR into `main`)

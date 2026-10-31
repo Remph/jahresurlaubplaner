@@ -3,6 +3,7 @@ package de.remph.urlaubsplaner.planner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.remph.urlaubsplaner.core.balance.DayMark
+import de.remph.urlaubsplaner.core.balance.MarkedDays
 import de.remph.urlaubsplaner.core.balance.VacationCalculator
 import de.remph.urlaubsplaner.core.bridge.BridgeFinder
 import de.remph.urlaubsplaner.core.holidays.PublicHolidays
@@ -178,9 +179,31 @@ class PlannerViewModel(
         }
     }
 
+    private val lastRemoved = MutableStateFlow<MarkedDays?>(null)
+
+    /**
+     * What the last [unmark] removed, until the screen has offered to undo it ([removalShown]).
+     * Null when nothing is waiting, also when the days were not marked at all.
+     */
+    val removed: StateFlow<MarkedDays?> = lastRemoved
+
     fun unmark(dates: Collection<LocalDate>) {
         if (dates.isEmpty()) return
-        viewModelScope.launch { repository.unmarkAll(dates) }
+        viewModelScope.launch {
+            val days = repository.removeAll(dates)
+            if (days.marks.isNotEmpty()) lastRemoved.value = days
+        }
+    }
+
+    /** The undo is on screen; a second visit or a rotation must not offer it again. */
+    fun removalShown() {
+        lastRemoved.value = null
+    }
+
+    /** Puts back what an [unmark] removed: each day with its mark and its granted flag. */
+    fun undoRemoval(days: MarkedDays) {
+        if (days.marks.isEmpty()) return
+        viewModelScope.launch { repository.restore(days) }
     }
 
     private fun yearView(years: Flow<Int>): StateFlow<YearView?> =

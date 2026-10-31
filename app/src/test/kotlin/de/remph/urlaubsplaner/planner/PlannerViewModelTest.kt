@@ -252,6 +252,50 @@ class PlannerViewModelTest {
 
         assertNull(model.highlight.value)
     }
+
+    @Test
+    fun `removing days offers them for the undo once, and the undo puts back mark and flag`() {
+        val model = viewModel()
+        fixture.fill()
+        val granted = fixture.date("2027-03-22")
+        val half = fixture.date("2027-03-23")
+        runBlocking {
+            fixture.repository.mark(granted, DayMark.FULL, granted = true)
+            fixture.repository.mark(half, DayMark.HALF)
+        }
+        // The calendar shows another month than the removed days: the undo does not depend on it.
+        model.showMonth(YearMonth.of(2027, 6))
+
+        // A day that is not marked (the Wednesday) is not part of what is offered.
+        model.unmark(listOf(granted, half, fixture.date("2027-03-24")))
+
+        val removed = await(model.removed)
+        assertEquals(mapOf(granted to DayMark.FULL, half to DayMark.HALF), removed.marks)
+        assertEquals(setOf(granted), removed.granted)
+        model.removalShown()
+        assertNull(model.removed.value)
+
+        model.undoRemoval(removed)
+
+        await(model.overview) { it.markOn(granted) != null && it.markOn(half) != null }
+        val back =
+            runBlocking {
+                fixture.repository.observeMarkedDays(granted, half).first()
+            }
+        assertEquals(removed, back)
+    }
+
+    @Test
+    fun `removing days that are not marked offers no undo`() {
+        val model = viewModel()
+        fixture.fill()
+
+        model.unmark(listOf(fixture.date("2027-03-24")))
+        // Give the removal time to finish; nothing may arrive.
+        runBlocking { delay(300) }
+
+        assertNull(model.removed.value)
+    }
 }
 
 /** A clock that tells the same time of day as [base] on a day the test can change. */

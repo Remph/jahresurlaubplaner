@@ -11,8 +11,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,14 +22,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.remph.urlaubsplaner.R
 import de.remph.urlaubsplaner.appearance.AppearanceStore
 import de.remph.urlaubsplaner.planner.CalendarMode
@@ -36,6 +41,8 @@ import de.remph.urlaubsplaner.planner.OverviewScreen
 import de.remph.urlaubsplaner.planner.PlannerViewModel
 import de.remph.urlaubsplaner.settings.SettingsHost
 import de.remph.urlaubsplaner.settings.SettingsViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /** The three tabs along the bottom (the maintainer, 2026-10-25). */
 enum class Tab(
@@ -60,6 +67,13 @@ fun AppRoot(
 ) {
     var tab by rememberSaveable { mutableStateOf(Tab.OVERVIEW) }
     val snackbar = remember { SnackbarHostState() }
+    // Messages run in this scope, not in the screen that asked for them: a tab that is left takes
+    // its effects with it, so a snackbar from the settings vanished at once (and its notice came
+    // back on the next visit), and the undo after Entfernen would go with the closing sheet.
+    val messages = rememberCoroutineScope()
+    val showMessage: (String) -> Unit =
+        remember(messages, snackbar) { { text -> messages.launch { snackbar.showSnackbar(text) } } }
+    RemovalUndo(plannerViewModel, snackbar, messages)
     // Leaving a tab drops its composables; this keeps what each tab remembered (the open settings
     // page, scroll positions) for the way back.
     val tabState = rememberSaveableStateHolder()
@@ -134,10 +148,39 @@ fun AppRoot(
                     }
 
                     Tab.SETTINGS -> {
-                        SettingsHost(settingsViewModel, appearanceStore, snackbar, padding)
+                        SettingsHost(settingsViewModel, appearanceStore, showMessage, padding)
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * After Entfernen in the day sheet: how many days went, and Rückgängig, which puts back each day's
+ * mark and granted flag. Marking says nothing (the tile and a haptic tick are enough).
+ */
+@Composable
+private fun RemovalUndo(
+    viewModel: PlannerViewModel,
+    snackbar: SnackbarHostState,
+    scope: CoroutineScope,
+) {
+    val removed by viewModel.removed.collectAsStateWithLifecycle()
+    val resources = LocalResources.current
+    val undo = stringResource(R.string.undo)
+    LaunchedEffect(removed) {
+        val days = removed ?: return@LaunchedEffect
+        // Handled from the moment it shows, so a rotation does not offer it a second time.
+        viewModel.removalShown()
+        val count = days.marks.size
+        val text = resources.getQuantityString(R.plurals.removed_days, count, count)
+        scope.launch {
+            // A newer removal replaces the older offer instead of waiting behind it.
+            snackbar.currentSnackbarData?.dismiss()
+            val result =
+                snackbar.showSnackbar(text, actionLabel = undo, duration = SnackbarDuration.Long)
+            if (result == SnackbarResult.ActionPerformed) viewModel.undoRemoval(days)
         }
     }
 }

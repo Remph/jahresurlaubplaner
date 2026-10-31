@@ -40,8 +40,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -90,6 +92,17 @@ fun CalendarScreen(
         if (highlight?.let { YearMonth.from(it) != month } == true) viewModel.highlightDone()
     }
     DisposableEffect(Unit) { onDispose { viewModel.highlightDone() } }
+    // Only a swipe ticks: the arrow buttons have their own press feedback. At the end of the
+    // calendar a swipe used to do nothing at all; now it says no.
+    val haptic = LocalHapticFeedback.current
+    val swipe = { steps: Long ->
+        if (viewModel.canStep(steps)) {
+            viewModel.step(steps)
+            haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
+        } else {
+            haptic.performHapticFeedback(HapticFeedbackType.Reject)
+        }
+    }
     val page = rememberCalendarPage(view, month, mode) ?: return
     val shown = page.view
     val locale = currentLocale()
@@ -104,7 +117,7 @@ fun CalendarScreen(
         val visible =
             maxHeight - outerPadding.calculateTopPadding() -
                 outerPadding.calculateBottomPadding() - FramePadding * 2
-        ScreenFrame(outerPadding, scroll, Modifier.swipeToStep(viewModel::step)) {
+        ScreenFrame(outerPadding, scroll, Modifier.swipeToStep(swipe)) {
             if (!shown.hasLand) {
                 EmptyState(
                     stringResource(R.string.overview_no_land),

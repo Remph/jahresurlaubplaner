@@ -16,8 +16,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -117,10 +123,16 @@ fun BridgeSheet(
     viewModel: PlannerViewModel,
     onDismiss: () -> Unit,
 ) {
+    // While it slides away the sheet keeps its numbers as they were before the days were stored.
+    var frozen by remember { mutableStateOf<YearView?>(null) }
+    val shown = frozen ?: view
     val locale = currentLocale()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val close = rememberSheetClose(sheetState, onDismiss)
+    val haptic = LocalHapticFeedback.current
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
     ) {
         Column(
             Modifier.fillMaxWidth().navigationBarsPadding().padding(
@@ -154,19 +166,22 @@ fun BridgeSheet(
                 text =
                     costText(
                         bridge.cost,
-                        view.remainingAfter(bridge.leave, DayMark.FULL),
+                        shown.remainingAfter(bridge.leave, DayMark.FULL),
                         locale,
                     ),
                 style = MaterialTheme.typography.bodyLarge,
             )
             Button(
                 onClick = {
-                    viewModel.mark(bridge.leave, DayMark.FULL)
-                    onDismiss()
+                    close.after {
+                        frozen = shown
+                        viewModel.mark(bridge.leave, DayMark.FULL)
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.mark_save)) }
-            TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = { close.after() }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.cancel))
             }
         }

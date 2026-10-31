@@ -34,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -61,22 +63,30 @@ fun DaySheet(
     viewModel: PlannerViewModel,
     onDismiss: () -> Unit,
 ) {
+    // While it slides away the sheet keeps showing the day as it was tapped, not the days just
+    // stored (the Entfernen button would vanish and the sheet shrink half way down).
+    var frozen by remember { mutableStateOf<YearView?>(null) }
+    val shown = frozen ?: view
     val locale = currentLocale()
     val colors = dayColors()
-    val existing = view.markOn(date)
+    val existing = shown.markOn(date)
     var mark by remember(date) { mutableStateOf(existing ?: DayMark.FULL) }
     // The switch is for days still to come; today and the past are taken, whatever it says.
-    val showGranted = view.grantedEnabled && date.isAfter(view.today)
-    var granted by remember(date) { mutableStateOf(view.isGranted(date)) }
+    val showGranted = shown.grantedEnabled && date.isAfter(shown.today)
+    var granted by remember(date) { mutableStateOf(shown.isGranted(date)) }
     var end by remember(date) { mutableStateOf(date) }
     var picking by remember { mutableStateOf(false) }
-    val days = view.costlyDays(date, end)
-    val cost = days.fold(VacationDays.ZERO) { sum, day -> sum + view.cost(day, mark) }
-    val remaining = view.remainingAfter(days, mark)
+    val days = shown.costlyDays(date, end)
+    val cost = days.fold(VacationDays.ZERO) { sum, day -> sum + shown.cost(day, mark) }
+    val remaining = shown.remainingAfter(days, mark)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val close = rememberSheetClose(sheetState, onDismiss)
+    // Follows Android's touch feedback setting; marking says nothing else (the maintainer, 2026-10-31).
+    val haptic = LocalHapticFeedback.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
     ) {
         Column(
             // The granted switch made the sheet taller; on a small screen or with a large font it scrolls.
@@ -96,8 +106,8 @@ fun DaySheet(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.semantics { heading() },
             )
-            Facts(view, date, locale, colors.holiday, colors.school)
-            if (view.canMark(date)) {
+            Facts(shown, date, locale, colors.holiday, colors.school)
+            if (shown.canMark(date)) {
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     val marks =
                         listOf(
@@ -129,8 +139,11 @@ fun DaySheet(
                 )
                 Button(
                     onClick = {
-                        viewModel.mark(days, mark, if (showGranted) granted else null)
-                        onDismiss()
+                        close.after {
+                            frozen = shown
+                            viewModel.mark(days, mark, if (showGranted) granted else null)
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -146,11 +159,15 @@ fun DaySheet(
                         ),
                     )
                 }
-                if (days.any { view.markOn(it) != null }) {
+                if (days.any { shown.markOn(it) != null }) {
                     TextButton(
+                        // The app's frame then says how many days went and offers Rückgängig.
                         onClick = {
-                            viewModel.unmark(days)
-                            onDismiss()
+                            close.after {
+                                frozen = shown
+                                viewModel.unmark(days)
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.mark_remove)) }

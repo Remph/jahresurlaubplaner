@@ -90,8 +90,23 @@ class UserDataRepository(
         granted: Boolean,
     ) = markedDayDao.setGranted(dates.map { it.toString() }, granted)
 
-    suspend fun unmarkAll(dates: Collection<LocalDate>) =
-        markedDayDao.deleteDates(dates.map { it.toString() })
+    /**
+     * Unmarks all [dates] and returns what they were (each day's mark and granted flag), so that
+     * [restore] can put exactly that back. Days among [dates] that were not marked are not in it.
+     */
+    suspend fun removeAll(dates: Collection<LocalDate>): MarkedDays =
+        database.withTransaction {
+            val keys = dates.map { it.toString() }
+            val removed = markedDayDao.getDates(keys).toMarkedDays()
+            markedDayDao.deleteDates(keys)
+            removed
+        }
+
+    /** Marks [days] again as they were when [removeAll] returned them (the undo). */
+    suspend fun restore(days: MarkedDays) =
+        markedDayDao.upsertAll(
+            days.marks.map { (date, mark) -> markedDayEntity(date, mark, date in days.granted) },
+        )
 
     /** Removes every mark of [year]; other years, the entitlement and the settings stay. */
     suspend fun clearMarks(year: Int) =

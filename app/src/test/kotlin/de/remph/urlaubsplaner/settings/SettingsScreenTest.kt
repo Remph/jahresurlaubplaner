@@ -2,7 +2,6 @@ package de.remph.urlaubsplaner.settings
 
 import android.content.Context
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -88,7 +87,7 @@ class SettingsScreenTest {
 
     private fun show(title: String) {
         compose.setContent {
-            SettingsHost(viewModel, appearance, SnackbarHostState(), PaddingValues())
+            SettingsHost(viewModel, appearance, showMessage = {}, PaddingValues())
         }
         waitForText(title)
     }

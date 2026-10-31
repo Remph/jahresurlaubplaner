@@ -1,0 +1,1 @@
+After "Remove", "Undo" brings the days back. Marking, removing and swiping in the calendar give a short vibration (if it is on in the Android settings). The sheet slides down when it closes, the start animation is smoother and the start no longer shows a grey screen. Fixed: a message in the settings vanished when you switched tabs and came back later.

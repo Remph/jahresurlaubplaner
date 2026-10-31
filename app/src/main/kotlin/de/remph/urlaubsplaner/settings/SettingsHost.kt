@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -45,7 +44,7 @@ enum class SettingsPage {
 fun SettingsHost(
     viewModel: SettingsViewModel,
     appearanceStore: AppearanceStore,
-    snackbar: SnackbarHostState,
+    showMessage: (String) -> Unit,
     outerPadding: PaddingValues,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -63,8 +62,10 @@ fun SettingsHost(
     val noticeText = notice?.let { noticeText(it) }
     LaunchedEffect(notice) {
         if (notice != null && noticeText != null && !notice.needsDialog()) {
-            snackbar.showSnackbar(noticeText)
+            // Handled once it is handed over; the snackbar runs in the app's frame, so it stays
+            // when the tab is left and does not show again on the way back.
             viewModel.dismissNotice()
+            showMessage(noticeText)
         }
     }
 
