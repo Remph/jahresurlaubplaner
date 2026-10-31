@@ -28,14 +28,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -45,6 +49,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -144,6 +149,8 @@ private fun Status(
     val balance = view.balance ?: return
     val overbooked = balance.remaining < VacationDays.ZERO
     val intro = rememberIntro(viewModel)
+    val probe = LocalCompositionProbe.current
+    SideEffect { probe?.invoke("Status") }
 
     // The one number that matters, first.
     Column(Modifier.riseIn(intro, 0).semantics(mergeDescendants = true) {}) {
@@ -153,17 +160,12 @@ private fun Status(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.semantics { heading() },
         )
-        val left = balance.remaining.text(locale)
-        Text(
-            text = balance.remaining.countedUp(countFraction(intro)).text(locale),
-            modifier = Modifier.clearAndSetSemantics { text = AnnotatedString(left) },
-            style = MaterialTheme.typography.displayLarge,
-            color =
-                if (overbooked) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.primary
-                },
+        CountUpText(
+            balance.remaining,
+            intro,
+            locale,
+            MaterialTheme.typography.displayLarge,
+            if (overbooked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
         )
         if (overbooked) {
             Text(
@@ -226,10 +228,11 @@ private fun Status(
         )
     }
 
+    // Found once when the sheet opens: once its days are marked the bridge leaves the list, and the
+    // sheet must stay until it has slid away.
     val chosen =
-        view.bridgeGroups.flatMap { it.bridges }.firstOrNull {
-            it.leave.first() ==
-                sheetStart
+        remember(sheetStart) {
+            view.bridgeGroups.flatMap { it.bridges }.firstOrNull { it.leave.first() == sheetStart }
         }
     if (chosen != null) {
         BridgeSheet(view, chosen, viewModel, onDismiss = { sheetStart = null })
@@ -240,9 +243,13 @@ private fun Status(
  * Milliseconds since the app started counting up and sliding in the panels; [INTRO_MILLIS] at every
  * other time. A screen reader gets the final numbers at once (see the semantics on the texts), and
  * "Remove animations" makes the whole intro jump to the end.
+ *
+ * A lambda, read only where the intro is drawn (the panels' layers and the counting numbers):
+ * reading the value here made the whole overview compose again in every frame of the intro
+ * (performance and feel review, 2026-10-31).
  */
 @Composable
-private fun rememberIntro(viewModel: PlannerViewModel): Float {
+private fun rememberIntro(viewModel: PlannerViewModel): () -> Float {
     val animationsRemoved = rememberAnimationsRemoved()
     // takeIntro() first: the start counts as played even when there is nothing to play.
     val elapsed =
@@ -262,21 +269,23 @@ private fun rememberIntro(viewModel: PlannerViewModel): Float {
             elapsed.animateTo(INTRO_MILLIS, tween(INTRO_MILLIS.toInt(), easing = LinearEasing))
         }
     }
-    return elapsed.value
+    return remember(elapsed) { { elapsed.value } }
 }
 
 private fun countFraction(elapsed: Float) =
     Decelerate.transform((elapsed / COUNT_UP_MILLIS).coerceIn(0f, 1f))
 
-/** Each panel rises a little and fades in, one after the other (the [index] sets the order). */
+/**
+ * Each panel rises a little and fades in, one after the other (the [index] sets the order). Only
+ * the layer is drawn again in each frame; after the intro it stays at full alpha and in place.
+ */
 private fun Modifier.riseIn(
-    elapsed: Float,
+    intro: () -> Float,
     index: Int,
 ): Modifier =
-    if (elapsed >= INTRO_MILLIS) {
-        this
-    } else {
-        graphicsLayer {
+    graphicsLayer {
+        val elapsed = intro()
+        if (elapsed < INTRO_MILLIS) {
             val t =
                 Decelerate.transform(
                     ((elapsed - index * RISE_STAGGER_MILLIS) / RISE_MILLIS).coerceIn(0f, 1f),
@@ -285,6 +294,38 @@ private fun Modifier.riseIn(
             translationY = (1 - t) * RISE_DISTANCE.toPx()
         }
     }
+
+/**
+ * A number that counts up during the intro. It composes again only when the shown text changes,
+ * and TalkBack reads the final number from the start.
+ */
+@Composable
+private fun CountUpText(
+    value: VacationDays,
+    intro: () -> Float,
+    locale: Locale,
+    style: TextStyle,
+    color: Color = Color.Unspecified,
+) {
+    val counted by remember(value, locale, intro) {
+        derivedStateOf { value.countedUp(countFraction(intro())).text(locale) }
+    }
+    val final = value.text(locale)
+    val probe = LocalCompositionProbe.current
+    SideEffect { probe?.invoke("CountUpText") }
+    Text(
+        counted,
+        modifier = Modifier.clearAndSetSemantics { text = AnnotatedString(final) },
+        style = style,
+        color = color,
+    )
+}
+
+/**
+ * For tests: called with a screen's name each time it composes, so a test can count how often the
+ * overview composes during the intro. Null (and nothing called) in the app.
+ */
+internal val LocalCompositionProbe = staticCompositionLocalOf<((String) -> Unit)?> { null }
 
 internal fun VacationDays.countedUp(progress: Float) =
     if (progress >= 1f) this else VacationDays.ofHalves((days * 2 * progress).roundToInt())
@@ -300,7 +341,7 @@ private val Decelerate = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
 private fun Figure(
     label: Int,
     value: VacationDays,
-    intro: Float,
+    intro: () -> Float,
     locale: Locale,
     modifier: Modifier,
 ) {
@@ -310,12 +351,7 @@ private fun Figure(
         modifier = modifier,
     ) {
         Column(Modifier.padding(12.dp).semantics(mergeDescendants = true) {}) {
-            val final = value.text(locale)
-            Text(
-                value.countedUp(countFraction(intro)).text(locale),
-                modifier = Modifier.clearAndSetSemantics { text = AnnotatedString(final) },
-                style = MaterialTheme.typography.headlineSmall,
-            )
+            CountUpText(value, intro, locale, MaterialTheme.typography.headlineSmall)
             // One line, shrunk when the word does not fit: at a large system font "Genommen"
             // broke in the middle of the word.
             Text(

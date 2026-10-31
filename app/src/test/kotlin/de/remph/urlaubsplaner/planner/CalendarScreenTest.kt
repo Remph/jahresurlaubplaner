@@ -2,7 +2,9 @@ package de.remph.urlaubsplaner.planner
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertCountEquals
@@ -64,6 +66,8 @@ class CalendarScreenTest {
     @After
     fun close() = fixture.close()
 
+    private val haptics = RecordedHaptics()
+
     private fun show(
         waitFor: String = "März 2027",
         fontScale: Float = 1f,
@@ -72,6 +76,7 @@ class CalendarScreenTest {
             val density = LocalDensity.current
             CompositionLocalProvider(
                 LocalDensity provides Density(density.density, fontScale = fontScale),
+                LocalHapticFeedback provides haptics,
             ) {
                 CalendarScreen(fixture.viewModel(), PaddingValues(), onOpenSettings = {})
             }
@@ -755,5 +760,102 @@ class CalendarScreenTest {
         val stored = runBlocking { fixture.repository.readAll() }
         assertEquals(DayMark.HALF, stored.marks.getValue(fixture.date("2027-03-15")))
         assertEquals(setOf(fixture.date("2027-03-15")), stored.granted)
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a swipe that steps the month ticks and the arrow buttons do not`() {
+        show()
+
+        compose.onRoot().performTouchInput { swipeLeft() }
+        waitForText("April 2027")
+        assertEquals(listOf(HapticFeedbackType.SegmentTick), haptics.performed)
+
+        compose.onNodeWithContentDescription("Nächster Monat").performClick()
+        waitForText("Mai 2027")
+        assertEquals(listOf(HapticFeedbackType.SegmentTick), haptics.performed)
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `a swipe at the end of the calendar says no`() {
+        show()
+        repeat(21) { compose.onNodeWithContentDescription("Nächster Monat").performClick() }
+        waitForText("Dezember 2028")
+
+        compose.onRoot().performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+
+        assertEquals(listOf(HapticFeedbackType.Reject), haptics.performed)
+        compose.onNodeWithText("Dezember 2028").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `marking and removing a day each give a confirm tick`() {
+        show()
+        waitForText("Karfreitag")
+
+        day("Donnerstag, 25. März 2027").performClick()
+        compose.onNodeWithText("Eintragen").performClick()
+        compose.waitUntil(
+            5_000,
+        ) { compose.onAllNodesWithText("Eintragen").fetchSemanticsNodes().isEmpty() }
+        assertEquals(listOf(HapticFeedbackType.Confirm), haptics.performed)
+
+        day("Montag, 15. März 2027").performClick()
+        compose.onNodeWithText("Entfernen").performClick()
+        compose.waitUntil(
+            5_000,
+        ) { compose.onAllNodesWithText("Entfernen").fetchSemanticsNodes().isEmpty() }
+        assertEquals(
+            listOf(HapticFeedbackType.Confirm, HapticFeedbackType.Confirm),
+            haptics.performed,
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the sheet slides down after Eintragen instead of vanishing at once`() {
+        show()
+        waitForText("Karfreitag")
+        day("Donnerstag, 25. März 2027").performClick()
+        waitForText("Eintragen")
+        compose.mainClock.autoAdvance = false
+
+        compose.onNodeWithText("Eintragen").performClick()
+        compose.mainClock.advanceTimeBy(64)
+
+        // Half way down it still shows the day as it was tapped.
+        compose.onNodeWithText("Eintragen").assertExists()
+        compose.onNodeWithText("Kostet 1 Urlaubstag, danach noch 32 übrig").assertExists()
+
+        compose.mainClock.autoAdvance = true
+        compose.waitUntil(
+            5_000,
+        ) { compose.onAllNodesWithText("Eintragen").fetchSemanticsNodes().isEmpty() }
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `Entfernen keeps the button while the sheet slides down`() {
+        show()
+        waitForText("Karfreitag")
+        day("Montag, 15. März 2027").performClick()
+        waitForText("Entfernen")
+        compose.mainClock.autoAdvance = false
+
+        compose.onNodeWithText("Entfernen").performClick()
+        // Long enough for the removal to reach the screen, not for the slide to end.
+        Thread.sleep(200)
+        compose.mainClock.advanceTimeBy(64)
+
+        compose.onNodeWithText("Entfernen").assertExists()
+        compose.onNodeWithText("Ändern").assertExists()
+
+        compose.mainClock.autoAdvance = true
+        compose.waitUntil(
+            5_000,
+        ) { compose.onAllNodesWithText("Entfernen").fetchSemanticsNodes().isEmpty() }
     }
 }

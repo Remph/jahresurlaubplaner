@@ -6,6 +6,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +22,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -195,14 +199,16 @@ private fun DayCell(
     )
     val schoolBar = look.school && (look.taken || look.holiday || planned)
     // The touch area is the whole cell; the tile is drawn 2 dp inside it, so a narrow phone does
-    // not lose 4 dp of the 48 dp target.
+    // not lose 4 dp of the 48 dp target. The press ripple is drawn on the tile, in its rounded
+    // shape, not as a rectangle around it.
+    val press = remember { MutableInteractionSource() }
     Box(
         modifier =
             modifier
                 .height(52.dp)
                 .zIndex(if (highlight) 1f else 0f)
                 .highlightRings(clock, MaterialTheme.colorScheme.primary, shape, 2.dp)
-                .clickable { onClick(date) }
+                .clickable(interactionSource = press, indication = null) { onClick(date) }
                 .semantics(mergeDescendants = true) { contentDescription = description },
     ) {
         Box(
@@ -216,6 +222,7 @@ private fun DayCell(
                         scaleY = scale
                     }.clip(shape)
                     .background(fill)
+                    .indication(press, ripple())
                     .then(
                         when {
                             planned || outline.alpha > 0f -> {

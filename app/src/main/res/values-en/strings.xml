@@ -230,6 +230,12 @@
     <string name="mark_save">Add</string>
     <string name="mark_change">Change</string>
     <string name="mark_remove">Remove</string>
+    <!-- After Entfernen: how many days went, with the undo. -->
+    <plurals name="removed_days">
+        <item quantity="one">1 day removed</item>
+        <item quantity="other">%d days removed</item>
+    </plurals>
+    <string name="undo">Undo</string>
     <string name="costs_nothing">You do not work on this day, or it is a public holiday. It costs no vacation.</string>
     <plurals name="sheet_costs">
         <item quantity="one">Costs %1$s vacation day</item>

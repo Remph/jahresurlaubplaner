@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- AppCompat, because AppCompatActivity carries the in-app language. Compose draws everything. -->
-    <style name="Theme.Urlaubsplaner" parent="Theme.AppCompat.DayNight.NoActionBar" />
+    <style name="Theme.Urlaubsplaner" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- The app's own background (as in Theme.kt), so the splash and the first frames before
+             Compose runs are not AppCompat's grey. The dark one is in values-night. Compose sets
+             the final colour (pure black, wallpaper colours) once it runs. -->
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+
+    <color name="window_background">#FFF4F6F8</color>
 </resources>

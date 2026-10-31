@@ -1,6 +1,9 @@
 package de.remph.urlaubsplaner.planner
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
@@ -44,15 +47,19 @@ class BridgesScreenTest {
     @After
     fun close() = fixture.close()
 
+    private val haptics = RecordedHaptics()
+
     private fun showOverview(waitFor: String) {
         compose.setContent {
-            OverviewScreen(
-                fixture.viewModel(),
-                PaddingValues(),
-                onOpenSettings = {},
-                onOpenMonth = {},
-                onShowDate = {},
-            )
+            CompositionLocalProvider(LocalHapticFeedback provides haptics) {
+                OverviewScreen(
+                    fixture.viewModel(),
+                    PaddingValues(),
+                    onOpenSettings = {},
+                    onOpenMonth = {},
+                    onShowDate = {},
+                )
+            }
         }
         waitForText(waitFor)
         // The data arrives from Room in steps (a new Land redraws the card), so let it settle.
@@ -148,6 +155,30 @@ class BridgesScreenTest {
 
     @Test
     @Config(qualifiers = "de")
+    fun `Eintragen gives a confirm tick and the sheet slides down, though the bridge is gone`() {
+        showOverview("danach: Fr nehmen")
+        line("danach: Fr nehmen, 4 Tage frei").performScrollTo().performClick()
+        waitForText("Brückentage eintragen")
+        compose.mainClock.autoAdvance = false
+
+        sheetButton("Eintragen").performClick()
+        // Long enough for the marked day to reach the screen (the bridge leaves the card), not
+        // for the slide to end.
+        compose.waitUntil(5_000) { fixture.date("2027-05-07") in marks() }
+        Thread.sleep(200)
+        compose.mainClock.advanceTimeBy(64)
+
+        compose.onNodeWithText("Brückentage eintragen").assertExists()
+        assertEquals(listOf(HapticFeedbackType.Confirm), haptics.performed)
+
+        compose.mainClock.autoAdvance = true
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithText("Brückentage eintragen").fetchSemanticsNodes().isEmpty()
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "de")
     fun `Abbrechen stores nothing`() {
         showOverview("danach: Fr nehmen")
 
@@ -159,6 +190,8 @@ class BridgesScreenTest {
             compose.onAllNodesWithText("Brückentage eintragen").fetchSemanticsNodes().isEmpty()
         }
         assertTrue(fixture.date("2027-05-07") !in marks())
+        // Nothing stored, so nothing to confirm.
+        assertEquals(emptyList<HapticFeedbackType>(), haptics.performed)
     }
 
     @Test

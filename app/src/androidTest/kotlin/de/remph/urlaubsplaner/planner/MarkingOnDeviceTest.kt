@@ -97,6 +97,9 @@ class MarkingOnDeviceTest {
         compose.onNodeWithText(string(R.string.mark_save)).performClick()
 
         waitUntil { stored().marks[date] == DayMark.FULL }
+        // The sheet slides down after Eintragen; the next tap is for the calendar, not the sheet.
+        val save = string(R.string.mark_save)
+        waitUntil { compose.onAllNodesWithText(save).fetchSemanticsNodes().isEmpty() }
 
         compose.onNode(day).performClick()
         compose.onNodeWithText(string(R.string.mark_remove)).performClick()

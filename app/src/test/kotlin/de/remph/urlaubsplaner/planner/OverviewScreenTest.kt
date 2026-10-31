@@ -1,6 +1,7 @@
 package de.remph.urlaubsplaner.planner
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
@@ -22,6 +23,7 @@ import de.remph.urlaubsplaner.core.settings.UserSettings
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -245,5 +247,40 @@ class OverviewScreenTest {
         }
         compose.waitForIdle()
         compose.onNodeWithText("Davon genehmigt", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    @Config(qualifiers = "de")
+    fun `the intro counts up without composing the whole overview in every frame`() {
+        fixture.fill()
+        val composed = mutableListOf<String>()
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            CompositionLocalProvider(LocalCompositionProbe provides { composed += it }) {
+                OverviewScreen(
+                    fixture.viewModel(),
+                    PaddingValues(),
+                    onOpenSettings = {},
+                    onOpenMonth = {},
+                    onShowDate = {},
+                )
+            }
+        }
+        // The data comes from Room on its own threads; step frames until the status is there.
+        val waitUntil = System.currentTimeMillis() + 5_000
+        while ("Status" !in composed && System.currentTimeMillis() < waitUntil) {
+            compose.mainClock.advanceTimeByFrame()
+            Thread.sleep(5)
+        }
+        assertTrue("Status" in composed)
+
+        // The whole intro (1 s) and a little more, frame by frame.
+        repeat(75) { compose.mainClock.advanceTimeByFrame() }
+
+        // Before 0.10.1 the status composed in 63 of 75 frames; now only when its data changes.
+        assertTrue(composed.count { it == "Status" } <= 5)
+        // The numbers still count up: they compose on their own, many times.
+        assertTrue(composed.count { it == "CountUpText" } > 20)
+        compose.onNodeWithText("33").assertIsDisplayed()
     }
 }
